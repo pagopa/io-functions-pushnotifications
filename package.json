@@ -1,13 +1,14 @@
 {
-  "name": "@pagopa/<YOUR PACKAGE NAME>",
+  "name": "@pagopa/io-functions-notifications",
   "description": "",
   "author": "IO team",
-  "repository": "https://github.com/pagopa/<YOUR PROJECT NAME>",
+  "repository": "https://github.com/pagopa/io-functions-notifications",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
     "prebuild": "shx rm -rf dist && yarn generate",
     "postbuild": "dependency-check package.json --no-dev --missing ./dist/**/*.js",
+    "clean": " tsc --build --clean",
     "build": "tsc",
     "watch": "tsc -w",
     "extensions:install": "func extensions install",
