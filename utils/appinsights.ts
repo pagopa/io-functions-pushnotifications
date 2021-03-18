@@ -1,6 +1,4 @@
 import * as ai from "applicationinsights";
-import { fromPredicate } from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
 import { initAppInsights } from "italia-ts-commons/lib/appinsights";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
