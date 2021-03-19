@@ -6,7 +6,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
   },

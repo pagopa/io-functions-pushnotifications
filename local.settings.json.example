@@ -1,8 +1,8 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "FUNCTIONS_WORKER_RUNTIME": "{FUNCTIONS_WORKER_RUNTIME}",
     "AzureWebJobsStorage": "{AzureWebJobsStorage}",
-    "FUNCTIONS_V2_COMPATIBILITY_MODE": false
+    "FUNCTIONS_V2_COMPATIBILITY_MODE": "{FUNCTIONS_V2_COMPATIBILITY_MODE}"
   }
 }

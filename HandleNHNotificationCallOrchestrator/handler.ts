@@ -1,10 +1,9 @@
-import * as t from "io-ts";
-
-import { isLeft } from "fp-ts/lib/Either";
-
+import * as df from "durable-functions";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/classes";
 
-import * as df from "durable-functions";
+import { isLeft } from "fp-ts/lib/Either";
+import * as t from "io-ts";
+
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { NotificationMessage } from "../HandleNHNotificationCall";
@@ -25,9 +24,10 @@ export const handler = function*(
 ): Generator<unknown> {
   const logPrefix = `NHCallOrchestrator`;
 
-  const retryOptions = new df.RetryOptions(5000, 10);
-  // tslint:disable-next-line: no-object-mutation
-  retryOptions.backoffCoefficient = 1.5;
+  const retryOptions = {
+    ...new df.RetryOptions(5000, 10),
+    backoffCoefficient: 1.5
+  };
 
   // Get and decode orchestrator input
   const input = context.df.getInput();
