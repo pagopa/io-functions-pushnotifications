@@ -1,44 +1,35 @@
-# IO Functions template
+# IO Functions Push Notification
 
-Template per l'utilizzo di Azure Functions (e Durable Functions) all'interno del
-progetto IO.
+This Azure Function Project manages all the aspects related to the Push Notifications.
 
-Una volta clonato il repo assicurarsi di:
-
-- editare i metadati del repository nel file `package.json`
-
-- specificare un nome per il
-  [TaskHub](https://docs.microsoft.com/it-it/azure/azure-functions/durable/durable-functions-task-hubs)
-  in host.json in modo da evitare di condividere lo stesso per function diverse
-  che usano lo stesso storage
-
-- effettuare il [tuning dei parametri per le durable
-  function](https://docs.microsoft.com/it-it/azure/azure-functions/durable/durable-functions-bindings#host-json)
-
-- impostare a `false` il parametro `FUNCTIONS_V2_COMPATIBILITY_MODE` nel file
-  `local.settings.json` nel caso di upgrade a `azure-functions@3.x`
-
-- modificare l' endpoint di healthcheck all' interno del file `deploy-pipelines.yml` in base al `basePath` configurato.
+It uses the Azure Notification Hub to enable the push notifications and the device management.
 
 ## Sviluppo in locale
 
 ```shell
 cp env.example .env
-yarn install
+cp local.settings.json.example local.settings.json
+yarn install --frozen-lockfile
 yarn build
-docker-compose up -d --build
-docker-compose logs -f functions
+yarn start
 open http://localhost/some/path/test
 ```
 
+## Environment variables
+
+Those are all Environment variables needed by the application:
+
+| Variable name                    | Description                                                            | type   | Required |
+|----------------------------------|------------------------------------------------------------------------|--------| ---------|
+| SLOT_TASK_HUBNAME                |  The unique slot task hubname                                          | string | true     |
+| APPINSIGHTS_INSTRUMENTATIONKEY   |  A valid Application Insights instrumentation key                      | string | true     |
+| AZURE_NH_HUB_NAME                |  The name of the Notification Hub                                      | string | true     |
+| AZURE_NH_ENDPOINT                |  The endpoint of the Notification Hub Namespace                        | string | true     |
+| STORAGE_CONN_STRING              |  The connection string of the Storage Account                          | string | true     |
+| NOTIFICATIONS_QUEUE_NAME         |  The name of the queue that stores the Notification messages           | string | true     |
+
+
+
 ## Deploy
 
-Il deploy avviene tramite una [pipeline](./.devops/deploy-pipelines.yml)
-(workflow) configurata su [Azure DevOps](https://dev.azure.com/pagopa-io/).
-
-## Esempi di function
-
-Sono presenti alcune function di esempio che permettono di testare la corretta
-esecuzione del runtime delle durable functions. Le funzioni attivate 
-da [trigger HTTP](./HttpTriggerFunction) utilizzano il pacchetto
-[io-functions-express](https://github.com/teamdigitale/io-functions-express).
+Deployment is automatized by a [pipeline](./.devops/deploy-pipelines.yml)
