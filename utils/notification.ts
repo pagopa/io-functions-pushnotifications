@@ -46,7 +46,7 @@ const httpsAgent = newHttpsAgent(getKeepAliveAgentOptions(process.env));
 // once this goes upstream: https://github.com/Azure/azure-sdk-for-js/pull/11977
 export class ExtendedNotificationHubService extends NotificationHubService {
   constructor(hubName: string, endpointOrConnectionString: string) {
-    super(hubName, endpointOrConnectionString, "", "");
+    super(hubName, endpointOrConnectionString, undefined, undefined);
   }
   // tslint:disable-next-line: typedef
   public _buildRequestOptions(
