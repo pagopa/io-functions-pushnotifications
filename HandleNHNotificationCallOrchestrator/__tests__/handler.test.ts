@@ -7,11 +7,9 @@ import {
   CreateOrUpdateInstallationMessage,
   KindEnum as CreateOrUpdateInstallationKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
-import {
-  ActivityInput as NHCallServiceActivityInput,
-  ActivityResult
-} from "../../HandleNHNotificationCallActivity/handler";
+import { ActivityInput as NHCallServiceActivityInput } from "../../HandleNHNotificationCallActivity/handler";
 import { handler, NhNotificationOrchestratorInput } from "../handler";
+import { success } from "../../utils/activity";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -28,14 +26,12 @@ const retryOptions = {
   backoffCoefficient: 1.5
 };
 
+const callNHServiceActivitySuccessResult = success();
+
 describe("HandleNHNotificationCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
     const nhCallOrchestratorInput = NhNotificationOrchestratorInput.encode({
       message: aNotificationHubMessage
-    });
-
-    const callNHServiceActivityResult = ActivityResult.encode({
-      kind: "SUCCESS"
     });
 
     const contextMockWithDf = {
@@ -43,7 +39,7 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       df: {
         callActivityWithRetry: jest
           .fn()
-          .mockReturnValueOnce(callNHServiceActivityResult),
+          .mockReturnValueOnce(callNHServiceActivitySuccessResult),
         getInput: jest.fn(() => nhCallOrchestratorInput)
       }
     };
@@ -66,16 +62,12 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       message: "aMessage"
     };
 
-    const callNHServiceActivityResult = ActivityResult.encode({
-      kind: "SUCCESS"
-    });
-
     const contextMockWithDf = {
       ...contextMock,
       df: {
         callActivityWithRetry: jest
           .fn()
-          .mockReturnValueOnce(callNHServiceActivityResult),
+          .mockReturnValueOnce(callNHServiceActivitySuccessResult),
         getInput: jest.fn(() => nhCallOrchestratorInput)
       }
     };

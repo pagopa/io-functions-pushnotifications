@@ -16,7 +16,6 @@ import {
   notify
 } from "../utils/notification";
 
-import { initTelemetryClient } from "../utils/appinsights";
 import {
   ActivityResult,
   ActivityResultSuccess,
@@ -24,6 +23,7 @@ import {
   retryActivity,
   success
 } from "../utils/activity";
+import { initTelemetryClient } from "../utils/appinsights";
 
 // Activity input
 export const ActivityInput = t.interface({
