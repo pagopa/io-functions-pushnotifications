@@ -1,11 +1,10 @@
 import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
-import { toString } from "fp-ts/lib/function";
+import { identity, toString } from "fp-ts/lib/function";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-import { toError } from "fp-ts/lib/Either";
 import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
@@ -18,6 +17,13 @@ import {
 } from "../utils/notification";
 
 import { initTelemetryClient } from "../utils/appinsights";
+import {
+  ActivityResult,
+  ActivityResultSuccess,
+  failActivity,
+  retryActivity,
+  success
+} from "../utils/activity";
 
 // Activity input
 export const ActivityInput = t.interface({
@@ -25,50 +31,6 @@ export const ActivityInput = t.interface({
 });
 
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
-
-// Activity result
-const ActivityResultSuccess = t.interface({
-  kind: t.literal("SUCCESS")
-});
-
-type ActivityResultSuccess = t.TypeOf<typeof ActivityResultSuccess>;
-
-const ActivityResultFailure = t.interface({
-  kind: t.literal("FAILURE"),
-  reason: t.string
-});
-
-type ActivityResultFailure = t.TypeOf<typeof ActivityResultFailure>;
-
-export const ActivityResult = t.taggedUnion("kind", [
-  ActivityResultSuccess,
-  ActivityResultFailure
-]);
-
-export type ActivityResult = t.TypeOf<typeof ActivityResult>;
-
-const failActivity = (context: Context, logPrefix: string) => (
-  errorMessage: string,
-  errorDetails?: string
-) => {
-  const details = errorDetails ? `|ERROR_DETAILS=${errorDetails}` : ``;
-  context.log.error(`${logPrefix}|${errorMessage}${details}`);
-  return ActivityResultFailure.encode({
-    kind: "FAILURE",
-    reason: errorMessage
-  });
-};
-
-// trigger a rety in case the notification fail
-const retryActivity = (context: Context, msg: string) => {
-  context.log.error(msg);
-  throw toError(msg);
-};
-
-const success = () =>
-  ActivityResultSuccess.encode({
-    kind: "SUCCESS"
-  });
 
 const assertNever = (x: never): never => {
   throw new Error(`Unexpected object: ${toString(x)}`);
@@ -128,9 +90,6 @@ export const getCallNHServiceActivityHandler = (
           assertNever(message);
       }
     })
-    .fold<ActivityResult>(
-      err => err,
-      _ => success()
-    )
+    .fold<ActivityResult>(identity, success)
     .run();
 };

@@ -30,3 +30,5 @@ export async function index(
       message: notificationHubMessage
     });
 }
+
+export default index;
