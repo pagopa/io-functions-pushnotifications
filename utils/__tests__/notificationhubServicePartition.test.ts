@@ -1,6 +1,6 @@
 import { isSome } from "fp-ts/lib/Option";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { getNHService } from "../notificationhubServicePartition";
+import { getNHLegacyService } from "../notificationhubServicePartition";
 
 import * as config from "../config";
 
@@ -21,7 +21,7 @@ jest.spyOn(config, "getConfigOrThrow").mockImplementation(() => {
 
 describe("NotificationHubServicepartition", () => {
   it("should return always NH0 Service", () => {
-    const NH0Option = getNHService(aFiscalCodeHash);
+    const NH0Option = getNHLegacyService();
 
     expect(isSome(NH0Option)).toBeTruthy();
 

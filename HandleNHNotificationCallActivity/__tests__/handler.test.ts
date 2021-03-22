@@ -64,7 +64,7 @@ describe("HandleNHNotificationCallActivity", () => {
   it("should call notificationhubServicePartion.getNHService to get the right notificationService to call", async () => {
     const getNHServiceSpy = jest.spyOn(
       notificationhubServicePartition,
-      "getNHService"
+      "getNHLegacyService"
     );
 
     const handler = getCallNHServiceActivityHandler();

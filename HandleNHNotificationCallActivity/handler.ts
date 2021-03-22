@@ -25,7 +25,7 @@ import {
   success
 } from "../utils/activity";
 import { initTelemetryClient } from "../utils/appinsights";
-import { getNHService } from "../utils/notificationhubServicePartition";
+import { getNHLegacyService } from "../utils/notificationhubServicePartition";
 
 // Activity input
 export const ActivityInput = t.interface({
@@ -56,7 +56,7 @@ export const getCallNHServiceActivityHandler = (
         `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
       );
 
-      const nhService = getNHService(message.installationId);
+      const nhService = getNHLegacyService();
 
       if (isNone(nhService)) {
         context.log.warn(
