@@ -5,8 +5,8 @@
     "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
-    "strict": true,
-    "sourceMap": false,
+    "strict": false,
+    "sourceMap": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
