@@ -2,7 +2,6 @@ import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
 import { identity, toString } from "fp-ts/lib/function";
-import { isNone } from "fp-ts/lib/Option";
 import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
@@ -58,17 +57,10 @@ export const getCallNHServiceActivityHandler = (
 
       const nhService = getNHLegacyService();
 
-      if (isNone(nhService)) {
-        context.log.warn(
-          `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}|No NH `
-        );
-        return;
-      }
-
       switch (message.kind) {
         case CreateOrUpdateKind.CreateOrUpdateInstallation:
           return createOrUpdateInstallation(
-            nhService.value,
+            nhService,
             message.installationId,
             message.platform,
             message.pushChannel,
@@ -77,11 +69,7 @@ export const getCallNHServiceActivityHandler = (
             retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
           );
         case NotifyKind.Notify:
-          return notify(
-            nhService.value,
-            message.installationId,
-            message.payload
-          )
+          return notify(nhService, message.installationId, message.payload)
             .mapLeft(e =>
               retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
             )
@@ -98,14 +86,13 @@ export const getCallNHServiceActivityHandler = (
               )
             );
         case DeleteKind.DeleteInstallation:
-          return deleteInstallation(
-            nhService.value,
-            message.installationId
-          ).mapLeft(e => {
-            // do not trigger a retry as delete may fail in case of 404
-            context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
-            return failure(e.message);
-          });
+          return deleteInstallation(nhService, message.installationId).mapLeft(
+            e => {
+              // do not trigger a retry as delete may fail in case of 404
+              context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
+              return failure(e.message);
+            }
+          );
         default:
           assertNever(message);
       }

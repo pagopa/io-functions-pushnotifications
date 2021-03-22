@@ -7,6 +7,9 @@ import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { NotificationMessage } from "../HandleNHNotificationCall";
+import { getConfigOrThrow } from "../utils/config";
+
+const config = getConfigOrThrow();
 
 /**
  * Carries information about Notification Hub Message payload
@@ -25,7 +28,7 @@ export const handler = function*(
   const logPrefix = `NHCallOrchestrator`;
 
   const retryOptions = {
-    ...new df.RetryOptions(5000, 10),
+    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
     backoffCoefficient: 1.5
   };
 

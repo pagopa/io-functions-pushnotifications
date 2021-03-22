@@ -6,12 +6,15 @@
  */
 
 import * as t from "io-ts";
+import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.interface({
+  RETRY_ATTEMPT_NUMBER: IntegerFromString,
+
   AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString,
 

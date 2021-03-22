@@ -1,24 +1,35 @@
-import { Option, some } from "fp-ts/lib/Option";
+/**
+ * This file contains the functions used to create and return Notification Hub service
+ */
+
 import { getConfigOrThrow } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
-export function getNHLegacyService(): Option<ExtendedNotificationHubService> {
-  return some(createNH0Service());
+const config = getConfigOrThrow();
+
+/**
+ * It returns an ExtendedNotificationHubService related to the Legacy Notification Hub instance
+ */
+export function getNHLegacyService(): ExtendedNotificationHubService {
+  return createNH0Service();
 }
 
+/**
+ * It returns an ExtendedNotificationHubService related to one of the new Notification Hub instances
+ * based on the partion mechanism defined
+ * @param fiscalCodeHash a valid hash256 representing a Fiscal Code
+ */
 export function getNHService(
   fiscalCodeHash: string
-): Option<ExtendedNotificationHubService> {
+): ExtendedNotificationHubService {
   // tslint:disable-next-line: no-tslint-disable-all
   // tslint:disable-next-line
   const fs = fiscalCodeHash;
 
-  return some(createNH0Service());
+  throw new Error("It should not be called");
 }
 
 export function createNH0Service(): ExtendedNotificationHubService {
-  const config = getConfigOrThrow();
-
   return new ExtendedNotificationHubService(
     config.AZURE_NH_HUB_NAME,
     config.AZURE_NH_ENDPOINT

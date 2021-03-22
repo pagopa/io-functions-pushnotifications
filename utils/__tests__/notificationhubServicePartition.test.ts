@@ -1,6 +1,9 @@
 import { isSome } from "fp-ts/lib/Option";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { getNHLegacyService } from "../notificationhubServicePartition";
+import {
+  getNHLegacyService,
+  getNHService
+} from "../notificationhubServicePartition";
 
 import * as config from "../config";
 
@@ -23,10 +26,9 @@ describe("NotificationHubServicepartition", () => {
   it("should return always NH0 Service", () => {
     const NH0Option = getNHLegacyService();
 
-    expect(isSome(NH0Option)).toBeTruthy();
-
-    if (isSome(NH0Option)) {
-      expect(NH0Option.value.hubName).toBe(AZURE_NH_HUB_NAME);
-    }
+    expect(NH0Option.hubName).toBe(AZURE_NH_HUB_NAME);
+  });
+  it("should throw error calling getNHService", () => {
+    expect(() => getNHService(aFiscalCodeHash)).toThrowError();
   });
 });
