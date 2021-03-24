@@ -60,13 +60,10 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call CreateOrUpdate Orchestrator when message is CreateorUpdateInstallation", async () => {
-    await getHandler()(
-      context as any,
-      aCreateOrUpdateInstallationMessage
-    );
+    await getHandler()(context as any, aCreateOrUpdateInstallationMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHCreateOrUpdateInstallationCallOrchestrator",
       undefined,
       {
         message: aCreateOrUpdateInstallationMessage

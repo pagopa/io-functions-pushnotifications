@@ -37,10 +37,13 @@ export const getHandler = () => async (
       });
       break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
-      // tslint:disable-next-line: no-duplicated-branches
-      await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
-        message: notificationHubMessage
-      });
+      await client.startNew(
+        "HandleNHCreateOrUpdateInstallationCallOrchestrator",
+        undefined,
+        {
+          message: notificationHubMessage
+        }
+      );
       break;
     // tslint:disable-next-line: no-duplicated-branches
     case NotifyKind.Notify:
