@@ -51,7 +51,7 @@ describe("HandleNHNotificationCall", () => {
     await getHandler()(context as any, aDeleteInStalltionMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHDeleteInstallationCallOrchestrator",
       undefined,
       {
         message: aDeleteInStalltionMessage
@@ -60,10 +60,7 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call CreateOrUpdate Orchestrator when message is CreateorUpdateInstallation", async () => {
-    await getHandler()(
-      context as any,
-      aCreateOrUpdateInstallationMessage
-    );
+    await getHandler()(context as any, aCreateOrUpdateInstallationMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
       "HandleNHNotificationCallOrchestrator",

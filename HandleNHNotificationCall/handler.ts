@@ -32,9 +32,13 @@ export const getHandler = () => async (
   const client = df.getClient(context);
   switch (notificationHubMessage.kind) {
     case DeleteKind.DeleteInstallation:
-      await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
-        message: notificationHubMessage
-      });
+      await client.startNew(
+        "HandleNHDeleteInstallationCallOrchestrator",
+        undefined,
+        {
+          message: notificationHubMessage
+        }
+      );
       break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
       // tslint:disable-next-line: no-duplicated-branches
