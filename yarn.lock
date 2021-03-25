@@ -594,6 +594,15 @@
     "@octokit/openapi-types" "^1.2.0"
     "@types/node" ">= 8"
 
+"@pagopa/danger-custom-rules@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@pagopa/danger-custom-rules/-/danger-custom-rules-2.0.3.tgz#0424cdb7bed9f256e4954604ae376ecdb6a4eb8d"
+  integrity sha512-DvAha4a57CN36KcJK+9B50G0eVv0xaz7uA3Bnw2grKleqdoPSCq9OidblkIffVuxQZ/5nDcqmD4kkZ5bhAB0Rg==
+  dependencies:
+    auto-changelog "^2.2.1"
+    danger-plugin-yarn "^1.2.1"
+    pivotaljs "^1.0.3"
+
 "@sendgrid/client@^6.5.5":
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-6.5.5.tgz#66cf569445d98a795998a894bb432a9939ead7c3"
@@ -1193,7 +1202,7 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-auto-changelog@2.2.1:
+auto-changelog@2.2.1, auto-changelog@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/auto-changelog/-/auto-changelog-2.2.1.tgz#a031fbf1dfe140dda2ec8c77a524031478a0e933"
   integrity sha512-XlykJfZrXlWUAADBqGoN1elmntrRcx7oEymyYB3NRPEZxv0TfYHfivmwzejUMnwAdXKCgbQPo7GV5ULs3jwpfw==
@@ -2105,14 +2114,6 @@ cssstyle@^1.0.0:
   integrity sha512-GBrLZYZ4X4x6/QEoBnIrqb8B/f5l4+8me2dkom/j1Gtbxy0kBv6OGzKuAsGM75bkGwGAFkt56Iwg28S3XTZgSA==
   dependencies:
     cssom "0.3.x"
-
-danger-plugin-digitalcitizenship@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/danger-plugin-digitalcitizenship/-/danger-plugin-digitalcitizenship-1.0.0.tgz#8a501a42d010e8a7221a4b3e66033f428fbcd78b"
-  integrity sha512-gStrQcFlvKK/kftoFNlqgFlvWFNHoglPNDAvphNlq/DPu2MI2vexPQWsbHl1E61Gc0MriIvwzfaVJBkCOtQphA==
-  dependencies:
-    danger-plugin-yarn "^1.2.1"
-    pivotaljs "^1.0.3"
 
 danger-plugin-yarn@^1.2.1:
   version "1.3.2"

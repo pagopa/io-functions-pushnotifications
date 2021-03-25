@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@azure/functions": "^1.2.2",
+    "@pagopa/danger-custom-rules": "^2.0.3",
     "@types/azure-sb": "^0.0.38",
     "@types/express": "^4.17.9",
     "@types/jest": "^24.0.15",
@@ -51,7 +52,6 @@
     "@types/vfile-message": "^2.0.0",
     "auto-changelog": "2.2.1",
     "danger": "^10.3.0",
-    "danger-plugin-digitalcitizenship": "^1.0.0",
     "dependency-check": "^4.1.0",
     "dotenv-cli": "^3.1.0",
     "italia-tslint-rules": "*",
