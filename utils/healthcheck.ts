@@ -1,4 +1,3 @@
-import { CosmosClient } from "@azure/cosmos";
 import {
   common as azurestorageCommon,
   createBlobService,
