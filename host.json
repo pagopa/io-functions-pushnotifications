@@ -7,7 +7,7 @@
   },
   "extensions": {
     "durableTask": {
-      "hubName": "%SLOT_TASK_HUBNAME%",
+      "hubName": "IoFunctionsNotifications",
       "storageProvider": {
         "connectionStringName": "AzureWebJobsStorage"
       },

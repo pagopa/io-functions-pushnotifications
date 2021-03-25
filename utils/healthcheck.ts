@@ -53,26 +53,6 @@ export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
   );
 
 /**
- * Check the application can connect to an Azure CosmosDb instances
- *
- * @param dbUri uri of the database
- * @param dbUri connection string for the storage
- *
- * @returns either true or an array of error messages
- */
-export const checkAzureCosmosDbHealth = (
-  dbUri: string,
-  dbKey?: string
-): HealthCheck<"AzureCosmosDB", true> =>
-  tryCatch(() => {
-    const client = new CosmosClient({
-      endpoint: dbUri,
-      key: dbKey
-    });
-    return client.getDatabaseAccount();
-  }, toHealthProblems("AzureCosmosDB")).map(_ => true);
-
-/**
  * Check the application can connect to an Azure Storage
  *
  * @param connStr connection string for the storage
@@ -137,9 +117,6 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
         ReadonlyArray<HealthProblem<ProblemSource>>,
         // tslint:disable readonly-array beacuse the following is actually mutable
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-      >(
-        // checkAzureCosmosDbHealth(config.COSMOSDB_URI, config.COSMOSDB_KEY),
-        checkAzureStorageHealth(config.QueueStorageConnection)
-      )
+      >(checkAzureStorageHealth(config.QueueStorageConnection))
     )
     .map(_ => true);
