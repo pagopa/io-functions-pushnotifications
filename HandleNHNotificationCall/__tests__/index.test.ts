@@ -1,4 +1,4 @@
-// tslint:disable:no-any
+// eslint-disable @typescript-eslint/no-explicit-any
 
 import * as df from "durable-functions";
 import { DurableOrchestrationClient } from "durable-functions/lib/src/durableorchestrationclient";
@@ -92,7 +92,7 @@ describe("HandleNHNotificationCall", () => {
   //     kind: "WrongMessage" as any
   //   };
 
-  //   // tslint:disable-next-line: no-let
+  //   // eslint-disable-next-line 
   //   let hasError = false;
   //   try {
   //     await HandleNHNotificationCall(context as any, aWrongMessage);

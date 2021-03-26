@@ -51,22 +51,22 @@ class ExtendedNotificationHubService extends NotificationHubService {
   constructor(hubName: string, endpointOrConnectionString: string) {
     super(hubName, endpointOrConnectionString, "", "");
   }
-  // tslint:disable-next-line: typedef
+
   public _buildRequestOptions(
     webResource: unknown,
     body: unknown,
     options: unknown,
-    // tslint:disable-next-line: ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
     cb: Function
   ) {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patchedCallback = (err: any, cbOptions: any) => {
       cb(err, {
         ...cbOptions,
         agent: httpsAgent
       });
     };
-    // tslint:disable-next-line: no-string-literal  no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return super["_buildRequestOptions"](
       webResource,
       body,
@@ -146,6 +146,7 @@ const successNH = () =>
     kind: "SUCCESS"
   });
 
+/* eslint-disable arrow-body-style */
 export const notify = (
   installationId: NonEmptyString,
   payload: NotifyPayload

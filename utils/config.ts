@@ -15,11 +15,12 @@ export const IConfig = t.interface({
   AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString,
 
+  AzureWebJobsStorage: NonEmptyString,
+
   COSMOSDB_KEY: NonEmptyString,
   COSMOSDB_NAME: NonEmptyString,
   COSMOSDB_URI: NonEmptyString,
 
-  AzureWebJobsStorage: NonEmptyString,
   QueueStorageConnection: NonEmptyString,
 
   isProduction: t.boolean

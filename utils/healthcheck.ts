@@ -135,7 +135,6 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
       // TODO: once we upgrade to fp-ts >= 1.19 we can use Validation to collect all errors, not just the first to happen
       sequenceT(taskEither)<
         ReadonlyArray<HealthProblem<ProblemSource>>,
-        // tslint:disable readonly-array beacuse the following is actually mutable
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
       >(
         // checkAzureCosmosDbHealth(config.COSMOSDB_URI, config.COSMOSDB_KEY),

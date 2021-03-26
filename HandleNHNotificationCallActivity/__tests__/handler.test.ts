@@ -1,5 +1,5 @@
-/* tslint:disable: no-any */
-// tslint:disable-next-line: no-object-mutation
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
