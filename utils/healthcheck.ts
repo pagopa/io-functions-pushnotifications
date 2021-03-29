@@ -116,6 +116,6 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
         ReadonlyArray<HealthProblem<ProblemSource>>,
         // tslint:disable readonly-array beacuse the following is actually mutable
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-      >(checkAzureStorageHealth(config.QueueStorageConnection))
+      >(checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING))
     )
     .map(_ => true);
