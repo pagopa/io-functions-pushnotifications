@@ -28,7 +28,6 @@
     "version": "auto-changelog -p --config .auto-changelog.json --unreleased && git add CHANGELOG.md"
   },
   "dependencies": {
-    "@azure/cosmos": "^3.7.2",
     "applicationinsights": "^1.8.10",
     "azure-sb": "^0.11.1",
     "azure-storage": "^2.10.3",
