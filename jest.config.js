@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "env.example" });
+//require("dotenv").config({ path: "env.example" });
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",

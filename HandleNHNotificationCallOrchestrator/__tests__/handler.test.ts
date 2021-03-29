@@ -8,7 +8,7 @@ import {
   KindEnum as CreateOrUpdateInstallationKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 import { ActivityInput as NHCallServiceActivityInput } from "../../HandleNHNotificationCallActivity/handler";
-import { handler, NhNotificationOrchestratorInput } from "../handler";
+import { NhNotificationOrchestratorInput, getHandler } from "../handler";
 import { success } from "../../utils/activity";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
@@ -21,6 +21,8 @@ const aNotificationHubMessage: CreateOrUpdateInstallationMessage = {
   pushChannel: aPushChannel,
   tags: [aFiscalCodeHash]
 };
+
+const RETRY_ATTEMPT_NUMBER = 1;
 
 const retryOptions = {
   backoffCoefficient: 1.5
@@ -44,7 +46,7 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = handler(contextMockWithDf as any);
+    const orchestratorHandler = getHandler({ RETRY_ATTEMPT_NUMBER })(contextMockWithDf as any);
 
     orchestratorHandler.next();
 
@@ -72,7 +74,7 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = handler(contextMockWithDf as any);
+    const orchestratorHandler = getHandler({ RETRY_ATTEMPT_NUMBER })(contextMockWithDf as any);
 
     orchestratorHandler.next();
 

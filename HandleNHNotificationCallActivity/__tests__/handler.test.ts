@@ -56,28 +56,35 @@ const aDeleteInStalltionMessage: DeleteInstallationMessage = {
   kind: "DeleteInstallation" as any
 };
 
+const mockTelemetryClient = { trackEvent: () => {} } as unknown as Parameters<typeof getCallNHServiceActivityHandler>[0]
+const mockGetNHLegacyService = jest.fn(() => {
+  return {
+    createOrUpdateInstallation: createOrUpdateInstallationSpy,
+    send: notifySpy,
+    deleteInstallation: deleteInstallationSpy
+  };
+});
+const mockNotificationhubServicePartition = { getNHLegacyService: mockGetNHLegacyService }as unknown as typeof notificationhubServicePartition
+
 describe("HandleNHNotificationCallActivity", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should call notificationhubServicePartion.getNHService to get the right notificationService to call", async () => {
-    const getNHServiceSpy = jest.spyOn(
-      notificationhubServicePartition,
-      "getNHLegacyService"
-    );
+  
 
-    const handler = getCallNHServiceActivityHandler();
+    const handler = getCallNHServiceActivityHandler(mockTelemetryClient, mockNotificationhubServicePartition);
     const input = NHServiceActivityInput.encode({
       message: aDeleteInStalltionMessage
     });
     expect.assertions(1);
     await handler(contextMock as any, input);
-    expect(getNHServiceSpy).toHaveBeenCalledTimes(1);
+    expect(mockNotificationhubServicePartition.getNHLegacyService).toHaveBeenCalledTimes(1);
   });
 
   it("should trigger a retry if CreateOrUpdateInstallation fails", async () => {
-    const handler = getCallNHServiceActivityHandler();
+    const handler = getCallNHServiceActivityHandler(mockTelemetryClient, mockNotificationhubServicePartition);
     const input = NHServiceActivityInput.encode({
       message: aCreateOrUpdateInstallationMessage
     });
@@ -93,7 +100,7 @@ describe("HandleNHNotificationCallActivity", () => {
     }
   });
   it("should trigger a retry if notify fails", async () => {
-    const handler = getCallNHServiceActivityHandler();
+    const handler = getCallNHServiceActivityHandler(mockTelemetryClient, mockNotificationhubServicePartition);
     const input = NHServiceActivityInput.encode({
       message: aNotifyMessage
     });
@@ -106,7 +113,7 @@ describe("HandleNHNotificationCallActivity", () => {
     }
   });
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
-    const handler = getCallNHServiceActivityHandler();
+    const handler = getCallNHServiceActivityHandler(mockTelemetryClient, mockNotificationhubServicePartition);
     const input = NHServiceActivityInput.encode({
       message: aDeleteInStalltionMessage
     });

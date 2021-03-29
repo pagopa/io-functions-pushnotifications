@@ -11,7 +11,7 @@ import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 
 import { success } from "../../utils/activity";
-import HandleNHNotificationCall from "../index";
+import { getHandler } from "../handler";
 
 const dfClient = ({
   startNew: jest.fn().mockImplementation((_, __, ___) => success())
@@ -48,7 +48,7 @@ const aNotifyMessage: NotifyMessage = {
 
 describe("HandleNHNotificationCall", () => {
   it("should call Delete Orchestrator when message is DeleteInstallation", async () => {
-    await HandleNHNotificationCall(context as any, aDeleteInStalltionMessage);
+    await getHandler()(context as any, aDeleteInStalltionMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
       "HandleNHNotificationCallOrchestrator",
@@ -60,7 +60,7 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call CreateOrUpdate Orchestrator when message is CreateorUpdateInstallation", async () => {
-    await HandleNHNotificationCall(
+    await getHandler()(
       context as any,
       aCreateOrUpdateInstallationMessage
     );
@@ -75,7 +75,7 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call Notify Orchestrator when message is NotifyMessage", async () => {
-    await HandleNHNotificationCall(context as any, aNotifyMessage);
+    await getHandler()(context as any, aNotifyMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
       "HandleNHNotificationCallOrchestrator",
