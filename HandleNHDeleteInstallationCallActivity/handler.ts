@@ -15,11 +15,15 @@ import {
   ActivityResultSuccess,
   success
 } from "../utils/activity";
-import * as notificationhubServicePartition from "../utils/notificationhubServicePartition";
+import {
+  buildNHService,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 // Activity input
 export const ActivityInput = t.interface({
-  message: DeleteInstallationMessage
+  message: DeleteInstallationMessage,
+  notificationHubConfig: NotificationHubConfig
 });
 
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
@@ -40,7 +44,6 @@ const failActivity = (context: Context, logPrefix: string) => (
  * For each Notification Hub Message of type "Delete" calls related Notification Hub service
  */
 export const getCallNHDeleteInstallationActivityHandler = (
-  { getNHLegacyService }: typeof notificationhubServicePartition,
   logPrefix = "NHDeleteCallServiceActivity"
 ) => async (context: Context, input: unknown) => {
   const failure = failActivity(context, logPrefix);
@@ -48,12 +51,12 @@ export const getCallNHDeleteInstallationActivityHandler = (
     .mapLeft(errs =>
       failure("Error decoding activity input", readableReport(errs))
     )
-    .chain<ActivityResultSuccess>(({ message }) => {
+    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
       context.log.info(
         `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
       );
 
-      const nhService = getNHLegacyService();
+      const nhService = buildNHService(notificationHubConfig);
 
       return deleteInstallation(nhService, message.installationId).mapLeft(
         e => {

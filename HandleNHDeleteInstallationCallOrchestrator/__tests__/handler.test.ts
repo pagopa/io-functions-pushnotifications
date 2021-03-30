@@ -11,6 +11,7 @@ import {
   getHandler,
   NhDeleteInstallationOrchestratorCallInput
 } from "../handler";
+import { envConfig } from "../../__mocks__/env-config.mock";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -45,7 +46,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = getHandler(1)(contextMockWithDf as any);
+    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
 
     orchestratorHandler.next();
 
@@ -53,7 +54,11 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       "HandleNHDeleteInstallationCallActivity",
       retryOptions,
       NHCallServiceActivityInput.encode({
-        message: aDeleteNotificationHubMessage
+        message: aDeleteNotificationHubMessage,
+        notificationHubConfig: {
+          AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
+          AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
+        }
       })
     );
   });
@@ -77,7 +82,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = getHandler(1)(contextMockWithDf as any);
+    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
 
     orchestratorHandler.next();
 

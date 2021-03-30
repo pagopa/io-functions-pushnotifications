@@ -9,6 +9,10 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 
+import { ActivityInput as NHDeleteInstallationActivityInput } from "../HandleNHDeleteInstallationCallActivity/handler";
+import { IConfig } from "../utils/config";
+import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+
 /**
  * Carries information about Notification Hub Message payload
  */
@@ -33,12 +37,12 @@ const logError = (
   );
 };
 
-export const getHandler = (RETRY_ATTEMPT_NUMBER: number) =>
+export const getHandler = (config: IConfig) =>
   function*(context: IOrchestrationFunctionContext): Generator<unknown> {
     const logPrefix = `NhDeleteInstallationOrchestratorCallInput`;
 
     const retryOptions = {
-      ...new df.RetryOptions(5000, RETRY_ATTEMPT_NUMBER),
+      ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
       backoffCoefficient: 1.5
     };
 
@@ -53,7 +57,12 @@ export const getHandler = (RETRY_ATTEMPT_NUMBER: number) =>
       return false;
     }
 
-    const nhCallOrchestratorInput = errorOrNHCallOrchestratorInput.value;
+    const nhConfig = getNHLegacyConfig(config);
+
+    const nhCallOrchestratorInput: NHDeleteInstallationActivityInput = {
+      ...errorOrNHCallOrchestratorInput.value,
+      notificationHubConfig: nhConfig
+    };
 
     yield context.df.callActivityWithRetry(
       "HandleNHDeleteInstallationCallActivity",

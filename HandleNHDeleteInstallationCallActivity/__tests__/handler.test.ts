@@ -9,6 +9,8 @@ import * as azure from "azure-sb";
 import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 
 import * as notificationhubServicePartition from "../../utils/notificationhubServicePartition";
+import { envConfig } from "../../__mocks__/env-config.mock";
+import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
 const deleteInstallationSpy = jest
   .spyOn(azure.NotificationHubService.prototype, "deleteInstallation")
@@ -21,25 +23,20 @@ const aDeleteInStalltionMessage: DeleteInstallationMessage = {
   kind: "DeleteInstallation" as any
 };
 
-const mockGetNHLegacyService = jest.fn(() => {
-  return {
-    deleteInstallation: deleteInstallationSpy
-  };
-});
-const mockNotificationhubServicePartition = ({
-  getNHLegacyService: mockGetNHLegacyService
-} as unknown) as typeof notificationhubServicePartition;
+const aNHConfig = {
+  AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
+  AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
+} as NotificationHubConfig;
 
 describe("HandleNHDeleteInstallationCallActivity", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
-    const handler = getCallNHDeleteInstallationActivityHandler(
-      mockNotificationhubServicePartition
-    );
+    const handler = getCallNHDeleteInstallationActivityHandler();
     const input = NHServiceActivityInput.encode({
-      message: aDeleteInStalltionMessage
+      message: aDeleteInStalltionMessage,
+      notificationHubConfig: aNHConfig
     });
     const res = await handler(contextMock as any, input);
     expect(deleteInstallationSpy).toHaveBeenCalledTimes(1);

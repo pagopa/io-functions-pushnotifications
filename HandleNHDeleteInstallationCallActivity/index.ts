@@ -1,8 +1,5 @@
-﻿import * as notificationhubServicePartition from "../utils/notificationhubServicePartition";
-import { getCallNHDeleteInstallationActivityHandler } from "./handler";
+﻿import { getCallNHDeleteInstallationActivityHandler } from "./handler";
 
-const activityFunctionHandler = getCallNHDeleteInstallationActivityHandler(
-  notificationhubServicePartition
-);
+const activityFunctionHandler = getCallNHDeleteInstallationActivityHandler();
 
 export default activityFunctionHandler;
