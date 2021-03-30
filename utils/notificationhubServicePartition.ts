@@ -5,7 +5,7 @@ import * as t from "io-ts";
 
 import { NotificationHubService } from "azure-sb";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { getConfigOrThrow, IConfig } from "./config";
+import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
 export const NotificationHubConfig = t.interface({

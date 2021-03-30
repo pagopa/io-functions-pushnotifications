@@ -25,8 +25,8 @@ import {
 } from "../utils/activity";
 import { initTelemetryClient } from "../utils/appinsights";
 import {
-  NotificationHubConfig,
-  buildNHService
+  buildNHService,
+  NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
 
 // Activity input
