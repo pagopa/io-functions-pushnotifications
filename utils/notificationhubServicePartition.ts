@@ -1,23 +1,28 @@
 /**
  * This file contains the functions used to create and return Notification Hub service
  */
+import * as t from "io-ts";
 
 import { NotificationHubService } from "azure-sb";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { getConfigOrThrow, IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
-export type NotificationHubConfig = Pick<
-  IConfig,
-  "AZURE_NH_HUB_NAME" | "AZURE_NH_ENDPOINT"
->;
+export const NotificationHubConfig = t.interface({
+  AZURE_NH_ENDPOINT: NonEmptyString,
+  AZURE_NH_HUB_NAME: NonEmptyString
+});
 
-const envConfig = getConfigOrThrow();
+export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
 
 /**
- * It returns an ExtendedNotificationHubService related to the Legacy Notification Hub instance
+ * It returns the configuration related to the Legacy Notification Hub instance
  */
-export function getNHLegacyService(): NotificationHubService {
-  return createNHService(envConfig);
+export function getNHLegacyConfig(envConfig: IConfig): NotificationHubConfig {
+  return {
+    AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
+    AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
+  };
 }
 
 /**
@@ -39,7 +44,7 @@ export function getNHService(
  * @param config The NotificationHubConfig
  * @returns a NotificationHubService used to call Notification Hub APIs
  */
-export function createNHService(
+export function buildNHService(
   config: NotificationHubConfig
 ): NotificationHubService {
   return new ExtendedNotificationHubService(

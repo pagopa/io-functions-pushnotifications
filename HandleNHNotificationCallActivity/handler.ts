@@ -24,14 +24,20 @@ import {
   success
 } from "../utils/activity";
 import { initTelemetryClient } from "../utils/appinsights";
-import * as notificationhubServicePartition from "../utils/notificationhubServicePartition";
+import {
+  NotificationHubConfig,
+  buildNHService
+} from "../utils/notificationhubServicePartition";
 
 // Activity input
-export const ActivityInput = t.interface({
-  message: NotificationMessage
+export const HandleNHNotificationCallActivityInput = t.interface({
+  message: NotificationMessage,
+  notificationHubConfig: NotificationHubConfig
 });
 
-export type ActivityInput = t.TypeOf<typeof ActivityInput>;
+export type HandleNHNotificationCallActivityInput = t.TypeOf<
+  typeof HandleNHNotificationCallActivityInput
+>;
 
 const assertNever = (x: never): never => {
   throw new Error(`Unexpected object: ${toString(x)}`);
@@ -42,20 +48,19 @@ const assertNever = (x: never): never => {
  */
 export const getCallNHServiceActivityHandler = (
   telemetryClient: ReturnType<typeof initTelemetryClient>,
-  { getNHLegacyService }: typeof notificationhubServicePartition,
   logPrefix = "NHCallServiceActivity"
 ) => async (context: Context, input: unknown) => {
   const failure = failActivity(context, logPrefix);
-  return fromEither(ActivityInput.decode(input))
+  return fromEither(HandleNHNotificationCallActivityInput.decode(input))
     .mapLeft(errs =>
       failure("Error decoding activity input", readableReport(errs))
     )
-    .chain<ActivityResultSuccess>(({ message }) => {
+    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
       context.log.info(
         `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
       );
 
-      const nhService = getNHLegacyService();
+      const nhService = buildNHService(notificationHubConfig);
 
       switch (message.kind) {
         case CreateOrUpdateKind.CreateOrUpdateInstallation:

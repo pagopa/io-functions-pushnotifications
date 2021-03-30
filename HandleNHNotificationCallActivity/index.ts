@@ -7,8 +7,7 @@ const config = getConfigOrThrow();
 const telemetryClient = initTelemetryClient(config);
 
 const activityFunctionHandler = getCallNHServiceActivityHandler(
-  telemetryClient,
-  notificationhubServicePartition
+  telemetryClient
 );
 
 export default activityFunctionHandler;

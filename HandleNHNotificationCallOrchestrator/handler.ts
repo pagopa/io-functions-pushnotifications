@@ -7,6 +7,9 @@ import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { NotificationMessage } from "../HandleNHNotificationCall/handler";
+import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
+import { IConfig } from "../utils/config";
+import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -19,16 +22,12 @@ export type NhNotificationOrchestratorInput = t.TypeOf<
   typeof NhNotificationOrchestratorInput
 >;
 
-export const getHandler = ({
-  RETRY_ATTEMPT_NUMBER
-}: {
-  RETRY_ATTEMPT_NUMBER: number;
-}) =>
+export const getHandler = (envConfig: IConfig) =>
   function*(context: IOrchestrationFunctionContext): Generator<unknown> {
     const logPrefix = `NHCallOrchestrator`;
 
     const retryOptions = {
-      ...new df.RetryOptions(5000, RETRY_ATTEMPT_NUMBER),
+      ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
       backoffCoefficient: 1.5
     };
 
@@ -48,7 +47,12 @@ export const getHandler = ({
       return false;
     }
 
-    const nhCallOrchestratorInput = errorOrNHCallOrchestratorInput.value;
+    const nhConfig = getNHLegacyConfig(envConfig);
+
+    const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
+      ...errorOrNHCallOrchestratorInput.value,
+      notificationHubConfig: nhConfig
+    };
 
     yield context.df.callActivityWithRetry(
       "HandleNHNotificationCallActivity",
