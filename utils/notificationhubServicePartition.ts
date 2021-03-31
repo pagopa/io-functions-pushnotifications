@@ -44,11 +44,12 @@ export function getNHService(
  * @param config The NotificationHubConfig
  * @returns a NotificationHubService used to call Notification Hub APIs
  */
-export function buildNHService(
-  config: NotificationHubConfig
-): NotificationHubService {
+export function buildNHService({
+  AZURE_NH_HUB_NAME,
+  AZURE_NH_ENDPOINT
+}: NotificationHubConfig): NotificationHubService {
   return new ExtendedNotificationHubService(
-    config.AZURE_NH_HUB_NAME,
-    config.AZURE_NH_ENDPOINT
+    AZURE_NH_HUB_NAME,
+    AZURE_NH_ENDPOINT
   );
 }

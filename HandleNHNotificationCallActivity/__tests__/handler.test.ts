@@ -60,10 +60,12 @@ const aDeleteInStalltionMessage: DeleteInstallationMessage = {
   kind: "DeleteInstallation" as any
 };
 
-const aNHConfig = {
+const aNHConfig = NotificationHubConfig.decode({
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
-} as NotificationHubConfig;
+}).getOrElseL(() => {
+  throw new Error(`Cannot decode aNHConfig`);
+});
 
 const mockTelemetryClient = ({ trackEvent: () => {} } as unknown) as Parameters<
   typeof getCallNHServiceActivityHandler
@@ -79,7 +81,7 @@ const buildNHServiceMock = jest
       createOrUpdateInstallation: createOrUpdateInstallationSpy,
       send: notifySpy,
       deleteInstallation: deleteInstallationSpy
-    } as undefined) as NotificationHubService;
+    } as unknown) as NotificationHubService;
   });
 
 describe("HandleNHNotificationCallActivity", () => {
