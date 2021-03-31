@@ -1,3 +1,4 @@
+import * as ai from "applicationinsights";
 import * as df from "durable-functions";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/classes";
 
@@ -8,9 +9,14 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { NotificationMessage } from "../HandleNHNotificationCall/handler";
 import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  ActivitySuccessWithValue
+} from "../IsUserInActiveSubsetActivity/handler";
+
 import { IConfig } from "../utils/config";
-import { isInActiveSubset } from "../utils/featureFlags";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import { trackExceptionAndThrow } from "../utils/orchestrators";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -23,9 +29,17 @@ export type NhNotificationOrchestratorInput = t.TypeOf<
   typeof NhNotificationOrchestratorInput
 >;
 
-export const getHandler = (envConfig: IConfig) =>
+export const getHandler = (
+  envConfig: IConfig,
+  aiTelemetryClient: ai.TelemetryClient,
+  logPrefix: string = `NHCallOrchestrator`
+) =>
   function*(context: IOrchestrationFunctionContext): Generator<unknown> {
-    const logPrefix = `NHCallOrchestrator`;
+    const trackExAndThrow = trackExceptionAndThrow(
+      context,
+      aiTelemetryClient,
+      logPrefix
+    );
 
     const retryOptions = {
       ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
@@ -50,14 +64,27 @@ export const getHandler = (envConfig: IConfig) =>
 
     // Dummy implementation for testing
 
-    const ff = envConfig.NH_PARTITION_FEATURE_FLAG;
+    const isUserEnabledForTestActivityInput: IsUserInActiveSubsetActivityInput = {
+      enabledFeatureFlag: envConfig.NH_PARTITION_FEATURE_FLAG,
+      sha: errorOrNHCallOrchestratorInput.value.message.installationId
+    };
 
-    if (
-      isInActiveSubset(
-        ff,
-        errorOrNHCallOrchestratorInput.value.message.installationId
+    const isUserEnabledForTestOutput = yield context.df.callActivityWithRetry(
+      "IsUserInActiveSubsetActivity",
+      retryOptions,
+      isUserEnabledForTestActivityInput
+    );
+
+    const isUserEnabledForTest = ActivitySuccessWithValue.decode(
+      isUserEnabledForTestOutput
+    ).getOrElseL(_ =>
+      trackExAndThrow(
+        _,
+        "notificationorchestrator.exception.failure.isuserenabled"
       )
-    ) {
+    );
+
+    if (isUserEnabledForTest.value) {
       const nhConfig = getNHLegacyConfig(envConfig);
 
       const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {

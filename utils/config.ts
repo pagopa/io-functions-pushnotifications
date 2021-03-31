@@ -22,11 +22,6 @@ export enum NHPartitionFeatureFlag {
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.intersection([
   t.interface({
-    NH_PARTITION_FEATURE_FLAG: enumType<NHPartitionFeatureFlag>(
-      NHPartitionFeatureFlag,
-      "NHPartitionFeatureFlag"
-    ),
-
     RETRY_ATTEMPT_NUMBER: IntegerFromString,
 
     AZURE_NH_ENDPOINT: NonEmptyString,
@@ -41,6 +36,15 @@ export const IConfig = t.intersection([
     APPINSIGHTS_SAMPLING_PERCENTAGE: withDefault(IntegerFromString, 5),
 
     isProduction: t.boolean
+  }),
+  t.interface({
+    NH_PARTITION_FEATURE_FLAG: enumType<NHPartitionFeatureFlag>(
+      NHPartitionFeatureFlag,
+      "NHPartitionFeatureFlag"
+    ),
+
+    BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
+    BETA_USERS_TABLE_NAME: NonEmptyString
   }),
   t.partial({ APPINSIGHTS_DISABLE: t.string })
 ]);

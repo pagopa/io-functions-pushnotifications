@@ -1,6 +1,6 @@
-import { IntegerFromString } from "italia-ts-commons/lib/numbers";
+import { IConfig, NHPartitionFeatureFlag } from "../utils/config";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { IConfig } from "../utils/config";
+import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 
 export const envConfig: IConfig = {
   isProduction: false,
@@ -13,5 +13,9 @@ export const envConfig: IConfig = {
   AZURE_NH_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
 
-  NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString
+  NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+
+  NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag.all,
+  BETA_USERS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  BETA_USERS_TABLE_NAME: "nhpartitiontestusers" as NonEmptyString
 };

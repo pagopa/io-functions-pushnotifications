@@ -1,26 +1,8 @@
-import { isLeft, isRight } from "fp-ts/lib/Either";
+import { isRight } from "fp-ts/lib/Either";
 import { IConfig } from "../config";
-import * as t from "io-ts";
-import { IntegerFromString } from "italia-ts-commons/lib/numbers";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { envConfig } from "../../__mocks__/env-config.mock";
 
-const aConfig = {
-  NH_PARTITION_FEATURE_FLAG: "all",
-
-  RETRY_ATTEMPT_NUMBER: "2",
-  AZURE_NH_ENDPOINT:
-    "sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",
-  AZURE_NH_HUB_NAME: "io-notification-hub-mock",
-  AzureWebJobsStorage: "connString",
-  NOTIFICATIONS_STORAGE_CONNECTION_STRING: "connString",
-
-  APPINSIGHTS_INSTRUMENTATIONKEY: "IDoNotKnow",
-  // the internal function runtime has MaxTelemetryItem per second set to 20 by default
-  // @see https://github.com/Azure/azure-functions-host/blob/master/src/WebJobs.Script/Config/ApplicationInsightsLoggerOptionsSetup.cs#L29
-  APPINSIGHTS_SAMPLING_PERCENTAGE: "20",
-
-  isProduction: false
-};
+const aConfig = envConfig;
 
 describe("IConfig", () => {
   it("should deserialize right FF input", () => {
