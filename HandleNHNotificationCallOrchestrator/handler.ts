@@ -9,6 +9,7 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NotificationMessage } from "../HandleNHNotificationCall/handler";
 import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
 import { IConfig } from "../utils/config";
+import { isInActiveSubset } from "../utils/featureFlags";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 
 /**
@@ -47,18 +48,29 @@ export const getHandler = (envConfig: IConfig) =>
       return false;
     }
 
-    const nhConfig = getNHLegacyConfig(envConfig);
+    // Dummy implementation for testing
 
-    const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
-      ...errorOrNHCallOrchestratorInput.value,
-      notificationHubConfig: nhConfig
-    };
+    const ff = envConfig.NH_PARTITION_FEATURE_FLAG;
 
-    yield context.df.callActivityWithRetry(
-      "HandleNHNotificationCallActivity",
-      retryOptions,
-      nhCallOrchestratorInput
-    );
+    if (
+      isInActiveSubset(
+        ff,
+        errorOrNHCallOrchestratorInput.value.message.installationId
+      )
+    ) {
+      const nhConfig = getNHLegacyConfig(envConfig);
+
+      const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
+        ...errorOrNHCallOrchestratorInput.value,
+        notificationHubConfig: nhConfig
+      };
+
+      yield context.df.callActivityWithRetry(
+        "HandleNHNotificationCallActivity",
+        retryOptions,
+        nhCallOrchestratorInput
+      );
+    }
 
     return true;
   };

@@ -12,6 +12,7 @@ import { NhNotificationOrchestratorInput, getHandler } from "../handler";
 import { success } from "../../utils/durable/orchestrators";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
+import { NHPartitionFeatureFlag } from "../../utils/config";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -26,6 +27,11 @@ const aNotificationHubMessage: CreateOrUpdateInstallationMessage = {
 
 const retryOptions = {
   backoffCoefficient: 1.5
+};
+
+const envConfig_None = {
+  ...envConfig,
+  NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag.none
 };
 
 const callNHServiceActivitySuccessResult = success();
@@ -63,7 +69,31 @@ describe("HandleNHNotificationCallOrchestrator", () => {
     );
   });
 
-  it("should not start activity with wrong inputs", async () => {
+  it("should NOT start the activities if NHPartitionFeatureFlag is `none`", async () => {
+    const nhCallOrchestratorInput = NhNotificationOrchestratorInput.encode({
+      message: aNotificationHubMessage
+    });
+
+    const contextMockWithDf = {
+      ...contextMock,
+      df: {
+        callActivityWithRetry: jest
+          .fn()
+          .mockReturnValueOnce(callNHServiceActivitySuccessResult),
+        getInput: jest.fn(() => nhCallOrchestratorInput)
+      }
+    };
+
+    const orchestratorHandler = getHandler(envConfig_None)(
+      contextMockWithDf as any
+    );
+
+    orchestratorHandler.next();
+
+    expect(contextMockWithDf.df.callActivityWithRetry).not.toHaveBeenCalled();
+  });
+
+  it("should NOT start activity with wrong inputs", async () => {
     const nhCallOrchestratorInput = {
       message: "aMessage"
     };
