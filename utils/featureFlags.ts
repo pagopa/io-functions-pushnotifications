@@ -10,7 +10,8 @@ import { NHPartitionFeatureFlag } from "./config";
  * @returns `true` if the user is enabled for the new feature, `false` otherwise
  */
 export const getIsInActiveSubset = (
-  isUserATestUser: ReturnType<typeof getIsUserABetaTestUser>
+  isUserATestUser: ReturnType<typeof getIsUserABetaTestUser>,
+  isUserACanaryUser: ReturnType<typeof getIsUserACanaryTestUser>
 ) => (
   enabledFeatureFlag: NHPartitionFeatureFlag,
   sha: InstallationId,
@@ -23,8 +24,7 @@ export const getIsInActiveSubset = (
     case "beta":
       return isUserATestUser(betaUsersTable, sha);
     case "canary":
-      // Todo
-      return false;
+      return isUserACanaryUser(sha) || isUserATestUser(betaUsersTable, sha);
     case "none":
       return false;
   }
@@ -39,3 +39,16 @@ export const getIsUserABetaTestUser = () => (
   betaUsersTable: ReadonlyArray<{ readonly RowKey: string }>,
   sha: InstallationId
 ): boolean => betaUsersTable.filter(u => u.RowKey === sha).length > 0;
+
+/**
+ *
+ * @param regex The regex to use
+ * @returns
+ */
+export const getIsUserACanaryTestUser = (
+  regex: string
+): ((sha: InstallationId) => boolean) => {
+  const regExp = new RegExp(regex);
+
+  return (sha: InstallationId): boolean => regExp.test(sha);
+};
