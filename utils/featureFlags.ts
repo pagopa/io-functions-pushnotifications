@@ -1,3 +1,5 @@
+import { right } from "fp-ts/lib/Either";
+import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { NHPartitionFeatureFlag } from "./config";
 
@@ -7,25 +9,25 @@ import { NHPartitionFeatureFlag } from "./config";
  * @param sha the installation id of the user
  * @returns `true` if the user is enabled for the new feature, `false` otherwise
  */
-export function isInActiveSubset(
+export const getIsInActiveSubset = (
+  isUserATestUser: (InstallationId) => TaskEither<Error, boolean>
+) => (
   enabledFeatureFlag: NHPartitionFeatureFlag,
-  // tslint:disable-next-line: no-unused-variable
   sha: InstallationId
-): boolean {
+): TaskEither<Error, boolean> => {
   switch (enabledFeatureFlag) {
     case NHPartitionFeatureFlag.all:
-      return true;
+      return fromEither(right(true));
 
     case NHPartitionFeatureFlag.beta:
-      // Todo
-      return false;
+      return isUserATestUser(sha);
 
     case NHPartitionFeatureFlag.canary:
       // Todo
-      return false;
+      return fromEither(right(false));
 
     case NHPartitionFeatureFlag.none:
     default:
-      return false;
+      return fromEither(right(false));
   }
-}
+};
