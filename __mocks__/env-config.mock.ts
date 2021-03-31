@@ -1,6 +1,7 @@
-import { IConfig } from "../utils/config";
+import { IConfig, NHPartitionFeatureFlag } from "../utils/config";
 
 export const envConfig = {
+  NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag.all,
   RETRY_ATTEMPT_NUMBER: 1,
   APPINSIGHTS_INSTRUMENTATIONKEY: "Idontknow",
   AZURE_NH_ENDPOINT:

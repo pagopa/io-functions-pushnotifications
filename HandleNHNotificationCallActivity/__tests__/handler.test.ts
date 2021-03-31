@@ -108,8 +108,6 @@ describe("HandleNHNotificationCallActivity", () => {
       notificationHubConfig: aNHConfig
     });
 
-    console.log(input.message);
-
     expect.assertions(2);
     try {
       await handler(contextMock as any, input);
