@@ -32,9 +32,9 @@ export const ActivityInput = t.interface({
 
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
 
-const assertNever = (x: never): never => {
-  throw new Error(`Unexpected object: ${toString(x)}`);
-};
+// tslint:disable:no-any
+const createUnexpecterError = (x: any): Error =>
+  new Error(`Unexpected object: ${toString(x)}`);
 
 const telemetryClient = initTelemetryClient();
 
@@ -53,6 +53,7 @@ export const getCallNHServiceActivityHandler = (
       context.log.info(
         `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
       );
+
       switch (message.kind) {
         case CreateOrUpdateKind.CreateOrUpdateInstallation:
           return createOrUpdateInstallation(
@@ -87,7 +88,7 @@ export const getCallNHServiceActivityHandler = (
             return failure(e.message);
           });
         default:
-          assertNever(message);
+          throw createUnexpecterError(message);
       }
     })
     .fold<ActivityResult>(identity, success)

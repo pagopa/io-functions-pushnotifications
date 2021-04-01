@@ -67,7 +67,8 @@ class ExtendedNotificationHubService extends NotificationHubService {
       });
     };
     // tslint:disable-next-line: no-string-literal  no-any
-    return super["_buildRequestOptions"](
+    // @ts-ignore /* _buildRequestOptions is not defined in the Azure type NotificationHubService: the error is caused by strict=ture tsc configuration and will be ignored */
+    return super._buildRequestOptions(
       webResource,
       body,
       options,
