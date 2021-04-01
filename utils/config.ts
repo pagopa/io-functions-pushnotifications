@@ -16,8 +16,7 @@ export const IConfig = t.interface({
   AZURE_NH_HUB_NAME: NonEmptyString,
 
   AzureWebJobsStorage: NonEmptyString,
-
-  QueueStorageConnection: NonEmptyString,
+  NOTIFICATIONS_STORAGE_CONNECTION_STRING: NonEmptyString,
 
   isProduction: t.boolean
 });

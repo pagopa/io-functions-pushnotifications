@@ -115,6 +115,6 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
       sequenceT(taskEither)<
         ReadonlyArray<HealthProblem<ProblemSource>>,
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-      >(checkAzureStorageHealth(config.QueueStorageConnection))
+      >(checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING))
     )
     .map(_ => true);
