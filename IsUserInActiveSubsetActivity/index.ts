@@ -7,11 +7,13 @@ import { getIsUserInActiveSubsetHandler } from "./handler";
 const config = getConfigOrThrow();
 
 const tableService = createTableService(
-  config.NOTIFICATIONS_STORAGE_CONNECTION_STRING
+  config.BETA_USERS_STORAGE_CONNECTION_STRING
 );
 
 const activityFunction = getIsUserInActiveSubsetHandler(
-  getIsInActiveSubset(getIsUserATestUser(tableService))
+  getIsInActiveSubset(
+    getIsUserATestUser(tableService, config.BETA_USERS_TABLE_NAME)
+  )
 );
 
 export default activityFunction;
