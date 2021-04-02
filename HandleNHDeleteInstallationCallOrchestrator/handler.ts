@@ -20,6 +20,14 @@ import {
 } from "../utils/activity";
 import { IConfig } from "../utils/config";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import { logError } from "../utils/orchestrators/log";
+import {
+  OrchestratorActivityFailure,
+  OrchestratorFailure,
+  OrchestratorInvalidInputFailure,
+  OrchestratorSuccess,
+  OrchestratorUnhandledFailure
+} from "../utils/orchestrators/returnTypes";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -32,66 +40,7 @@ export type NhDeleteInstallationOrchestratorCallInput = t.TypeOf<
   typeof NhDeleteInstallationOrchestratorCallInput
 >;
 
-export type OrchestratorSuccess = t.TypeOf<typeof OrchestratorSuccess>;
-export const OrchestratorSuccess = t.interface({
-  kind: t.literal("SUCCESS")
-});
-
-export type OrchestratorInvalidInputFailure = t.TypeOf<
-  typeof OrchestratorInvalidInputFailure
->;
-export const OrchestratorInvalidInputFailure = t.interface({
-  input: t.unknown,
-  kind: t.literal("FAILURE_INVALID_INPUT"),
-  reason: t.string
-});
-
-export type OrchestratorActivityFailure = t.TypeOf<
-  typeof OrchestratorActivityFailure
->;
-export const OrchestratorActivityFailure = t.interface({
-  activityName: t.string,
-  kind: t.literal("FAILURE_ACTIVITY"),
-  reason: t.string
-});
-
-export type OrchestratorUnhandledFailure = t.TypeOf<
-  typeof OrchestratorUnhandledFailure
->;
-export const OrchestratorUnhandledFailure = t.interface({
-  kind: t.literal("FAILURE_UNHANDLED"),
-  reason: t.string
-});
-
-export type OrchestratorFailure = t.TypeOf<typeof OrchestratorFailure>;
-export const OrchestratorFailure = t.union([
-  OrchestratorActivityFailure,
-  OrchestratorInvalidInputFailure,
-  OrchestratorUnhandledFailure
-]);
-
-const defaultNever = <T>(_: never, d: T) => d;
-
 const logPrefix = `NhDeleteInstallationOrchestratorCallInput`;
-const logError = (
-  context: IOrchestrationFunctionContext,
-  failure: OrchestratorFailure
-) => {
-  const log = `${logPrefix}|Error executing orchestrator: ${failure.kind}`;
-  const verbose: string =
-    failure.kind === "FAILURE_INVALID_INPUT"
-      ? `ERROR=${failure.reason}|INPUT=${toString(failure.input)}`
-      : failure.kind === "FAILURE_ACTIVITY"
-      ? `ERROR=${failure.reason}|ACTIVITY=${failure.activityName}`
-      : failure.kind === "FAILURE_UNHANDLED"
-      ? `ERROR=${failure.reason}`
-      : defaultNever(
-          failure,
-          `unknown failure kind, failure: ${toString(failure)}`
-        );
-  context.log.error(log);
-  context.log.verbose(`${log}|${verbose}`);
-};
 
 function* deleteInstallation(
   context: IOrchestrationFunctionContext,
@@ -168,7 +117,8 @@ export const getHandler = (config: IConfig) =>
           reason: error instanceof Error ? error.message : toString(error)
         })
       );
-      logError(context, failure);
+      logError(context, failure, logPrefix);
+
       return failure;
     }
   };
