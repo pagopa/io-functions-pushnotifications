@@ -14,12 +14,12 @@ import {
 import { envConfig } from "../../__mocks__/env-config.mock";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
+const anInstallationId = aFiscalCodeHash;
 
 const aDeleteNotificationHubMessage: DeleteInstallationMessage = {
-  installationId: aFiscalCodeHash,
+  installationId: anInstallationId,
   kind: DeleteKind.DeleteInstallation
 };
-
 const retryOptions = {
   backoffCoefficient: 1.5
 };
@@ -54,7 +54,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       "HandleNHDeleteInstallationCallActivity",
       retryOptions,
       NHCallServiceActivityInput.encode({
-        message: aDeleteNotificationHubMessage,
+        installationId: anInstallationId,
         notificationHubConfig: {
           AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
           AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
