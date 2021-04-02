@@ -2,14 +2,14 @@ import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
 import { identity, toString } from "fp-ts/lib/function";
+import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
-import { NotificationMessage } from "../HandleNHNotificationCall";
+import { NotificationMessage } from "../HandleNHNotificationCall/handler";
 import {
   createOrUpdateInstallation,
   deleteInstallation,
@@ -24,38 +24,48 @@ import {
   success
 } from "../utils/activity";
 import { initTelemetryClient } from "../utils/appinsights";
+import {
+  buildNHService,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 // Activity input
-export const ActivityInput = t.interface({
-  message: NotificationMessage
+export const HandleNHNotificationCallActivityInput = t.interface({
+  message: NotificationMessage,
+  notificationHubConfig: NotificationHubConfig
 });
 
-export type ActivityInput = t.TypeOf<typeof ActivityInput>;
+export type HandleNHNotificationCallActivityInput = t.TypeOf<
+  typeof HandleNHNotificationCallActivityInput
+>;
 
 const assertNever = (x: never): never => {
   throw new Error(`Unexpected object: ${toString(x)}`);
 };
 
-const telemetryClient = initTelemetryClient();
-
 /**
  * For each Notification Hub Message calls related Notification Hub service
  */
 export const getCallNHServiceActivityHandler = (
+  telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
 ) => async (context: Context, input: unknown) => {
   const failure = failActivity(context, logPrefix);
-  return fromEither(ActivityInput.decode(input))
+  return fromEither(HandleNHNotificationCallActivityInput.decode(input))
     .mapLeft(errs =>
       failure("Error decoding activity input", readableReport(errs))
     )
-    .chain<ActivityResultSuccess>(({ message }) => {
+    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
       context.log.info(
         `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
       );
+
+      const nhService = buildNHService(notificationHubConfig);
+
       switch (message.kind) {
         case CreateOrUpdateKind.CreateOrUpdateInstallation:
           return createOrUpdateInstallation(
+            nhService,
             message.installationId,
             message.platform,
             message.pushChannel,
@@ -64,7 +74,7 @@ export const getCallNHServiceActivityHandler = (
             retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
           );
         case NotifyKind.Notify:
-          return notify(message.installationId, message.payload)
+          return notify(nhService, message.installationId, message.payload)
             .mapLeft(e =>
               retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
             )
@@ -81,11 +91,13 @@ export const getCallNHServiceActivityHandler = (
               )
             );
         case DeleteKind.DeleteInstallation:
-          return deleteInstallation(message.installationId).mapLeft(e => {
-            // do not trigger a retry as delete may fail in case of 404
-            context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
-            return failure(e.message);
-          });
+          return deleteInstallation(nhService, message.installationId).mapLeft(
+            e => {
+              // do not trigger a retry as delete may fail in case of 404
+              context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
+              return failure(e.message);
+            }
+          );
         default:
           assertNever(message);
       }
