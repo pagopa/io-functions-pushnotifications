@@ -11,7 +11,10 @@ import { CreateOrUpdateInstallationMessage } from "../generated/notifications/Cr
 
 import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity/handler";
 import { IConfig } from "../utils/config";
-import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import {
+  getNHLegacyConfig,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -37,14 +40,34 @@ const logError = (
   );
 };
 
-export const getHandler = (envConfig: IConfig) =>
-  function*(context: IOrchestrationFunctionContext): Generator<unknown> {
-    const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
+function* callCreateOrUpdateInstallation(
+  context: IOrchestrationFunctionContext,
+  retryOptions: df.RetryOptions,
+  { message }: NhCreateOrUpdateInstallationOrchestratorCallInput,
+  notificationHubConfig: NotificationHubConfig
+): Generator {
+  const nhCallOrchestratorInput: CreateOrUpdateActivityInput = {
+    message,
+    notificationHubConfig
+  };
 
-    const retryOptions = {
-      ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
-      backoffCoefficient: 1.5
-    };
+  yield context.df.callActivityWithRetry(
+    "HandleNHCreateOrUpdateInstallationCallActivity",
+    retryOptions,
+    nhCallOrchestratorInput
+  );
+}
+
+export const getHandler = (envConfig: IConfig) => {
+  const retryOptions = {
+    ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
+    backoffCoefficient: 1.5
+  };
+
+  const nhConfig = getNHLegacyConfig(envConfig);
+
+  return function*(context: IOrchestrationFunctionContext): Generator<unknown> {
+    const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
 
     // Get and decode orchestrator input
     const input = context.df.getInput();
@@ -61,18 +84,13 @@ export const getHandler = (envConfig: IConfig) =>
       return false;
     }
 
-    const nhConfig = getNHLegacyConfig(envConfig);
-
-    const nhCallOrchestratorInput: CreateOrUpdateActivityInput = {
-      ...errorOrNHCreateOrUpdateCallOrchestratorInput.value,
-      notificationHubConfig: nhConfig
-    };
-
-    yield context.df.callActivityWithRetry(
-      "HandleNHCreateOrUpdateInstallationCallActivity",
+    yield* callCreateOrUpdateInstallation(
+      context,
       retryOptions,
-      nhCallOrchestratorInput
+      errorOrNHCreateOrUpdateCallOrchestratorInput.value,
+      nhConfig
     );
 
     return true;
   };
+};
