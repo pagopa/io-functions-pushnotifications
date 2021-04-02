@@ -8,7 +8,6 @@ import { ActivityInput as NHServiceActivityInput } from "../handler";
 import * as azure from "azure-sb";
 import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 
-import * as notificationhubServicePartition from "../../utils/notificationhubServicePartition";
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
@@ -17,6 +16,8 @@ const deleteInstallationSpy = jest
   .mockImplementation((_, cb) => cb(new Error("deleteInstallation error")));
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
+
+const anInstallationId = aFiscalCodeHash;
 
 const aDeleteInStalltionMessage: DeleteInstallationMessage = {
   installationId: aFiscalCodeHash,
@@ -35,7 +36,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
     const handler = getCallNHDeleteInstallationActivityHandler();
     const input = NHServiceActivityInput.encode({
-      message: aDeleteInStalltionMessage,
+      installationId: anInstallationId,
       notificationHubConfig: aNHConfig
     });
     const res = await handler(contextMock as any, input);
