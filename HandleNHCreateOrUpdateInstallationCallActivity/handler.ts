@@ -1,12 +1,13 @@
-import { toString } from "fp-ts/lib/function";
+import { identity, toString } from "fp-ts/lib/function";
 import { fromEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
 
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { InstallationId } from "../generated/notifications/InstallationId";
+import { Platform } from "../generated/notifications/Platform";
 
-import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
+import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import {
   ActivityResult,
@@ -21,10 +22,16 @@ import {
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
 
+// Activity Name
+export const ActivityName = "HandleNHCreateOrUpdateInstallationCallActivity";
+
 // Activity input
 export const ActivityInput = t.interface({
-  message: CreateOrUpdateInstallationMessage,
-  notificationHubConfig: NotificationHubConfig
+  installationId: InstallationId,
+  notificationHubConfig: NotificationHubConfig,
+  platform: Platform,
+  pushChannel: t.string,
+  tags: t.readonlyArray(t.string, "array of string")
 });
 
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
@@ -40,26 +47,23 @@ export const getCallNHCreateOrUpdateInstallationActivityHandler = (
     .mapLeft(errs =>
       failure("Error decoding activity input", readableReport(errs))
     )
-    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
+    .chain<ActivityResultSuccess>(activityInput => {
       context.log.info(
-        `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
+        `${logPrefix}|INSTALLATION_ID=${activityInput.installationId}`
       );
 
-      const nhService = buildNHService(notificationHubConfig);
+      const nhService = buildNHService(activityInput.notificationHubConfig);
 
       return createOrUpdateInstallation(
         nhService,
-        message.installationId,
-        message.platform,
-        message.pushChannel,
-        message.tags
+        activityInput.installationId,
+        activityInput.platform,
+        activityInput.pushChannel,
+        activityInput.tags
       ).mapLeft(e =>
         retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
       );
     })
-    .fold<ActivityResult>(
-      err => err,
-      _ => success()
-    )
+    .fold<ActivityResult>(identity, success)
     .run();
 };

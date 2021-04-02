@@ -65,7 +65,10 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
 
     const handler = getCallNHCreateOrUpdateInstallationActivityHandler();
     const input = NHServiceActivityInput.encode({
-      message: aCreateOrUpdateInstallationMessage,
+      installationId: aCreateOrUpdateInstallationMessage.installationId,
+      platform: aCreateOrUpdateInstallationMessage.platform,
+      tags: aCreateOrUpdateInstallationMessage.tags,
+      pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
       notificationHubConfig: aNHConfig
     });
     expect.assertions(2);
@@ -79,7 +82,10 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
 
     const handler = getCallNHCreateOrUpdateInstallationActivityHandler();
     const input = NHServiceActivityInput.encode({
-      message: aCreateOrUpdateInstallationMessage,
+      installationId: aCreateOrUpdateInstallationMessage.installationId,
+      platform: aCreateOrUpdateInstallationMessage.platform,
+      tags: aCreateOrUpdateInstallationMessage.tags,
+      pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
       notificationHubConfig: aNHConfig
     });
     expect.assertions(2);

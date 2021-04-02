@@ -1,20 +1,39 @@
 import * as t from "io-ts";
 
-import { isLeft } from "fp-ts/lib/Either";
+import { either, left, right } from "fp-ts/lib/Either";
 
-import { IOrchestrationFunctionContext } from "durable-functions/lib/src/classes";
+import {
+  IOrchestrationFunctionContext,
+  Task
+} from "durable-functions/lib/src/classes";
 
 import * as df from "durable-functions";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 
-import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity/handler";
+import {
+  ActivityInput as CreateOrUpdateActivityInput,
+  ActivityName as CreateOrUpdateActivityName
+} from "../HandleNHCreateOrUpdateInstallationCallActivity/handler";
+
+import {
+  ActivityResult,
+  ActivityResultFailure,
+  ActivityResultSuccess
+} from "../utils/activity";
 import { IConfig } from "../utils/config";
 import {
   getNHLegacyConfig,
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
+import { logError } from "../utils/orchestrators/log";
+import * as o from "../utils/orchestrators/returnTypes";
+
+const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
+
+export const OrchestratorName =
+  "HandleNHCreateOrUpdateInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -27,35 +46,51 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
   typeof NhCreateOrUpdateInstallationOrchestratorCallInput
 >;
 
-const logError = (
-  context: IOrchestrationFunctionContext,
-  logPrefix: string,
-  errorOrNHCallOrchestratorInput
-) => {
-  context.log.error(`${logPrefix}|Error decoding input`);
-  context.log.verbose(
-    `${logPrefix}|Error decoding input|ERROR=${readableReport(
-      errorOrNHCallOrchestratorInput.value
-    )}`
-  );
-};
-
 function* callCreateOrUpdateInstallation(
   context: IOrchestrationFunctionContext,
   retryOptions: df.RetryOptions,
-  { message }: NhCreateOrUpdateInstallationOrchestratorCallInput,
+  message: CreateOrUpdateInstallationMessage,
   notificationHubConfig: NotificationHubConfig
-): Generator {
+): Generator<Task, "SUCCESS"> {
   const nhCallOrchestratorInput: CreateOrUpdateActivityInput = {
-    message,
-    notificationHubConfig
+    installationId: message.installationId,
+    notificationHubConfig,
+    platform: message.platform,
+    pushChannel: message.pushChannel,
+    tags: message.tags
   };
 
-  yield context.df.callActivityWithRetry(
-    "HandleNHCreateOrUpdateInstallationCallActivity",
+  const activityName = CreateOrUpdateActivityName;
+
+  const result = yield context.df.callActivityWithRetry(
+    activityName,
     retryOptions,
     nhCallOrchestratorInput
   );
+
+  return either
+    .of<ActivityResultFailure | Error, unknown>(result)
+    .chain(r =>
+      ActivityResult.decode(r).mapLeft(
+        e =>
+          new Error(
+            `Cannot decode result from ${activityName}, err: ${readableReport(
+              e
+            )}`
+          )
+      )
+    )
+    .chain(r => (ActivityResultSuccess.is(r) ? right(r) : left(r)))
+    .fold(
+      // In case of failure, trow a failure object with the activity name
+      e => {
+        throw o.failureActivity(
+          activityName,
+          e instanceof Error ? e.message : e.reason
+        );
+      },
+      _ => "SUCCESS" as const
+    );
 }
 
 export const getHandler = (envConfig: IConfig) => {
@@ -67,30 +102,33 @@ export const getHandler = (envConfig: IConfig) => {
   const nhConfig = getNHLegacyConfig(envConfig);
 
   return function*(context: IOrchestrationFunctionContext): Generator<unknown> {
-    const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
-
     // Get and decode orchestrator input
     const input = context.df.getInput();
-    const errorOrNHCreateOrUpdateCallOrchestratorInput = NhCreateOrUpdateInstallationOrchestratorCallInput.decode(
-      input
-    );
 
-    if (isLeft(errorOrNHCreateOrUpdateCallOrchestratorInput)) {
-      logError(
+    try {
+      const {
+        message
+      } = NhCreateOrUpdateInstallationOrchestratorCallInput.decode(
+        input
+      ).getOrElseL(err => {
+        throw o.failureInvalidInput(input, `${readableReport(err)}`);
+      });
+
+      yield* callCreateOrUpdateInstallation(
         context,
-        logPrefix,
-        errorOrNHCreateOrUpdateCallOrchestratorInput
+        retryOptions,
+        message,
+        nhConfig
       );
-      return false;
+
+      return o.OrchestratorSuccess.encode({ kind: "SUCCESS" });
+    } catch (error) {
+      const failure = o.OrchestratorFailure.decode(error).getOrElse(
+        o.failureUnhandled(error)
+      );
+      logError(context, failure, logPrefix);
+
+      return failure;
     }
-
-    yield* callCreateOrUpdateInstallation(
-      context,
-      retryOptions,
-      errorOrNHCreateOrUpdateCallOrchestratorInput.value,
-      nhConfig
-    );
-
-    return true;
   };
 };

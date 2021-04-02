@@ -59,7 +59,10 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
       "HandleNHCreateOrUpdateInstallationCallActivity",
       retryOptions,
       NHCallServiceActivityInput.encode({
-        message: aCreateOrUpdateInstallationMessage,
+        installationId: aCreateOrUpdateInstallationMessage.installationId,
+        platform: aCreateOrUpdateInstallationMessage.platform,
+        tags: aCreateOrUpdateInstallationMessage.tags,
+        pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
         notificationHubConfig: {
           AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
           AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
