@@ -27,7 +27,7 @@ import {
   getNHLegacyConfig,
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
-import { logError } from "../utils/orchestrators/log";
+import { createLogger } from "../utils/orchestrators/log";
 import * as o from "../utils/orchestrators/returnTypes";
 
 const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
@@ -102,6 +102,8 @@ export const getHandler = (envConfig: IConfig) => {
   const nhConfig = getNHLegacyConfig(envConfig);
 
   return function*(context: IOrchestrationFunctionContext): Generator<unknown> {
+    const logger = createLogger(context, logPrefix);
+
     // Get and decode orchestrator input
     const input = context.df.getInput();
 
@@ -126,7 +128,7 @@ export const getHandler = (envConfig: IConfig) => {
       const failure = o.OrchestratorFailure.decode(error).getOrElse(
         o.failureUnhandled(error)
       );
-      logError(context, failure, logPrefix);
+      logger.error(failure);
 
       return failure;
     }
