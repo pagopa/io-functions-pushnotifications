@@ -101,7 +101,10 @@ export const getHandler = (envConfig: IConfig) => {
   return o.createOrchestrator(
     OrchestratorName,
     NhCreateOrUpdateInstallationOrchestratorCallInput,
-    function*({ context, input: { message } /* , logger */ }) {
+    function*({
+      context,
+      input: { message } /* , logger */
+    }): Generator<Task, void, Task> {
       yield* callCreateOrUpdateInstallation(
         context,
         retryOptions,

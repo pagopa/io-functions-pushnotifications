@@ -1,32 +1,29 @@
-import * as t from "io-ts";
 import {
   IOrchestrationFunctionContext,
   Task
 } from "durable-functions/lib/src/classes";
-import { createLogger, OrchestratorLogger } from "./log";
+import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
+import { createLogger, IOrchestratorLogger } from "./log";
 import {
-  OrchestratorSuccess,
   failureInvalidInput,
   failureUnhandled,
-  success,
-  OrchestratorFailure
+  OrchestratorFailure,
+  OrchestratorSuccess,
+  success
 } from "./returnTypes";
 
-export { createLogger, OrchestratorLogger } from "./log";
+export { createLogger, IOrchestratorLogger as OrchestratorLogger } from "./log";
 export * from "./returnTypes";
 
 // TODO: define a more specific type so that OrchestratorBody must be strict in what it yields
 type TNextDefault = unknown;
 
-interface OrchestratorBodyParams<I> {
+type OrchestratorBody<I, TNext> = (p: {
   context: IOrchestrationFunctionContext;
-  logger: OrchestratorLogger;
+  logger: IOrchestratorLogger;
   input: I;
-}
-interface OrchestratorBody<I, TNext> {
-  (p: OrchestratorBodyParams<I>): Generator<Task, void, TNext>;
-}
+}) => Generator<Task, void, TNext>;
 
 /**
  * Wraps an orchestrator execution so that types are enforced and errors are handled consistently.
@@ -44,7 +41,7 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
   function*(
     context: IOrchestrationFunctionContext
   ): Generator<Task, OrchestratorFailure | OrchestratorSuccess, TNext> {
-    //TODO: define type variable TNext so that
+    // TODO: define type variable TNext so that
     const logger = createLogger(context, orchestratorName);
 
     // Get and decode orchestrator input

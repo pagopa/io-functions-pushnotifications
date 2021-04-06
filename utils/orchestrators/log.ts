@@ -5,7 +5,7 @@ import { OrchestratorFailure } from "./returnTypes";
 
 const defaultNever = <T>(_: never, d: T) => d;
 
-export interface OrchestratorLogger {
+export interface IOrchestratorLogger {
   error: (failure: OrchestratorFailure) => void;
 }
 
@@ -13,17 +13,17 @@ export interface OrchestratorLogger {
  * Creates a logger object which is bound to an orchestrator context
  * @param {IOrchestrationFunctionContext} context the context of execution of the orchestrator
  * @param {string} logPrefix a string to prepend to every log entry, usually the name of the orchestrator. Default: empty string
- * @returns {OrchestratorLogger} a logger instance
+ * @returns {IOrchestratorLogger} a logger instance
  */
 export const createLogger = (
   context: IOrchestrationFunctionContext,
   logPrefix: string = ""
-): OrchestratorLogger => ({
+): IOrchestratorLogger => ({
   /**
    * Logs a failure in the orchestrator execution
    * @param failure an encoded orchestrator failure
    */
-  error(failure: OrchestratorFailure) {
+  error(failure: OrchestratorFailure): void {
     const log = `${logPrefix}|Error executing orchestrator: ${failure.kind}`;
     const verbose: string =
       failure.kind === "FAILURE_INVALID_INPUT"
