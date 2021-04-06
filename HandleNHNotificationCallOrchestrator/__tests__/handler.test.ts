@@ -7,9 +7,11 @@ import {
   CreateOrUpdateInstallationMessage,
   KindEnum as CreateOrUpdateInstallationKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
-import { ActivityInput as NHCallServiceActivityInput } from "../../HandleNHNotificationCallActivity/handler";
-import { handler, NhNotificationOrchestratorInput } from "../handler";
+import { HandleNHNotificationCallActivityInput } from "../../HandleNHNotificationCallActivity/handler";
+import { NhNotificationOrchestratorInput, getHandler } from "../handler";
 import { success } from "../../utils/activity";
+
+import { envConfig } from "../../__mocks__/env-config.mock";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -44,15 +46,19 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = handler(contextMockWithDf as any);
+    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
 
     orchestratorHandler.next();
 
     expect(contextMockWithDf.df.callActivityWithRetry).toBeCalledWith(
       "HandleNHNotificationCallActivity",
       retryOptions,
-      NHCallServiceActivityInput.encode({
-        message: aNotificationHubMessage
+      HandleNHNotificationCallActivityInput.encode({
+        message: aNotificationHubMessage,
+        notificationHubConfig: {
+          AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
+          AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
+        }
       })
     );
   });
@@ -72,7 +78,7 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       }
     };
 
-    const orchestratorHandler = handler(contextMockWithDf as any);
+    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
 
     orchestratorHandler.next();
 
