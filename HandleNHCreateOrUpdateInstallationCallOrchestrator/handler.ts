@@ -27,10 +27,7 @@ import {
   getNHLegacyConfig,
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
-import { createLogger } from "../utils/orchestrators/log";
-import * as o from "../utils/orchestrators/returnTypes";
-
-const logPrefix = `NhCreateOrUpdateInstallationOrchestratorCallInput`;
+import * as o from "../utils/orchestrators";
 
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
@@ -101,36 +98,16 @@ export const getHandler = (envConfig: IConfig) => {
 
   const nhConfig = getNHLegacyConfig(envConfig);
 
-  return function*(context: IOrchestrationFunctionContext): Generator<unknown> {
-    const logger = createLogger(context, logPrefix);
-
-    // Get and decode orchestrator input
-    const input = context.df.getInput();
-
-    try {
-      const {
-        message
-      } = NhCreateOrUpdateInstallationOrchestratorCallInput.decode(
-        input
-      ).getOrElseL(err => {
-        throw o.failureInvalidInput(input, `${readableReport(err)}`);
-      });
-
+  return o.createOrchestrator(
+    OrchestratorName,
+    NhCreateOrUpdateInstallationOrchestratorCallInput,
+    function*({ context, input: { message } /* , logger */ }) {
       yield* callCreateOrUpdateInstallation(
         context,
         retryOptions,
         message,
         nhConfig
       );
-
-      return o.OrchestratorSuccess.encode({ kind: "SUCCESS" });
-    } catch (error) {
-      const failure = o.OrchestratorFailure.decode(error).getOrElse(
-        o.failureUnhandled(error)
-      );
-      logger.error(failure);
-
-      return failure;
     }
-  };
+  );
 };
