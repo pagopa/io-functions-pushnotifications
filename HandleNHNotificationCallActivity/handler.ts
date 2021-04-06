@@ -70,9 +70,11 @@ export const getCallNHServiceActivityHandler = (
             message.platform,
             message.pushChannel,
             message.tags
-          ).mapLeft(e =>
-            retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
-          );
+          )
+            .mapLeft(e =>
+              retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
+            )
+            .map(_ => success());
         case NotifyKind.Notify:
           return notify(nhService, message.installationId, message.payload)
             .mapLeft(e =>
@@ -102,6 +104,6 @@ export const getCallNHServiceActivityHandler = (
           assertNever(message);
       }
     })
-    .fold<ActivityResult>(identity, success)
+    .fold<ActivityResult>(identity, identity)
     .run();
 };
