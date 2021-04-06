@@ -1,3 +1,4 @@
+import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 export type OrchestratorSuccess = t.TypeOf<typeof OrchestratorSuccess>;
@@ -37,3 +38,25 @@ export const OrchestratorFailure = t.union([
   OrchestratorInvalidInputFailure,
   OrchestratorUnhandledFailure
 ]);
+
+export const success = () => OrchestratorSuccess.encode({ kind: "SUCCESS" });
+
+export const failureInvalidInput = (input: unknown, reason: string) =>
+  OrchestratorInvalidInputFailure.encode({
+    input,
+    kind: "FAILURE_INVALID_INPUT",
+    reason
+  });
+
+export const failureActivity = (activityName: string, reason: string) =>
+  OrchestratorActivityFailure.encode({
+    activityName,
+    kind: "FAILURE_ACTIVITY",
+    reason
+  });
+
+export const failureUnhandled = (error: unknown) =>
+  OrchestratorUnhandledFailure.encode({
+    kind: "FAILURE_UNHANDLED",
+    reason: error instanceof Error ? error.message : toString(error)
+  });

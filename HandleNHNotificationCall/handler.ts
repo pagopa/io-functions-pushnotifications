@@ -10,6 +10,8 @@ import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/Creat
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
 
+import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
+
 export const NotificationMessage = t.union([
   NotifyMessage,
   CreateOrUpdateInstallationMessage,
@@ -32,13 +34,9 @@ export const getHandler = () => async (
   const client = df.getClient(context);
   switch (notificationHubMessage.kind) {
     case DeleteKind.DeleteInstallation:
-      await client.startNew(
-        "HandleNHDeleteInstallationCallOrchestrator",
-        undefined,
-        {
-          message: notificationHubMessage
-        }
-      );
+      await client.startNew(DeleteInstallationOrchestratorName, undefined, {
+        message: notificationHubMessage
+      });
       break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
       // tslint:disable-next-line: no-duplicated-branches

@@ -1,5 +1,5 @@
 import { Context } from "@azure/functions";
-import { toString } from "fp-ts/lib/function";
+import { identity, toString } from "fp-ts/lib/function";
 import { fromEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
@@ -17,6 +17,9 @@ import {
   buildNHService,
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
+
+// Activity name for df
+export const ActivityName = "HandleNHDeleteInstallationCallActivity";
 
 // Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
@@ -61,9 +64,6 @@ export const getCallNHDeleteInstallationActivityHandler = (
         });
       }
     )
-    .fold<ActivityResult>(
-      err => err,
-      _ => success()
-    )
+    .fold<ActivityResult>(identity, success)
     .run();
 };

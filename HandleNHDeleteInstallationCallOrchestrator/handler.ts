@@ -11,7 +11,10 @@ import { toString } from "fp-ts/lib/function";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
-import { ActivityInput as NHDeleteInstallationActivityInput } from "../HandleNHDeleteInstallationCallActivity/handler";
+import {
+  ActivityInput as NHDeleteInstallationActivityInput,
+  ActivityName as NHDeleteInstallationActivityName
+} from "../HandleNHDeleteInstallationCallActivity/handler";
 
 import {
   ActivityResult,
@@ -21,13 +24,12 @@ import {
 import { IConfig } from "../utils/config";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 import { logError } from "../utils/orchestrators/log";
-import {
-  OrchestratorActivityFailure,
-  OrchestratorFailure,
-  OrchestratorInvalidInputFailure,
-  OrchestratorSuccess,
-  OrchestratorUnhandledFailure
-} from "../utils/orchestrators/returnTypes";
+import * as o from "../utils/orchestrators/returnTypes";
+
+/**
+ * Orchestrator Name
+ */
+export const OrchestratorName = "HandleNHDeleteInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -47,7 +49,7 @@ function* deleteInstallation(
   input: NHDeleteInstallationActivityInput,
   retryOptions: df.RetryOptions
 ): Generator<Task, "SUCCESS"> {
-  const activityName = "HandleNHDeleteInstallationCallActivity";
+  const activityName = NHDeleteInstallationActivityName;
   const result = yield context.df.callActivityWithRetry(
     activityName,
     retryOptions,
@@ -70,11 +72,10 @@ function* deleteInstallation(
     .fold(
       // In case of failure, trow a failure object with the activity name
       e => {
-        throw OrchestratorActivityFailure.encode({
+        throw o.failureActivity(
           activityName,
-          kind: "FAILURE_ACTIVITY",
-          reason: e instanceof Error ? e.message : e.reason
-        });
+          e instanceof Error ? e.message : e.reason
+        );
       },
       _ => "SUCCESS" as const
     );
@@ -93,11 +94,7 @@ export const getHandler = (config: IConfig) =>
       const { message } = NhDeleteInstallationOrchestratorCallInput.decode(
         input
       ).getOrElseL(err => {
-        throw OrchestratorInvalidInputFailure.encode({
-          input,
-          kind: "FAILURE_INVALID_INPUT",
-          reason: `${readableReport(err)}`
-        });
+        throw o.failureInvalidInput(input, `${readableReport(err)}`);
       });
 
       yield* deleteInstallation(
@@ -109,13 +106,12 @@ export const getHandler = (config: IConfig) =>
         retryOptions
       );
 
-      return OrchestratorSuccess.encode({ kind: "SUCCESS" });
+      return o.success();
     } catch (error) {
-      const failure = OrchestratorFailure.decode(error).getOrElseL(_ =>
-        OrchestratorUnhandledFailure.encode({
-          kind: "FAILURE_UNHANDLED",
-          reason: error instanceof Error ? error.message : toString(error)
-        })
+      const failure = o.OrchestratorFailure.decode(error).getOrElse(
+        o.failureUnhandled(
+          error instanceof Error ? error.message : toString(error)
+        )
       );
       logError(context, failure, logPrefix);
 
