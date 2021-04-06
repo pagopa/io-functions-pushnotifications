@@ -32,6 +32,10 @@ module.exports = {
         "sort-keys":"off",
         "no-underscore-dangle":"off",
         "functional/prefer-readonly-type":"off",
-        "@typescript-eslint/dot-notation": "off"
+        "@typescript-eslint/dot-notation": "off",
+        "sonarjs/no-duplicated-branches": "off",
+        "jsdoc/newline-after-description": "off",
+        "extra-rules/no-commented-out-code": "off",
+        "@typescript-eslint/no-unused-vars": "off"
     }
 }
