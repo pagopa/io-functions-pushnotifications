@@ -1,93 +1,181 @@
 // tslint:disable:no-any
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { context as contextMock } from "../../__mocks__/durable-functions";
+import { context as contextMockBase } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
 import {
   CreateOrUpdateInstallationMessage,
   KindEnum as CreateOrUpdateKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
-import { ActivityInput as NHCallServiceActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity/handler";
-import { success } from "../../utils/activity";
+import { success } from "../../utils/durable/activities";
+import { consumeGenerator } from "../../utils/durable/utils";
 import {
   getHandler,
+  IHandlerParams,
   NhCreateOrUpdateInstallationOrchestratorCallInput
 } from "../handler";
 
-import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
+import { readableReport } from "italia-ts-commons/lib/reporters";
+import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
+import {
+  CallableActivity,
+  failureActivity,
+  failureInvalidInput,
+  OrchestratorActivityFailure,
+  OrchestratorFailure,
+  OrchestratorInvalidInputFailure,
+  OrchestratorSuccess,
+  OrchestratorUnhandledFailure
+} from "../../utils/durable/orchestrators";
+import { ActivityBodyImpl as CreateOrUpdateActivityBody } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
   "fLKP3EATnBI:APA91bEy4go681jeSEpLkNqhtIrdPnEKu6Dfi-STtUiEnQn8RwMfBiPGYaqdWrmzJyXIh5Yms4017MYRS9O1LGPZwA4sOLCNIoKl4Fwg7cSeOkliAAtlQ0rVg71Kr5QmQiLlDJyxcq3p";
 
-const aCreateOrUpdateInstallationMessage: CreateOrUpdateInstallationMessage = {
-  installationId: aFiscalCodeHash,
-  kind: CreateOrUpdateKind.CreateOrUpdateInstallation,
-  platform: PlatformEnum.apns,
-  pushChannel: aPushChannel,
-  tags: [aFiscalCodeHash]
-};
+const aCreateOrUpdateInstallationMessage = CreateOrUpdateInstallationMessage.decode(
+  {
+    installationId: aFiscalCodeHash,
+    kind: CreateOrUpdateKind.CreateOrUpdateInstallation,
+    platform: PlatformEnum.apns,
+    pushChannel: aPushChannel,
+    tags: [aFiscalCodeHash]
+  }
+).getOrElseL(err => {
+  throw new Error(
+    `Cannot decode aCreateOrUpdateInstallationMessage: ${readableReport(err)}`
+  );
+});
 
-const RETRY_ATTEMPT_NUMBER = 1;
-const retryOptions = {
-  backoffCoefficient: 1.5
-};
+const anOrchestratorInput = NhCreateOrUpdateInstallationOrchestratorCallInput.encode(
+  {
+    message: aCreateOrUpdateInstallationMessage
+  }
+);
+
+const aNotificationHubConfig = NotificationHubConfig.decode({
+  AZURE_NH_ENDPOINT: "foo",
+  AZURE_NH_HUB_NAME: "bar"
+}).getOrElseL(err => {
+  throw new Error(
+    `Cannot decode aNotificationHubConfig: ${readableReport(err)}`
+  );
+});
+
+type CallableCreateOrUpdateActivity = CallableActivity<
+  CreateOrUpdateActivityBody // FIXME: the editor marks it as type error, but tests compile correctly
+>;
+const mockCreateOrUpdateActivity = jest.fn<
+  ReturnType<CallableCreateOrUpdateActivity>,
+  Parameters<CallableCreateOrUpdateActivity>
+>(function*() {
+  return { kind: "SUCCESS", value: "foo" };
+});
+
+const mockGetInput = jest.fn<unknown, []>(() => anOrchestratorInput);
+const contextMock = ({
+  ...contextMockBase,
+  df: {
+    callActivityWithRetry: jest.fn().mockReturnValueOnce(success()),
+    getInput: mockGetInput
+  }
+} as unknown) as IOrchestrationFunctionContext;
 
 describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   it("should start the activities with the right inputs", async () => {
-    const nhCallOrchestratorInput = NhCreateOrUpdateInstallationOrchestratorCallInput.encode(
-      {
-        message: aCreateOrUpdateInstallationMessage
+    const orchestratorHandler = getHandler({
+      createOrUpdateActivity: mockCreateOrUpdateActivity,
+      notificationHubConfig: aNotificationHubConfig
+    })(contextMock);
+
+    const result = consumeGenerator(orchestratorHandler);
+
+    OrchestratorSuccess.decode(result).fold(
+      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+      _ => {
+        expect(mockCreateOrUpdateActivity).toBeCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            installationId: aCreateOrUpdateInstallationMessage.installationId,
+            platform: aCreateOrUpdateInstallationMessage.platform,
+            tags: aCreateOrUpdateInstallationMessage.tags,
+            pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
+            notificationHubConfig: aNotificationHubConfig
+          })
+        );
       }
-    );
-
-    const contextMockWithDf = {
-      ...contextMock,
-      df: {
-        callActivityWithRetry: jest.fn().mockReturnValueOnce(success()),
-        getInput: jest.fn(() => nhCallOrchestratorInput)
-      }
-    };
-
-    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
-
-    orchestratorHandler.next();
-
-    expect(contextMockWithDf.df.callActivityWithRetry).toBeCalledWith(
-      "HandleNHCreateOrUpdateInstallationCallActivity",
-      retryOptions,
-      NHCallServiceActivityInput.encode({
-        installationId: aCreateOrUpdateInstallationMessage.installationId,
-        platform: aCreateOrUpdateInstallationMessage.platform,
-        tags: aCreateOrUpdateInstallationMessage.tags,
-        pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
-        notificationHubConfig: {
-          AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
-          AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
-        }
-      })
     );
   });
 
   it("should not start activity with wrong inputs", async () => {
-    const nhCallOrchestratorInput = {
+    const input = {
       message: "aMessage"
     };
+    mockGetInput.mockImplementationOnce(() => input);
 
-    const contextMockWithDf = {
-      ...contextMock,
-      df: {
-        callActivityWithRetry: jest.fn().mockReturnValueOnce(success()),
-        getInput: jest.fn(() => nhCallOrchestratorInput)
+    const orchestratorHandler = getHandler({
+      createOrUpdateActivity: mockCreateOrUpdateActivity,
+      notificationHubConfig: aNotificationHubConfig
+    })(contextMock);
+
+    const result = consumeGenerator(orchestratorHandler);
+
+    expect(mockCreateOrUpdateActivity).not.toBeCalled();
+    OrchestratorFailure.decode(result).fold(
+      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+      decoded => {
+        expect(OrchestratorInvalidInputFailure.is(decoded)).toBe(true);
+        expect(decoded).toEqual(
+          expect.objectContaining({
+            input
+          })
+        );
       }
-    };
+    );
+  });
 
-    const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
+  it("should fail if CreateOrUpdateActivity fails with unexpected throw", async () => {
+    mockCreateOrUpdateActivity.mockImplementationOnce(() => {
+      throw new Error("any exception");
+    });
 
-    orchestratorHandler.next();
+    const orchestratorHandler = getHandler({
+      createOrUpdateActivity: mockCreateOrUpdateActivity,
+      notificationHubConfig: aNotificationHubConfig
+    })(contextMock);
 
-    expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    const result = consumeGenerator(orchestratorHandler);
+
+    OrchestratorFailure.decode(result).fold(
+      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+      decoded => {
+        expect(OrchestratorUnhandledFailure.is(decoded)).toBe(true);
+      }
+    );
+  });
+
+  it("should fail if CreateOrUpdateActivity fails ", async () => {
+    mockCreateOrUpdateActivity.mockImplementationOnce(() => {
+      throw failureActivity("any activity name", "any reason");
+    });
+
+    const orchestratorHandler = getHandler({
+      createOrUpdateActivity: mockCreateOrUpdateActivity,
+      notificationHubConfig: aNotificationHubConfig
+    })(contextMock);
+
+    const result = consumeGenerator(orchestratorHandler);
+
+    OrchestratorFailure.decode(result).fold(
+      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+      decoded => {
+        expect(OrchestratorActivityFailure.is(decoded)).toBe(true);
+      }
+    );
   });
 });
