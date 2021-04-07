@@ -12,7 +12,6 @@ import { success } from "../../utils/durable/activities";
 import { consumeGenerator } from "../../utils/durable/utils";
 import {
   getHandler,
-  IHandlerParams,
   NhCreateOrUpdateInstallationOrchestratorCallInput
 } from "../handler";
 
