@@ -7,6 +7,7 @@ const defaultNever = <T>(_: never, d: T) => d;
 
 export interface IOrchestratorLogger {
   error: (failure: OrchestratorFailure) => void;
+  info: (s: string) => void;
 }
 
 /**
@@ -38,5 +39,8 @@ export const createLogger = (
           );
     context.log.error(log);
     context.log.verbose(`${log}|${verbose}`);
+  },
+  info(s: string): void {
+    context.log.info(`${logPrefix}|${s}`);
   }
 });
