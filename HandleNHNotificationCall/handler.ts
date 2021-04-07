@@ -10,13 +10,13 @@ import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/Creat
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
 
-export const NotificationMessage = t.union([
+export const notificationMessage = t.union([
   NotifyMessage,
   CreateOrUpdateInstallationMessage,
   DeleteInstallationMessage
 ]);
 
-export type NotificationHubMessage = t.TypeOf<typeof NotificationMessage>;
+export type NotificationHubMessage = t.TypeOf<typeof notificationMessage>;
 
 const assertNever = (x: never): never => {
   throw new Error(`Unexpected object: ${toString(x)}`);
@@ -31,18 +31,19 @@ export const getHandler = () => async (
 ): Promise<void> => {
   const client = df.getClient(context);
   switch (notificationHubMessage.kind) {
+    // eslint-disable-next-line sonarjs/no-duplicated-branches
     case DeleteKind.DeleteInstallation:
       await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
         message: notificationHubMessage
       });
       break;
+    // eslint-disable-next-line sonarjs/no-duplicated-branches
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
-      // tslint:disable-next-line: no-duplicated-branches
       await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
         message: notificationHubMessage
       });
       break;
-    // tslint:disable-next-line: no-duplicated-branches
+    // eslint-disable-next-line sonarjs/no-duplicated-branches
     case NotifyKind.Notify:
       await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
         message: notificationHubMessage

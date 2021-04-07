@@ -1,6 +1,6 @@
 import { fromLeft, taskEither } from "fp-ts/lib/TaskEither";
 import { HealthCheck, HealthProblem } from "../../utils/healthcheck";
-import { InfoHandler } from "../handler";
+import { infoHandler } from "../handler";
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -12,7 +12,7 @@ describe("InfoHandler", () => {
       "failure 1" as HealthProblem<"Config">,
       "failure 2" as HealthProblem<"Config">
     ]);
-    const handler = InfoHandler(healthCheck);
+    const handler = infoHandler(healthCheck);
 
     const response = await handler();
 
@@ -21,7 +21,7 @@ describe("InfoHandler", () => {
 
   it("should return a success if the application is healthy", async () => {
     const healthCheck: HealthCheck = taskEither.of(true);
-    const handler = InfoHandler(healthCheck);
+    const handler = infoHandler(healthCheck);
 
     const response = await handler();
 

@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import { NotificationHubService } from "azure-sb";
-import { tryCatch } from "fp-ts/lib/TaskEither";
+import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import {
   getKeepAliveAgentOptions,
   newHttpsAgent
@@ -18,11 +18,11 @@ import { Platform, PlatformEnum } from "../generated/backend/Platform";
  *
  * @see https://msdn.microsoft.com/en-us/library/azure/mt621153.aspx
  */
-export const INotificationTemplate = t.interface({
+export const iNotificationTemplate = t.interface({
   body: t.string
 });
 
-export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
+export type INotificationTemplate = t.TypeOf<typeof iNotificationTemplate>;
 
 /**
  * APNS apns-push-type available values
@@ -30,12 +30,14 @@ export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
  * @see https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns
  */
 export enum APNSPushType {
+  /* eslint-disable @typescript-eslint/naming-convention */
   ALERT = "alert",
   BACKGROUND = "background",
   VOIP = "voip",
   COMPLICATION = "complication",
   FILEPROVIDER = "fileprovider",
   MDM = "mdm"
+  /* eslint-enable @typescript-eslint/naming-convention */
 }
 
 const httpsAgent = newHttpsAgent(getKeepAliveAgentOptions(process.env));
@@ -55,15 +57,16 @@ export class ExtendedNotificationHubService extends NotificationHubService {
     options: unknown,
     // eslint-disable-next-line @typescript-eslint/ban-types
     cb: Function
-  ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const patchedCallback = (err: any, cbOptions: any) => {
+  ): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patchedCallback = (err: any, cbOptions: any): any => {
       cb(err, {
         ...cbOptions,
         agent: httpsAgent
       });
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/dot-notation
     return super["_buildRequestOptions"](
       webResource,
       body,
@@ -78,7 +81,7 @@ export class ExtendedNotificationHubService extends NotificationHubService {
  *
  * @see https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
  */
-const APNSTemplate: INotificationTemplate = {
+const apnsTemplate: INotificationTemplate = {
   body:
     '{"aps": {"alert": {"title": "$(title)", "body": "$(message)"}}, "message_id": "$(message_id)"}'
 };
@@ -88,7 +91,7 @@ const APNSTemplate: INotificationTemplate = {
  *
  * @see https://developers.google.com/cloud-messaging/concept-options
  */
-const GCMTemplate: INotificationTemplate = {
+const gcmTemplate: INotificationTemplate = {
   body:
     '{"data": {"title": "$(title)", "message": "$(message)", "message_id": "$(message_id)", "smallIcon": "ic_notification", "largeIcon": "ic_notification"}}'
 };
@@ -96,10 +99,11 @@ const GCMTemplate: INotificationTemplate = {
 // send the push notification only to the last
 // device that set the installationId
 // see https://docs.microsoft.com/en-us/azure/notification-hubs/notification-hubs-push-notification-registration-management#installations
-export const toNotificationTag = (fiscalCodeHash: NonEmptyString) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const toNotificationTag = (fiscalCodeHash: NonEmptyString): any =>
   `$InstallationId:{${fiscalCodeHash}}`;
 
-const CreateOrUpdateInstallationOptions = t.interface({
+const createOrUpdateInstallationOptions = t.interface({
   installationId: t.string,
   platform: t.keyof({
     adm: null,
@@ -111,30 +115,31 @@ const CreateOrUpdateInstallationOptions = t.interface({
   pushChannel: t.string,
   tags: t.array(t.string),
   templates: t.interface({
-    template: INotificationTemplate
+    template: iNotificationTemplate
   })
 });
 
 type CreateOrUpdateInstallationOptions = t.TypeOf<
-  typeof CreateOrUpdateInstallationOptions
+  typeof createOrUpdateInstallationOptions
 >;
 
-const NotifyPayload = t.interface({
+const notifyPayload = t.interface({
   message: t.string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   message_id: t.string,
   title: t.string
 });
 
-type NotifyPayload = t.TypeOf<typeof NotifyPayload>;
+type NotifyPayload = t.TypeOf<typeof notifyPayload>;
 // NH result
-export const NHResultSuccess = t.interface({
+export const nhResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
 });
 
-export type NHResultSuccess = t.TypeOf<typeof NHResultSuccess>;
+export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 
-const successNH = () =>
-  NHResultSuccess.encode({
+const successNH = (): NHResultSuccess =>
+  nhResultSuccess.encode({
     kind: "SUCCESS"
   });
 
@@ -143,7 +148,7 @@ export const notify = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
   payload: NotifyPayload
-) => {
+): TaskEither<Error, NHResultSuccess> => {
   return tryCatch(
     () => {
       return new Promise<NHResultSuccess>((resolve, reject) =>
@@ -154,8 +159,8 @@ export const notify = (
             // Add required headers for APNS notification to iOS 13
             // https://azure.microsoft.com/en-us/updates/azure-notification-hubs-updates-ios13/
             headers: {
-              ["apns-push-type"]: APNSPushType.ALERT,
-              ["apns-priority"]: 10
+              ["apns-priority"]: 10,
+              ["apns-push-type"]: APNSPushType.ALERT
             }
           },
           (error, _) =>
@@ -178,7 +183,7 @@ export const createOrUpdateInstallation = (
   platform: Platform,
   pushChannel: string,
   tags: ReadonlyArray<string>
-) => {
+): TaskEither<Error, NHResultSuccess> => {
   const azureInstallationOptions: CreateOrUpdateInstallationOptions = {
     // When a single active session per user is allowed, the installation that must be created or updated
     // will have an unique installationId referred to that user.
@@ -188,7 +193,7 @@ export const createOrUpdateInstallation = (
     pushChannel,
     tags: [...tags],
     templates: {
-      template: platform === PlatformEnum.apns ? APNSTemplate : GCMTemplate
+      template: platform === PlatformEnum.apns ? apnsTemplate : gcmTemplate
     }
   };
 
@@ -217,7 +222,7 @@ export const createOrUpdateInstallation = (
 export const deleteInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString
-) => {
+): TaskEither<Error, NHResultSuccess> => {
   return tryCatch(
     () => {
       return new Promise<NHResultSuccess>((resolve, reject) =>

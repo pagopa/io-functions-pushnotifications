@@ -5,14 +5,14 @@ import { context as contextMock } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 import { getCallNHServiceActivityHandler } from "../handler";
-import { HandleNHNotificationCallActivityInput as NHServiceActivityInput } from "../handler";
+import { handleNHNotificationCallActivityInput as NHServiceActivityInput } from "../handler";
 
 import * as azure from "azure-sb";
 import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
 import * as notificationhubServicePartition from "../../utils/notificationhubServicePartition";
-import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
+import { notificationHubConfig, NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubService } from "azure-sb";
@@ -60,7 +60,7 @@ const aDeleteInStalltionMessage: DeleteInstallationMessage = {
   kind: "DeleteInstallation" as any
 };
 
-const aNHConfig = NotificationHubConfig.decode({
+const aNHConfig = notificationHubConfig.decode({
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 }).getOrElseL(() => {
