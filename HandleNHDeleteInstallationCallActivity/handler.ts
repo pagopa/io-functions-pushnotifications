@@ -1,17 +1,12 @@
-import { Context } from "@azure/functions";
-import { identity, toString } from "fp-ts/lib/function";
-import { fromEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
-import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import {
-  ActivityResult,
-  ActivityResultFailure,
+  ActivityBody,
   ActivityResultSuccess,
-  success
-} from "../utils/activity";
+  failure
+} from "../utils/durable/activities";
 import { deleteInstallation } from "../utils/notification";
 import {
   buildNHService,
@@ -28,42 +23,18 @@ export const ActivityInput = t.interface({
   notificationHubConfig: NotificationHubConfig
 });
 
-const failActivity = (context: Context, logPrefix: string) => (
-  errorMessage: string,
-  errorDetails?: string
-) => {
-  const details = errorDetails ? `|ERROR_DETAILS=${errorDetails}` : ``;
-  context.log.error(`${logPrefix}|${errorMessage}${details}`);
-  return ActivityResultFailure.encode({
-    kind: "FAILURE",
-    reason: errorMessage
-  });
-};
+export { ActivityResultSuccess } from "../utils/durable/activities";
 
-/**
- * For each Notification Hub Message of type "Delete" calls related Notification Hub service
- */
-export const getCallNHDeleteInstallationActivityHandler = (
-  logPrefix = "NHDeleteCallServiceActivity"
-) => async (context: Context, input: unknown): Promise<ActivityResult> => {
-  const failure = failActivity(context, logPrefix);
-  return fromEither(ActivityInput.decode(input))
-    .mapLeft(errs =>
-      failure("Error decoding activity input", readableReport(errs))
-    )
-    .chain<ActivityResultSuccess>(
-      ({ installationId, notificationHubConfig }) => {
-        context.log.info(`${logPrefix}|INSTALLATION_ID=${installationId}`);
+export type ActivityBodyImpl = ActivityBody<
+  ActivityInput,
+  ActivityResultSuccess
+>;
 
-        const nhService = buildNHService(notificationHubConfig);
-
-        return deleteInstallation(nhService, installationId).mapLeft(e => {
-          // do not trigger a retry as delete may fail in case of 404
-          context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
-          return failure(e.message);
-        });
-      }
-    )
-    .fold<ActivityResult>(identity, success)
-    .run();
+export const activityBody: ActivityBodyImpl = ({ input, logger }) => {
+  logger.info(`INSTALLATION_ID=${input.installationId}`);
+  const nhService = buildNHService(input.notificationHubConfig);
+  return deleteInstallation(nhService, input.installationId).bimap(
+    failure(logger), // do not trigger a retry as delete may fail in case of 404
+    ActivityResultSuccess.encode
+  );
 };
