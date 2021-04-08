@@ -10,6 +10,7 @@ import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/Creat
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
 
+import { OrchestratorName as CreateOrUpdateInstallationOrchestrator } from "../HandleNHCreateOrUpdateInstallationCallOrchestrator/handler";
 import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
 
 export const NotificationMessage = t.union([
@@ -39,8 +40,7 @@ export const getHandler = () => async (
       });
       break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
-      // tslint:disable-next-line: no-duplicated-branches
-      await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
+      await client.startNew(CreateOrUpdateInstallationOrchestrator, undefined, {
         message: notificationHubMessage
       });
       break;

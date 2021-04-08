@@ -1,19 +1,17 @@
-import { Context } from "@azure/functions";
 import { toError } from "fp-ts/lib/Either";
 import * as t from "io-ts";
+import { ActivityLogger } from "./log";
 
-// Activity result
+export type ActivityResultSuccess = t.TypeOf<typeof ActivityResultSuccess>;
 export const ActivityResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
 });
-export type ActivityResultSuccess = t.TypeOf<typeof ActivityResultSuccess>;
 
+export type ActivityResultFailure = t.TypeOf<typeof ActivityResultFailure>;
 export const ActivityResultFailure = t.interface({
   kind: t.literal("FAILURE"),
   reason: t.string
 });
-
-export type ActivityResultFailure = t.TypeOf<typeof ActivityResultFailure>;
 
 export const ActivityResult = t.taggedUnion("kind", [
   ActivityResultSuccess,
@@ -22,27 +20,27 @@ export const ActivityResult = t.taggedUnion("kind", [
 
 export type ActivityResult = t.TypeOf<typeof ActivityResult>;
 
-export const failure = (context: Context, logPrefix: string) => (
+export const failure = (logger: ActivityLogger) => (
   err: Error,
   description: string = ""
 ) => {
   const logMessage =
     description === ""
-      ? `${logPrefix}|FAILURE=${err.message}`
-      : `${logPrefix}|${description}|FAILURE=${err.message}`;
-  context.log.info(logMessage);
+      ? `FAILURE=${err.message}`
+      : `${description}|FAILURE=${err.message}`;
+  logger.info(logMessage);
   return ActivityResultFailure.encode({
     kind: "FAILURE",
     reason: err.message
   });
 };
 
-export const failActivity = (context: Context, logPrefix: string) => (
+export const failActivity = (logger: ActivityLogger) => (
   errorMessage: string,
   errorDetails?: string
 ) => {
   const details = errorDetails ? `|ERROR_DETAILS=${errorDetails}` : ``;
-  context.log.error(`${logPrefix}|${errorMessage}${details}`);
+  logger.error(`${errorMessage}${details}`);
   return ActivityResultFailure.encode({
     kind: "FAILURE",
     reason: errorMessage
@@ -50,8 +48,8 @@ export const failActivity = (context: Context, logPrefix: string) => (
 };
 
 // trigger a rety in case the notification fail
-export const retryActivity = (context: Context, msg: string) => {
-  context.log.error(msg);
+export const retryActivity = (logger: ActivityLogger, msg: string) => {
+  logger.error(msg);
   throw toError(msg);
 };
 

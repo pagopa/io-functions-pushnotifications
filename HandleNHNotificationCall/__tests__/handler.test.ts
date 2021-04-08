@@ -10,7 +10,7 @@ import { DeleteInstallationMessage } from "../../generated/notifications/DeleteI
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 
-import { success } from "../../utils/activity";
+import { success } from "../../utils/durable/activities";
 import { getHandler } from "../handler";
 
 const dfClient = ({
@@ -63,7 +63,7 @@ describe("HandleNHNotificationCall", () => {
     await getHandler()(context as any, aCreateOrUpdateInstallationMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHCreateOrUpdateInstallationCallOrchestrator",
       undefined,
       {
         message: aCreateOrUpdateInstallationMessage

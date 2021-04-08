@@ -16,14 +16,14 @@ import {
   notify
 } from "../utils/notification";
 
+import { initTelemetryClient } from "../utils/appinsights";
 import {
   ActivityResult,
   ActivityResultSuccess,
+  createLogger,
   failActivity,
-  retryActivity,
-  success
-} from "../utils/activity";
-import { initTelemetryClient } from "../utils/appinsights";
+  retryActivity
+} from "../utils/durable/activities";
 import {
   buildNHService,
   NotificationHubConfig
@@ -50,7 +50,8 @@ export const getCallNHServiceActivityHandler = (
   telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
 ) => async (context: Context, input: unknown) => {
-  const failure = failActivity(context, logPrefix);
+  const logger = createLogger(context, logPrefix);
+  const failure = failActivity(logger);
   return fromEither(HandleNHNotificationCallActivityInput.decode(input))
     .mapLeft(errs =>
       failure("Error decoding activity input", readableReport(errs))
@@ -70,15 +71,11 @@ export const getCallNHServiceActivityHandler = (
             message.platform,
             message.pushChannel,
             message.tags
-          )
-            .mapLeft(e =>
-              retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
-            )
-            .map(_ => success());
+          ).mapLeft(e => retryActivity(logger, `ERROR=${toString(e)}`));
         case NotifyKind.Notify:
           return notify(nhService, message.installationId, message.payload)
             .mapLeft(e =>
-              retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
+              retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
             )
             .chainFirst(
               taskEither.of(
