@@ -1,16 +1,12 @@
-import * as df from "durable-functions";
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
-import {
-  ActivityInput as NHDeleteInstallationActivityInput,
-  ActivityName as NHDeleteInstallationActivityName
-} from "../HandleNHDeleteInstallationCallActivity/handler";
 
-import { IConfig } from "../utils/config";
-import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
-import * as o from "../utils/orchestrators";
+import { ActivityBodyImpl as DeleteInstallationActivityBodyImpl } from "../HandleNHDeleteInstallationCallActivity";
+
+import * as o from "../utils/durable/orchestrators";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 /**
  * Orchestrator Name
@@ -28,28 +24,30 @@ export type NhDeleteInstallationOrchestratorCallInput = t.TypeOf<
   typeof NhDeleteInstallationOrchestratorCallInput
 >;
 
-export const getHandler = (envConfig: IConfig) => {
-  const retryOptions = {
-    ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  };
+interface IHandlerParams {
+  deleteInstallationActivity: o.CallableActivity<
+    DeleteInstallationActivityBodyImpl
+  >;
+  legacyNotificationHubConfig: NotificationHubConfig;
+}
 
+export const getHandler = ({
+  deleteInstallationActivity,
+  legacyNotificationHubConfig
+}: IHandlerParams) => {
   return o.createOrchestrator(
     OrchestratorName,
     NhDeleteInstallationOrchestratorCallInput,
     function*({
       context,
-      input: { message } /* , logger */
+      input: {
+        message: { installationId }
+      } /* , logger */
     }): Generator<Task, void, Task> {
-      yield* o.callActivity<NHDeleteInstallationActivityInput>(
-        NHDeleteInstallationActivityName,
-        context,
-        {
-          installationId: message.installationId,
-          notificationHubConfig: getNHLegacyConfig(envConfig)
-        },
-        retryOptions
-      );
+      yield* deleteInstallationActivity(context, {
+        installationId,
+        notificationHubConfig: legacyNotificationHubConfig
+      });
     }
   );
 };
