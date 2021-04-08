@@ -17,10 +17,7 @@ import {
   ActivityResultSuccess,
   success as activitySuccess
 } from "../../utils/durable/activities";
-import {
-  getHandler,
-  NhDeleteInstallationOrchestratorCallInput
-} from "../handler";
+import { getHandler, OrchestratorCallInput } from "../handler";
 import { envConfig } from "../../__mocks__/env-config.mock";
 import {
   CallableActivity,
@@ -41,11 +38,9 @@ const aDeleteNotificationHubMessage: DeleteInstallationMessage = {
   kind: DeleteKind.DeleteInstallation
 };
 
-const nhCallOrchestratorInput = NhDeleteInstallationOrchestratorCallInput.encode(
-  {
-    message: aDeleteNotificationHubMessage
-  }
-);
+const nhCallOrchestratorInput = OrchestratorCallInput.encode({
+  message: aDeleteNotificationHubMessage
+});
 
 const retryOptions = {
   ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),

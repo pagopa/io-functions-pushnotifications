@@ -21,24 +21,19 @@ const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991
 
 const anInstallationId = aFiscalCodeHash;
 
-const aDeleteInStalltionMessage: DeleteInstallationMessage = {
-  installationId: aFiscalCodeHash,
-  kind: "DeleteInstallation" as any
-};
-
 const aNHConfig = {
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 } as NotificationHubConfig;
 
+const mockNotificationHubService = {
+  deleteInstallation: jest.fn()
+};
 const mockBuildNHService = jest
   .fn()
   .mockImplementation(
     _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
   );
-const mockNotificationHubService = {
-  deleteInstallation: jest.fn()
-};
 
 const handler = createActivity(
   activityName,

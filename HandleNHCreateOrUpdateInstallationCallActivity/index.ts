@@ -1,5 +1,10 @@
 import { createActivity } from "../utils/durable/activities";
-import { activityBody, ActivityInput, ActivityResultSuccess } from "./handler";
+import { buildNHService } from "../utils/notificationhubServicePartition";
+import {
+  ActivityInput,
+  ActivityResultSuccess,
+  getActivityBody
+} from "./handler";
 
 export {
   ActivityBodyImpl,
@@ -12,7 +17,7 @@ const activityFunctionHandler = createActivity(
   activityName,
   ActivityInput,
   ActivityResultSuccess,
-  activityBody
+  getActivityBody(buildNHService)
 );
 
 export default activityFunctionHandler;
