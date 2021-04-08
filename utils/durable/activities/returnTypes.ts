@@ -38,7 +38,7 @@ export const failure = (logger: ActivityLogger) => (
 export const failActivity = (logger: ActivityLogger) => (
   errorMessage: string,
   errorDetails?: string
-) => {
+): ActivityResultFailure => {
   const details = errorDetails ? `|ERROR_DETAILS=${errorDetails}` : ``;
   logger.error(`${errorMessage}${details}`);
   return ActivityResultFailure.encode({
@@ -47,8 +47,8 @@ export const failActivity = (logger: ActivityLogger) => (
   });
 };
 
-// trigger a rety in case the notification fail
-export const retryActivity = (logger: ActivityLogger, msg: string) => {
+// trigger a rety in case of activity failure
+export const retryActivity = (logger: ActivityLogger, msg: string): never => {
   logger.error(msg);
   throw toError(msg);
 };

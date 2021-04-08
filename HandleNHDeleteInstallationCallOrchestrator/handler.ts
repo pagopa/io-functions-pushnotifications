@@ -1,11 +1,16 @@
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
-import * as o from "../utils/durable/orchestrators";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
-import { ActivityBodyImpl as DeleteActivityBodyImpl } from "../HandleNHDeleteInstallationCallActivity";
+
+import { ActivityBodyImpl as DeleteInstallationActivityBodyImpl } from "../HandleNHDeleteInstallationCallActivity";
+
+import * as o from "../utils/durable/orchestrators";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
+/**
+ * Orchestrator Name
+ */
 export const OrchestratorName = "HandleNHDeleteInstallationCallOrchestrator";
 
 /**
@@ -17,13 +22,15 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  deleteActivity: o.CallableActivity<DeleteActivityBodyImpl>;
-  notificationHubConfig: NotificationHubConfig;
+  deleteInstallationActivity: o.CallableActivity<
+    DeleteInstallationActivityBodyImpl
+  >;
+  legacyNotificationHubConfig: NotificationHubConfig;
 }
 
 export const getHandler = ({
-  deleteActivity,
-  notificationHubConfig
+  deleteInstallationActivity,
+  legacyNotificationHubConfig
 }: IHandlerParams) => {
   return o.createOrchestrator(
     OrchestratorName,
@@ -32,11 +39,11 @@ export const getHandler = ({
       context,
       input: {
         message: { installationId }
-      }
+      } /* , logger */
     }): Generator<Task, void, Task> {
-      yield* deleteActivity(context, {
+      yield* deleteInstallationActivity(context, {
         installationId,
-        notificationHubConfig
+        notificationHubConfig: legacyNotificationHubConfig
       });
     }
   );

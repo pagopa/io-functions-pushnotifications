@@ -1,31 +1,29 @@
-﻿import * as df from "durable-functions";
-import * as o from "../utils/durable/orchestrators";
-
-import { getConfigOrThrow } from "../utils/config";
-import { getHandler } from "./handler";
-
+import * as df from "durable-functions";
 import {
-  ActivityBodyImpl as DeleteActivityBodyImpl,
-  activityName as DeleteActivityName,
-  ActivityResultSuccess as DeleteActivityResultSuccess
+  ActivityBodyImpl as DeleteInstallationActivityBodyImpl,
+  activityName as DeleteInstallationActivityName,
+  ActivityResultSuccess as DeleteInstallationActivityResultSuccess
 } from "../HandleNHDeleteInstallationCallActivity";
+import { getConfigOrThrow } from "../utils/config";
+import * as o from "../utils/durable/orchestrators";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 
-const deleteActivity = o.callableActivity<DeleteActivityBodyImpl>(
-  DeleteActivityName,
-  DeleteActivityResultSuccess,
-  {
-    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  }
-);
+const deleteInstallationActivity = o.callableActivity<
+  DeleteInstallationActivityBodyImpl
+>(DeleteInstallationActivityName, DeleteInstallationActivityResultSuccess, {
+  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+  backoffCoefficient: 1.5
+});
 
-const notificationHubConfig = getNHLegacyConfig(config);
+const legacyNotificationHubConfig = getNHLegacyConfig(config);
 
-const handler = getHandler({ deleteActivity, notificationHubConfig });
-
+const handler = getHandler({
+  deleteInstallationActivity,
+  legacyNotificationHubConfig
+});
 const orchestrator = df.orchestrator(handler);
 
 export default orchestrator;

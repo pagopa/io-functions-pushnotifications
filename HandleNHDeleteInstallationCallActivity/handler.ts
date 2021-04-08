@@ -1,3 +1,5 @@
+import { NotificationHubService } from "azure-sb";
+import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
@@ -5,13 +7,10 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import {
   ActivityBody,
   ActivityResultSuccess,
-  failure
+  failActivity
 } from "../utils/durable/activities";
 import { deleteInstallation } from "../utils/notification";
-import {
-  buildNHService,
-  NotificationHubConfig
-} from "../utils/notificationhubServicePartition";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // Activity name for df
 export const ActivityName = "HandleNHDeleteInstallationCallActivity";
@@ -23,18 +22,23 @@ export const ActivityInput = t.interface({
   notificationHubConfig: NotificationHubConfig
 });
 
+// Activity Result
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
-export type ActivityBodyImpl = ActivityBody<
-  ActivityInput,
-  ActivityResultSuccess
->;
+export type ActivityBodyImpl = ActivityBody<ActivityInput>;
 
-export const activityBody: ActivityBodyImpl = ({ input, logger }) => {
+/**
+ * For each Notification Hub Message of type "Delete" calls related Notification Hub service
+ */
+
+export const getActivityBody = (
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
+
   return deleteInstallation(nhService, input.installationId).bimap(
-    failure(logger), // do not trigger a retry as delete may fail in case of 404
+    e => failActivity(logger)(`ERROR=${toString(e)}`),
     ActivityResultSuccess.encode
   );
 };
