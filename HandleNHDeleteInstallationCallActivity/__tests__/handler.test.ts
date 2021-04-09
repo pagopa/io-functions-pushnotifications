@@ -4,17 +4,18 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import {
   getActivityBody,
-  ActivityBodyImpl,
   ActivityInput,
   ActivityResultSuccess
 } from "../handler";
 
 import * as azure from "azure-sb";
-import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
-import { createActivity, success } from "../../utils/durable/activities";
+import {
+  ActivityResultFailure,
+  createActivity
+} from "../../utils/durable/activities";
 import { activityName } from "..";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
@@ -62,7 +63,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
 
     expect(mockBuildNHService).toHaveBeenCalledWith(aNHConfig);
 
-    expect(res.kind).toEqual("SUCCESS");
+    expect(ActivityResultSuccess.is(res)).toBeTruthy();
   });
 
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
@@ -78,6 +79,6 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
     expect(mockNotificationHubService.deleteInstallation).toHaveBeenCalledTimes(
       1
     );
-    expect(res.kind).toEqual("FAILURE");
+    expect(ActivityResultFailure.is(res)).toBeTruthy();
   });
 });

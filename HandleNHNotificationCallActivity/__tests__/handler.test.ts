@@ -16,6 +16,7 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubService } from "azure-sb";
+import { ActivityResultFailure } from "../../utils/durable/activities";
 
 const createOrUpdateInstallationSpy = jest
   .spyOn(azure.NotificationHubService.prototype, "createOrUpdateInstallation")
@@ -142,6 +143,6 @@ describe("HandleNHNotificationCallActivity", () => {
     });
     const res = await handler(contextMock as any, input);
     expect(deleteInstallationSpy).toHaveBeenCalledTimes(1);
-    expect(res.kind).toEqual("FAILURE");
+    expect(ActivityResultFailure.is(res)).toBeTruthy();
   });
 });

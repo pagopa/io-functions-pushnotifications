@@ -11,11 +11,9 @@ import * as azure from "azure-sb";
 import { PlatformEnum } from "../../generated/backend/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
-import * as notificationhubServicePartition from "../../utils/notificationhubServicePartition";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
-import { Azure, NotificationHubService } from "azure-sb";
 import { createActivity } from "../../utils/durable/activities";
 
 const activityName = "any";
@@ -74,7 +72,7 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     expect.assertions(3);
 
     const res = await handler(contextMock as any, input);
-    expect(res.kind).toEqual("SUCCESS");
+    expect(ActivityResultSuccess.is(res)).toBeTruthy();
 
     expect(mockBuildNHService).toHaveBeenCalledTimes(1);
     expect(mockBuildNHService).toBeCalledWith(aNHConfig);
