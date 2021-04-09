@@ -12,6 +12,7 @@ import {
   getIsUserInActiveSubsetHandler
 } from "../handler";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { ActivityResultFailure } from "../../utils/activity";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -24,33 +25,37 @@ const userIsNotInActiveSubset: ReturnType<typeof getIsInActiveSubset> = _ =>
 const userIsInActiveSubset_Error: ReturnType<typeof getIsInActiveSubset> = _ =>
   fromEither(left(new Error("Test Error")));
 
-describe("IsUserInActiveSubsetActivity", () => {
-  it("should return true", async () => {
+describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
+  it("should return false if `userIsNotInActiveSubset` return true", async () => {
     const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset);
 
-    const input = ActivityInput.encode({
-      enabledFeatureFlag: NHPartitionFeatureFlag.all,
+    var result = await handler(contextMock as any, {
+      enabledFeatureFlag: NHPartitionFeatureFlag.beta,
       sha: aFiscalCodeHash
     });
-    var result = await handler(contextMock as any, input);
-    expect(result.kind).toBe("SUCCESS");
 
-    expect((result as any).value).toBeTruthy();
+    ActivitySuccessWithValue.decode(result).fold(
+      _ => fail(),
+      r => expect(r.value).toBe(true)
+    );
   });
-  it("should return false", async () => {
+
+  it("should return false if `userIsNotInActiveSubset` return false", async () => {
     const handler = getIsUserInActiveSubsetHandler(userIsNotInActiveSubset);
 
     const input = ActivityInput.encode({
-      enabledFeatureFlag: NHPartitionFeatureFlag.all,
+      enabledFeatureFlag: NHPartitionFeatureFlag.beta,
       sha: aFiscalCodeHash
     });
     var result = await handler(contextMock as any, input);
-    expect(result.kind).toBe("SUCCESS");
 
-    expect((result as any).value).toBeFalsy();
+    ActivitySuccessWithValue.decode(result).fold(
+      _ => fail(),
+      r => expect(r.value).toBe(false)
+    );
   });
 
-  it("should throw Exception if an error occurred in function", async () => {
+  it("should throw Exception if an error occurred in `userIsNotInActiveSubset` function", async () => {
     const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset_Error);
 
     expect.assertions(1);
@@ -59,13 +64,13 @@ describe("IsUserInActiveSubsetActivity", () => {
         enabledFeatureFlag: NHPartitionFeatureFlag.all,
         sha: aFiscalCodeHash
       });
-      var result = await handler(contextMock as any, input);
+      await handler(contextMock as any, input);
     } catch (e) {
-      expect(true).toBeTruthy();
+      expect(true).toBe(true);
     }
   });
 
-  it("should return Error if input is wrong", async () => {
+  it("should return Error if activity input is wrong", async () => {
     const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset_Error);
 
     const input = {
@@ -73,6 +78,6 @@ describe("IsUserInActiveSubsetActivity", () => {
       sha: aFiscalCodeHash
     };
     var result = await handler(contextMock as any, input);
-    expect(result.kind).toBe("FAILURE");
+    expect(ActivityResultFailure.is(result)).toBe(true);
   });
 });

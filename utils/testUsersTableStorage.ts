@@ -1,9 +1,7 @@
 import { TableQuery, TableService } from "azure-storage";
-import { toError } from "fp-ts/lib/Either";
-import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
-const tryUserExists = (
+export const tryUserExists = (
   tableService: TableService,
   tableName: string,
   sha: InstallationId
@@ -24,12 +22,3 @@ const tryUserExists = (
       }
     );
   });
-
-/**
- * Returns a paged query function for a certain query on a storage table
- */
-export const getIsUserATestUser = (
-  tableService: TableService,
-  tableName: string
-) => (sha: InstallationId): TaskEither<Error, boolean> =>
-  tryCatch(() => tryUserExists(tableService, tableName, sha), toError);
