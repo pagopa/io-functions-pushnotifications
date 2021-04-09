@@ -29,6 +29,8 @@ import {
   OrchestratorUnhandledFailure
 } from "../../utils/durable/orchestrators";
 import { ActivityBodyImpl as CreateOrUpdateActivityBody } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
+import { ActivityBodyImpl as IsUserInActiveSubsetActivityBody } from "../../IsUserInActiveSubsetActivity";
+import { NHPartitionFeatureFlag } from "../../utils/config";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -70,8 +72,20 @@ const mockCreateOrUpdateActivity = jest.fn<
   ReturnType<CallableCreateOrUpdateActivity>,
   Parameters<CallableCreateOrUpdateActivity>
 >(function*() {
-  return { kind: "SUCCESS", value: "foo" };
+  return { kind: "SUCCESS" };
 });
+
+type CallableIsUserInActiveSubsetActivity = CallableActivity<
+  IsUserInActiveSubsetActivityBody // FIXME: the editor marks it as type error, but tests compile correctly
+>;
+
+const getMockIsUserATestUserActivity = (res: boolean) =>
+  jest.fn<
+    ReturnType<CallableIsUserInActiveSubsetActivity>,
+    Parameters<CallableIsUserInActiveSubsetActivity>
+  >(function*() {
+    return { kind: "SUCCESS", value: res };
+  });
 
 const mockGetInput = jest.fn<unknown, []>(() => anOrchestratorInput);
 const contextMock = ({
@@ -87,9 +101,13 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     jest.clearAllMocks();
   });
   it("should start the activities with the right inputs", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      notificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      notificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -117,9 +135,13 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     };
     mockGetInput.mockImplementationOnce(() => input);
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      notificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      notificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -143,9 +165,13 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
       throw new Error("any exception");
     });
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      notificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      notificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -163,9 +189,13 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
       throw failureActivity("any activity name", "any reason");
     });
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      notificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      notificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);

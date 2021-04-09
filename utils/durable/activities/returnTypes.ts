@@ -54,17 +54,6 @@ export const retryActivity = (logger: ActivityLogger, msg: string): never => {
 };
 
 /**
- * Build a retryActivity from `context` and `logPrefix`
- * @param context
- * @param logPrefix
- * @returns a function that log the error and throw an exception
- *          so that the orchestrator can retry the activity
- */
-export const getRetryActivity = (context: Context, logPrefix: string) => (
-  e: Error
-) => retryActivity(context, `${logPrefix}|ERROR=${e.message}`);
-
-/**
  * @returns an `ActivityResultSuccess`
  */
 export const success = () =>

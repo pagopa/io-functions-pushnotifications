@@ -2,12 +2,15 @@
 
 import { getIsUserATestUser } from "../utils/checkTestUsers";
 import { getConfigOrThrow } from "../utils/config";
+import { createActivity } from "../utils/durable/activities";
 import { getIsInActiveSubset } from "../utils/featureFlags";
 
 import {
+  ActivityBodyImpl,
   ActivityInput,
-  ActivitySuccessWithValue,
-  getIsUserInActiveSubsetHandler
+  activityResultSuccessWithValue,
+  ActivityResultSuccessWithValue,
+  getActivityBody
 } from "./handler";
 
 const config = getConfigOrThrow();
@@ -16,14 +19,26 @@ const tableService = createTableService(
   config.BETA_USERS_STORAGE_CONNECTION_STRING
 );
 
-const activityFunction = getIsUserInActiveSubsetHandler(
+export {
+  ActivityBodyImpl,
+  ActivityInput,
+  ActivityResultSuccessWithValue,
+  activityResultSuccessWithValue
+};
+
+export const activityName = "IsUserInActiveSubsetActivity";
+
+const activityFunction = getActivityBody(
   getIsInActiveSubset(
     getIsUserATestUser(tableService, config.BETA_USERS_TABLE_NAME)
   )
 );
 
-export { ActivityInput, ActivitySuccessWithValue };
+const activityFunctionHandler = createActivity(
+  activityName,
+  ActivityInput,
+  activityResultSuccessWithValue,
+  activityFunction
+);
 
-export const activityName = "IsUserInActiveSubsetActivity";
-
-export default activityFunction;
+export default activityFunctionHandler;

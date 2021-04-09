@@ -8,12 +8,10 @@ import { KindEnum as DeleteKind } from "../../generated/notifications/DeleteInst
 
 import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 import {
-  ActivityBodyImpl,
   ActivityInput as NHCallServiceActivityInput,
   ActivityName
 } from "../../HandleNHDeleteInstallationCallActivity/handler";
 import {
-  ActivityResult,
   ActivityResultSuccess,
   success as activitySuccess
 } from "../../utils/durable/activities";
@@ -26,9 +24,11 @@ import {
 } from "../../utils/durable/orchestrators";
 
 import { ActivityBodyImpl as DeleteInstallationActivityBody } from "../../HandleNHDeleteInstallationCallActivity";
+import { ActivityBodyImpl as IsUserInActiveSubsetActivityBody } from "../../IsUserInActiveSubsetActivity";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { readableReport } from "italia-ts-commons/lib/reporters";
+import { NHPartitionFeatureFlag } from "../../utils/config";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const anInstallationId = aFiscalCodeHash;
@@ -64,6 +64,18 @@ const deleteInstallationActivity = o.callableActivity<
   DeleteInstallationActivityBody
 >(ActivityName, ActivityResultSuccess, retryOptions);
 
+type CallableIsUserInActiveSubsetActivity = CallableActivity<
+  IsUserInActiveSubsetActivityBody // FIXME: the editor marks it as type error, but tests compile correctly
+>;
+
+const getMockIsUserATestUserActivity = (res: boolean) =>
+  jest.fn<
+    ReturnType<CallableIsUserInActiveSubsetActivity>,
+    Parameters<CallableIsUserInActiveSubsetActivity>
+  >(function*() {
+    return { kind: "SUCCESS", value: res };
+  });
+
 const mockGetInput = jest.fn<unknown, []>(() => nhCallOrchestratorInput);
 const contextMockWithDf = ({
   ...contextMockBase,
@@ -78,9 +90,13 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     jest.clearAllMocks();
   });
   it("should start the activities with the right inputs", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      legacyNotificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMockWithDf as any);
 
     // call orchestrator 1 time
@@ -100,9 +116,13 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
   });
 
   it("should end the activity with SUCCESS in two steps", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      legacyNotificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMockWithDf as any);
 
     // call orchestrator 1 time
@@ -123,9 +143,13 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
 
     mockGetInput.mockImplementationOnce(() => nhCallOrchestratorInput);
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
+      legacyNotificationHubConfig: aNotificationHubConfig,
+      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
     })(contextMockWithDf as any);
 
     var res = orchestratorHandler.next();

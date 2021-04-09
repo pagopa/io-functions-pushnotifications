@@ -8,13 +8,24 @@ import { context as contextMock } from "../../__mocks__/durable-functions";
 
 import {
   ActivityInput,
-  ActivitySuccessWithValue,
-  getIsUserInActiveSubsetHandler
+  activityResultSuccessWithValue,
+  ActivityResultSuccessWithValue,
+  getActivityBody
 } from "../handler";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { ActivityResultFailure } from "../../utils/activity";
+import {
+  ActivityResult,
+  ActivityResultFailure
+} from "../../utils/durable/activities";
+import {
+  ActivityLogger,
+  createLogger
+} from "../../utils/durable/activities/log";
+import { identity } from "fp-ts/lib/function";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
+
+const mockLogger: ActivityLogger = createLogger(contextMock as any, "");
 
 const userIsInActiveSubset: ReturnType<typeof getIsInActiveSubset> = _ =>
   fromEither(right(true));
@@ -22,62 +33,67 @@ const userIsInActiveSubset: ReturnType<typeof getIsInActiveSubset> = _ =>
 const userIsNotInActiveSubset: ReturnType<typeof getIsInActiveSubset> = _ =>
   fromEither(right(false));
 
-const userIsInActiveSubset_Error: ReturnType<typeof getIsInActiveSubset> = _ =>
+const userIsInActiveSubsetError: ReturnType<typeof getIsInActiveSubset> = _ =>
   fromEither(left(new Error("Test Error")));
 
 describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
-  it("should return false if `userIsNotInActiveSubset` return true", async () => {
-    const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset);
-
-    var result = await handler(contextMock as any, {
+  it("should return false if userIsNotInActiveSubset return true", async () => {
+    const handler = getActivityBody(userIsInActiveSubset);
+    const input = {
       enabledFeatureFlag: NHPartitionFeatureFlag.beta,
-      sha: aFiscalCodeHash
-    });
+      installationId: aFiscalCodeHash
+    };
+    const result = await handler({
+      context: contextMock as any,
+      input,
+      logger: mockLogger
+    })
+      .fold<ActivityResult>(identity, identity)
+      .run();
 
-    ActivitySuccessWithValue.decode(result).fold(
+    activityResultSuccessWithValue.decode(result).fold(
       _ => fail(),
       r => expect(r.value).toBe(true)
     );
   });
 
-  it("should return false if `userIsNotInActiveSubset` return false", async () => {
-    const handler = getIsUserInActiveSubsetHandler(userIsNotInActiveSubset);
+  it("should return false if userIsNotInActiveSubset return false", async () => {
+    const handler = getActivityBody(userIsNotInActiveSubset);
 
-    const input = ActivityInput.encode({
+    const input = {
       enabledFeatureFlag: NHPartitionFeatureFlag.beta,
-      sha: aFiscalCodeHash
-    });
-    var result = await handler(contextMock as any, input);
+      installationId: aFiscalCodeHash
+    };
+    const result = await handler({
+      context: contextMock as any,
+      input,
+      logger: mockLogger
+    })
+      .fold<ActivityResult>(identity, identity)
+      .run();
 
-    ActivitySuccessWithValue.decode(result).fold(
+    activityResultSuccessWithValue.decode(result).fold(
       _ => fail(),
       r => expect(r.value).toBe(false)
     );
   });
 
   it("should throw Exception if an error occurred in `userIsNotInActiveSubset` function", async () => {
-    const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset_Error);
+    const handler = getActivityBody(userIsInActiveSubsetError);
 
     expect.assertions(1);
     try {
       const input = ActivityInput.encode({
         enabledFeatureFlag: NHPartitionFeatureFlag.all,
-        sha: aFiscalCodeHash
+        installationId: aFiscalCodeHash
       });
-      await handler(contextMock as any, input);
+      await handler({
+        context: contextMock as any,
+        input,
+        logger: mockLogger
+      }).run();
     } catch (e) {
       expect(true).toBe(true);
     }
-  });
-
-  it("should return Error if activity input is wrong", async () => {
-    const handler = getIsUserInActiveSubsetHandler(userIsInActiveSubset_Error);
-
-    const input = {
-      enabledFeatureFlag: "wrong",
-      sha: aFiscalCodeHash
-    };
-    var result = await handler(contextMock as any, input);
-    expect(ActivityResultFailure.is(result)).toBe(true);
   });
 });
