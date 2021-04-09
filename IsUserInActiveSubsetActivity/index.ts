@@ -1,8 +1,14 @@
 ﻿import { createTableService } from "azure-storage";
+
+import { getIsUserATestUser } from "../utils/checkTestUsers";
 import { getConfigOrThrow } from "../utils/config";
 import { getIsInActiveSubset } from "../utils/featureFlags";
-import { getIsUserATestUser } from "../utils/testUsersTableStorage";
-import { getIsUserInActiveSubsetHandler } from "./handler";
+
+import {
+  ActivityInput,
+  ActivitySuccessWithValue,
+  getIsUserInActiveSubsetHandler
+} from "./handler";
 
 const config = getConfigOrThrow();
 
@@ -15,5 +21,9 @@ const activityFunction = getIsUserInActiveSubsetHandler(
     getIsUserATestUser(tableService, config.BETA_USERS_TABLE_NAME)
   )
 );
+
+export { ActivityInput, ActivitySuccessWithValue };
+
+export const activityName = "IsUserInActiveSubsetActivity";
 
 export default activityFunction;

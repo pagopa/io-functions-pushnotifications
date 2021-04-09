@@ -19,10 +19,11 @@ describe("featureFlags", () => {
       )
       .run()
       .then(v => {
-        expect(isRight(v)).toBeTruthy();
-        expect(v.value).toBeTruthy();
+        expect(isRight(v)).toBe(true);
+        expect(v.value).toBe(true);
       });
   });
+
   it("should return `false` when feature flag `none` is enabled", () => {
     expect.assertions(2);
 
@@ -33,8 +34,38 @@ describe("featureFlags", () => {
       )
       .run()
       .then(v => {
-        expect(isRight(v)).toBeTruthy();
-        expect(v.value).toBeFalsy();
+        expect(isRight(v)).toBe(true);
+        expect(v.value).toBe(false);
+      });
+  });
+
+  it("should return `true` when feature flag `beta` is enabled adn user is a beta test user", () => {
+    expect.assertions(2);
+
+    featureFlags
+      .getIsInActiveSubset(_ => fromEither(right(true)))(
+        NHPartitionFeatureFlag.beta,
+        aFiscalCodeHash
+      )
+      .run()
+      .then(v => {
+        expect(isRight(v)).toBe(true);
+        expect(v.value).toBe(true);
+      });
+  });
+
+  it("should return `false` when feature flag `beta` is enabled adn user is NOT a beta test user", () => {
+    expect.assertions(2);
+
+    featureFlags
+      .getIsInActiveSubset(_ => fromEither(right(false)))(
+        NHPartitionFeatureFlag.beta,
+        aFiscalCodeHash
+      )
+      .run()
+      .then(v => {
+        expect(isRight(v)).toBe(true);
+        expect(v.value).toBe(false);
       });
   });
 });
