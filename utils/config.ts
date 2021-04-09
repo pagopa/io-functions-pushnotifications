@@ -9,14 +9,15 @@ import * as t from "io-ts";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { enumType, withDefault } from "italia-ts-commons/lib/types";
+import { withDefault } from "italia-ts-commons/lib/types";
 
-export enum NHPartitionFeatureFlag {
-  "none" = "none",
-  "beta" = "beta",
-  "canary" = "canary",
-  "all" = "all"
-}
+export type NHPartitionFeatureFlag = t.TypeOf<typeof NHPartitionFeatureFlag>;
+export const NHPartitionFeatureFlag = t.keyof({
+  all: null,
+  beta: null,
+  canary: null,
+  none: null
+});
 
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
@@ -38,10 +39,7 @@ export const IConfig = t.intersection([
     isProduction: t.boolean
   }),
   t.interface({
-    NH_PARTITION_FEATURE_FLAG: enumType<NHPartitionFeatureFlag>(
-      NHPartitionFeatureFlag,
-      "NHPartitionFeatureFlag"
-    ),
+    NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag,
 
     BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
     BETA_USERS_TABLE_NAME: NonEmptyString

@@ -11,12 +11,12 @@ import { NotificationMessage } from "../HandleNHNotificationCall/handler";
 import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
 import {
   ActivityInput as IsUserInActiveSubsetActivityInput,
-  ActivitySuccessWithValue
-} from "../IsUserInActiveSubsetActivity/handler";
+  activityResultSuccessWithValue
+} from "../IsUserInActiveSubsetActivity";
 
 import { IConfig } from "../utils/config";
+import { trackExceptionAndThrow } from "../utils/durable/orchestrators/log";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
-import { trackExceptionAndThrow } from "../utils/orchestrators";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -65,8 +65,8 @@ export const getHandler = (
     // Dummy implementation for testing
 
     const isUserEnabledForTestActivityInput: IsUserInActiveSubsetActivityInput = {
-      enabledFeatureFlag: envConfig.NH_PARTITION_FEATURE_FLAG,
-      sha: errorOrNHCallOrchestratorInput.value.message.installationId
+      installationId:
+        errorOrNHCallOrchestratorInput.value.message.installationId
     };
 
     const isUserEnabledForTestOutput = yield context.df.callActivityWithRetry(
@@ -75,14 +75,14 @@ export const getHandler = (
       isUserEnabledForTestActivityInput
     );
 
-    const isUserEnabledForTest = ActivitySuccessWithValue.decode(
-      isUserEnabledForTestOutput
-    ).getOrElseL(_ =>
-      trackExAndThrow(
-        _,
-        "notificationorchestrator.exception.failure.isuserenabled"
-      )
-    );
+    const isUserEnabledForTest = activityResultSuccessWithValue
+      .decode(isUserEnabledForTestOutput)
+      .getOrElseL(_ =>
+        trackExAndThrow(
+          _,
+          "notificationorchestrator.exception.failure.isuserenabled"
+        )
+      );
 
     if (isUserEnabledForTest.value) {
       const nhConfig = getNHLegacyConfig(envConfig);

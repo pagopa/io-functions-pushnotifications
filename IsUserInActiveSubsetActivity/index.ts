@@ -1,29 +1,37 @@
-﻿import { createTableService } from "azure-storage";
-
-import { getIsUserATestUser } from "../utils/checkTestUsers";
-import { getConfigOrThrow } from "../utils/config";
-import { getIsInActiveSubset } from "../utils/featureFlags";
+﻿import { getConfigOrThrow } from "../utils/config";
+import { createActivity } from "../utils/durable/activities";
+import {
+  getIsInActiveSubset,
+  getIsUserABetaTestUser
+} from "../utils/featureFlags";
 
 import {
   ActivityInput,
-  ActivitySuccessWithValue,
-  getIsUserInActiveSubsetHandler
+  ActivityResultSuccessWithValue,
+  activityResultSuccessWithValue,
+  getActivityBody
 } from "./handler";
+
+export {
+  ActivityInput,
+  ActivityResultSuccessWithValue,
+  activityResultSuccessWithValue
+};
 
 const config = getConfigOrThrow();
 
-const tableService = createTableService(
-  config.BETA_USERS_STORAGE_CONNECTION_STRING
-);
-
-const activityFunction = getIsUserInActiveSubsetHandler(
-  getIsInActiveSubset(
-    getIsUserATestUser(tableService, config.BETA_USERS_TABLE_NAME)
-  )
-);
-
-export { ActivityInput, ActivitySuccessWithValue };
-
 export const activityName = "IsUserInActiveSubsetActivity";
 
-export default activityFunction;
+const activityFunction = getActivityBody({
+  enabledFeatureFlag: config.NH_PARTITION_FEATURE_FLAG,
+  isInActiveSubset: getIsInActiveSubset(getIsUserABetaTestUser())
+});
+
+const activityFunctionHandler = createActivity(
+  activityName,
+  ActivityInput,
+  activityResultSuccessWithValue,
+  activityFunction
+);
+
+export default activityFunctionHandler;

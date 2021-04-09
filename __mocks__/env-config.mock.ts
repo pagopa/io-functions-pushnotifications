@@ -15,7 +15,7 @@ export const envConfig: IConfig = {
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
 
-  NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag.all,
+  NH_PARTITION_FEATURE_FLAG: "all",
   BETA_USERS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   BETA_USERS_TABLE_NAME: "nhpartitiontestusers" as NonEmptyString
 };

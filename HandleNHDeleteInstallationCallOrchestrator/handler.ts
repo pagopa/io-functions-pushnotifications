@@ -1,12 +1,16 @@
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
+import * as o from "../utils/durable/orchestrators";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 
 import { ActivityInput as DeleteInstallationActivityInput } from "../HandleNHDeleteInstallationCallActivity";
-
-import * as o from "../utils/durable/orchestrators";
-import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
+} from "../IsUserInActiveSubsetActivity";
 
 /**
  * Orchestrator Name
@@ -25,11 +29,16 @@ interface IHandlerParams {
   deleteInstallationActivity: o.CallableActivity<
     DeleteInstallationActivityInput
   >;
+  isUserInActiveTestSubsetActivity: o.CallableActivity<
+    IsUserInActiveSubsetActivityInput,
+    IsUserInActiveSubsetResultSuccess
+  >;
   legacyNotificationHubConfig: NotificationHubConfig;
 }
 
 export const getHandler = ({
   deleteInstallationActivity,
+  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig
 }: IHandlerParams) => {
   return o.createOrchestrator(
@@ -39,8 +48,17 @@ export const getHandler = ({
       context,
       input: {
         message: { installationId }
-      } /* , logger */
+      },
+      logger
     }): Generator<Task, void, Task> {
+      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+        installationId
+      });
+
+      logger.info(
+        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
+      );
+
       yield* deleteInstallationActivity(context, {
         installationId,
         notificationHubConfig: legacyNotificationHubConfig

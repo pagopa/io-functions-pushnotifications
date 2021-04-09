@@ -6,6 +6,10 @@ import {
   ActivityInput as NotifyMessageActivityInput,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../HandleNHNotifyMessageCallActivity";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetActivityResultSuccess
+} from "../IsUserInActiveSubsetActivity";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
@@ -36,17 +40,36 @@ interface IHandlerParams {
     NotifyMessageActivityInput,
     NotifyMessageActivityResultSuccess
   >;
+  isUserInActiveTestSubsetActivity: CallableActivity<
+    IsUserInActiveSubsetActivityInput,
+    IsUserInActiveSubsetActivityResultSuccess
+  >;
   legacyNotificationHubConfig: NotificationHubConfig;
 }
 
 export const getHandler = ({
   notifyMessageActivity,
+  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig
 }: IHandlerParams) => {
   return createOrchestrator(
     OrchestratorName,
     NhNotifyMessageOrchestratorCallInput,
-    function*({ context, input: { message } }): Generator<Task, void, Task> {
+    function*({
+      context,
+      input: { message },
+      logger
+    }): Generator<Task, void, Task> {
+      const installationId = message.installationId;
+
+      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+        installationId
+      });
+
+      logger.info(
+        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
+      );
+
       yield* notifyMessageActivity(context, {
         message,
         notificationHubConfig: legacyNotificationHubConfig

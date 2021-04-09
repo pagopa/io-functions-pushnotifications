@@ -17,12 +17,12 @@ export type ActivityBody<
   Input = unknown,
   Success extends ActivityResultSuccess = ActivityResultSuccess,
   Failure extends ActivityResultFailure = ActivityResultFailure
-  // Bindings extends Array<unknown> = []
 > = (p: {
   context: Context;
   logger: ActivityLogger;
   input: Input;
-  // bindings?: Bindings;
+  // tslint:disable-next-line: no-any
+  [key: string]: any;
 }) => TaskEither<Failure, Success>;
 
 // All activity will return ActivityResultFailure, ActivityResultSuccess or some derived types
@@ -62,7 +62,7 @@ export const createActivity = <
         readableReport(errs)
       )
     )
-    .chain(input => body({ context, logger, input }))
+    .chain(input => body({ context, logger, input, ...context.bindings }))
     .map(e => OutputCodec.encode(e))
     .fold<ActivityResult<F | S>>(identity, identity)
     .run();

@@ -9,6 +9,13 @@ import {
   activityName as CreateOrUpdateActivityName,
   ActivityResultSuccess as CreateOrUpdateActivityResultSuccess
 } from "../HandleNHCreateOrUpdateInstallationCallActivity";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  activityName as IsUserInActiveSubsetActivityName,
+  activityResultSuccessWithValue as isUserInActiveSubsetActivitySuccess,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
+} from "../IsUserInActiveSubsetActivity";
+
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 
 const config = getConfigOrThrow();
@@ -22,9 +29,21 @@ const createOrUpdateActivity = o.callableActivity<CreateOrUpdateActivityInput>(
   }
 );
 
+const isUserInActiveTestSubsetActivity = o.callableActivity<
+  IsUserInActiveSubsetActivityInput,
+  IsUserInActiveSubsetResultSuccess
+>(IsUserInActiveSubsetActivityName, isUserInActiveSubsetActivitySuccess, {
+  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+  backoffCoefficient: 1.5
+});
+
 const notificationHubConfig = getNHLegacyConfig(config);
 
-const handler = getHandler({ createOrUpdateActivity, notificationHubConfig });
+const handler = getHandler({
+  createOrUpdateActivity,
+  isUserInActiveTestSubsetActivity,
+  notificationHubConfig
+});
 
 const orchestrator = df.orchestrator(handler);
 

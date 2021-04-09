@@ -1,10 +1,15 @@
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
+
 import * as o from "../utils/durable/orchestrators";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity";
-import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
+} from "../IsUserInActiveSubsetActivity";
 
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
@@ -22,11 +27,16 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 
 interface IHandlerParams {
   createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityInput>;
+  isUserInActiveTestSubsetActivity: o.CallableActivity<
+    IsUserInActiveSubsetActivityInput,
+    IsUserInActiveSubsetResultSuccess
+  >;
   notificationHubConfig: NotificationHubConfig;
 }
 
 export const getHandler = ({
   createOrUpdateActivity,
+  isUserInActiveTestSubsetActivity,
   notificationHubConfig
 }: IHandlerParams) => {
   return o.createOrchestrator(
@@ -36,8 +46,17 @@ export const getHandler = ({
       context,
       input: {
         message: { installationId, platform, pushChannel, tags }
-      }
+      },
+      logger
     }): Generator<Task, void, Task> {
+      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+        installationId
+      });
+
+      logger.info(
+        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
+      );
+
       yield* createOrUpdateActivity(context, {
         installationId,
         notificationHubConfig,

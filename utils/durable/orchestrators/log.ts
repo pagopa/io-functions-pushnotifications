@@ -1,5 +1,10 @@
+import * as ai from "applicationinsights";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/classes";
+
 import { toString } from "fp-ts/lib/function";
+import * as t from "io-ts";
+
+import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { OrchestratorFailure } from "./returnTypes";
 
@@ -44,3 +49,19 @@ export const createLogger = (
     context.log.info(`${logPrefix}|${s}`);
   }
 });
+
+export const trackExceptionAndThrow = (
+  context: IOrchestrationFunctionContext,
+  aiTelemetry: ai.TelemetryClient,
+  logPrefix: string
+) => (err: Error | t.Errors, name: string) => {
+  const errMessage = err instanceof Error ? err.message : readableReport(err);
+  context.log.verbose(`${logPrefix}|ERROR=${errMessage}`);
+  aiTelemetry.trackException({
+    exception: new Error(`${logPrefix}|ERROR=${errMessage}`),
+    properties: {
+      name
+    }
+  });
+  throw new Error(errMessage);
+};
