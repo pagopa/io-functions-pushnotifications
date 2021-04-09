@@ -1,31 +1,23 @@
-import { identity, toString } from "fp-ts/lib/function";
-import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
+import { toString } from "fp-ts/lib/function";
+import { taskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
-import { Context } from "@azure/functions";
-
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { TelemetryClient } from "applicationinsights";
+import { NotificationHubService } from "azure-sb";
 
 import {
-  ActivityResult,
+  ActivityBody,
   ActivityResultSuccess,
-  failActivity,
-  retryActivity,
-  success
-} from "../utils/activity";
-import { initTelemetryClient } from "../utils/appinsights";
+  retryActivity
+} from "../utils/durable/activities";
 import { notify } from "../utils/notification";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
-import {
-  buildNHService,
-  NotificationHubConfig
-} from "../utils/notificationhubServicePartition";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
-/**
- * Activity Name
- */
-export const ActivityName = "HandleNHNotifyMessageCallActivity";
+// message: t.string,
+// message_id: t.string,
+// title: t.string
 
 // Activity input
 export const ActivityInput = t.interface({
@@ -35,42 +27,40 @@ export const ActivityInput = t.interface({
 
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
 
+// Activity Result
+export { ActivityResultSuccess } from "../utils/durable/activities";
+
+// ActivityBody
+export type ActivityBodyImpl = ActivityBody<
+  ActivityInput,
+  ActivityResultSuccess
+>;
+
 /**
  * For each Notification Hub Message of type "Delete" calls related Notification Hub service
  */
-export const getCallNHNotifyMessageActivityHandler = (
-  telemetryClient: ReturnType<typeof initTelemetryClient>,
-  logPrefix = "NHNotifyCallServiceActivity"
-) => async (context: Context, input: unknown) => {
-  const failure = failActivity(context, logPrefix);
-  return fromEither(ActivityInput.decode(input))
-    .mapLeft(errs =>
-      failure("Error decoding activity input", readableReport(errs))
+
+export const getActivityBody = (
+  telemetryClient: TelemetryClient,
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+): ActivityBodyImpl => ({ input, logger }) => {
+  logger.info(`INSTALLATION_ID=${input.message.installationId}`);
+  const nhService = buildNHService(input.notificationHubConfig);
+  return notify(nhService, input.message.installationId, input.message.payload)
+    .bimap(
+      e => retryActivity(logger, `ERROR=${toString(e)}`),
+      ActivityResultSuccess.encode
     )
-    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
-      context.log.info(
-        `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
-      );
-
-      const nhService = buildNHService(notificationHubConfig);
-
-      return notify(nhService, message.installationId, message.payload)
-        .mapLeft(e =>
-          retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
-        )
-        .chainFirst(
-          taskEither.of(
-            telemetryClient.trackEvent({
-              name: "api.messages.notification.push.sent",
-              properties: {
-                isSuccess: "true",
-                messageId: message.payload.message_id
-              },
-              tagOverrides: { samplingEnabled: "false" }
-            })
-          )
-        );
-    })
-    .fold<ActivityResult>(identity, success)
-    .run();
+    .chainFirst(
+      taskEither.of(
+        telemetryClient.trackEvent({
+          name: "api.messages.notification.push.sent",
+          properties: {
+            isSuccess: "true",
+            messageId: input.message.payload.message_id
+          },
+          tagOverrides: { samplingEnabled: "false" }
+        })
+      )
+    );
 };

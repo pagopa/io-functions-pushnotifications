@@ -2,7 +2,7 @@ import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
 import { identity, toString } from "fp-ts/lib/function";
-import { fromEither } from "fp-ts/lib/TaskEither";
+import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
@@ -80,13 +80,22 @@ export const getCallNHServiceActivityHandler = (
             retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
           );
         case NotifyKind.Notify:
-          return notify(
-            nhService,
-            message.installationId,
-            message.payload
-          ).mapLeft(e =>
-            retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
-          );
+          return notify(nhService, message.installationId, message.payload)
+            .mapLeft(e =>
+              retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
+            )
+            .chainFirst(
+              taskEither.of(
+                telemetryClient.trackEvent({
+                  name: "api.messages.notification.push.sent",
+                  properties: {
+                    isSuccess: "true",
+                    messageId: message.payload.message_id
+                  },
+                  tagOverrides: { samplingEnabled: "false" }
+                })
+              )
+            );
         case DeleteKind.DeleteInstallation:
           return deleteInstallation(nhService, message.installationId).mapLeft(
             e => {

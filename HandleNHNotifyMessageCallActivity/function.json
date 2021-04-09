@@ -6,5 +6,6 @@
       "direction": "in"
     }
   ],
-  "scriptFile": "../dist/HandleNHNotifyMessageCallActivity/index.js"
+  "scriptFile": "../dist/HandleNHNotifyMessageCallActivity/index.js",
+  "entryPoint": "default"
 }

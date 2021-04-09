@@ -56,10 +56,6 @@ const aNotificationHubConfig = NotificationHubConfig.decode({
   );
 });
 
-type CallableCreateOrUpdateActivity = CallableActivity<
-  DeleteInstallationActivityBody // FIXME: the editor marks it as type error, but tests compile correctly
->;
-
 const deleteInstallationActivity = o.callableActivity<
   DeleteInstallationActivityBody
 >(ActivityName, ActivityResultSuccess, retryOptions);

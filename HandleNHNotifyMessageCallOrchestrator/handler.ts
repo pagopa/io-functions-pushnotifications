@@ -1,18 +1,16 @@
 import * as t from "io-ts";
 
-import * as df from "durable-functions";
 import { Task } from "durable-functions/lib/src/classes";
 
-import {
-  ActivityInput as NotifyMessageActivityInput,
-  ActivityName as NotifyMessageActivityName
-} from "../HandleNHNotifyMessageCallActivity/handler";
+import { ActivityBodyImpl as NotifyMessageActivityBodyImpl } from "../HandleNHNotifyMessageCallActivity";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
-import { IConfig } from "../utils/config";
-import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
-import * as o from "../utils/orchestrators/index";
+import {
+  CallableActivity,
+  createOrchestrator
+} from "../utils/durable/orchestrators";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 /**
  * Orchestrator Name
@@ -30,28 +28,23 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
   typeof NhNotifyMessageOrchestratorCallInput
 >;
 
-export const getHandler = (config: IConfig) => {
-  const retryOptions = {
-    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  };
+interface IHandlerParams {
+  notifyMessageActivity: CallableActivity<NotifyMessageActivityBodyImpl>;
+  legacyNotificationHubConfig: NotificationHubConfig;
+}
 
-  return o.createOrchestrator(
+export const getHandler = ({
+  notifyMessageActivity,
+  legacyNotificationHubConfig
+}: IHandlerParams) => {
+  return createOrchestrator(
     OrchestratorName,
     NhNotifyMessageOrchestratorCallInput,
-    function*({
-      context,
-      input: { message } /* , logger */
-    }): Generator<Task, void, Task> {
-      yield* o.callActivity<NotifyMessageActivityInput>(
-        NotifyMessageActivityName,
-        context,
-        {
-          message,
-          notificationHubConfig: getNHLegacyConfig(config)
-        },
-        retryOptions
-      );
+    function*({ context, input: { message } }): Generator<Task, void, Task> {
+      yield* notifyMessageActivity(context, {
+        message,
+        notificationHubConfig: legacyNotificationHubConfig
+      });
     }
   );
 };
