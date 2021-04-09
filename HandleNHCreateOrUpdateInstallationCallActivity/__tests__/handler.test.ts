@@ -1,17 +1,19 @@
 // tslint:disable:no-any
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
-import { activityBody, ActivityInput, ActivityResultSuccess } from "../handler";
+import {
+  getActivityBody,
+  ActivityInput,
+  ActivityResultSuccess
+} from "../handler";
 
 import * as azure from "azure-sb";
 import { PlatformEnum } from "../../generated/backend/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
-import * as notificationhubServicePartition from "../../utils/notificationhubServicePartition";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
-import { Azure, NotificationHubService } from "azure-sb";
 import { createActivity } from "../../utils/durable/activities";
 
 const activityName = "any";
@@ -28,34 +30,25 @@ const aCreateOrUpdateInstallationMessage: CreateOrUpdateInstallationMessage = {
   tags: [aFiscalCodeHash]
 };
 
-const createOrUpdateInstallation_WithError_Mock = jest
-  .spyOn(azure.NotificationHubService.prototype, "createOrUpdateInstallation")
-  .mockImplementation((_, cb) =>
-    cb(new Error("createOrUpdateInstallation error"))
-  );
-
 const aNHConfig = {
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 } as NotificationHubConfig;
 
-/**
- * Spy on `buildNHService` to return a mocked `NotificationHubService`
- */
-const buildNHServiceMockBuilder = func =>
-  jest
-    .spyOn(notificationhubServicePartition, "buildNHService")
-    .mockImplementation((c: NotificationHubConfig) => {
-      return ({
-        createOrUpdateInstallation: func
-      } as undefined) as NotificationHubService;
-    });
+const mockNotificationHubService = {
+  createOrUpdateInstallation: jest.fn()
+};
+const mockBuildNHService = jest
+  .fn()
+  .mockImplementation(
+    _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
+  );
 
 const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  activityBody
+  getActivityBody(mockBuildNHService)
 );
 
 describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
@@ -64,13 +57,9 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
   });
 
   it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
-    const buildNHServiceMock = buildNHServiceMockBuilder(
-      jest
-        .fn()
-        .mockImplementation((_, cb: Azure.ServiceBus.ResponseCallback) =>
-          cb(null, null)
-        )
-    );
+    mockNotificationHubService.createOrUpdateInstallation = jest
+      .fn()
+      .mockImplementation((_, cb) => cb());
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,
@@ -80,16 +69,21 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
       notificationHubConfig: aNHConfig
     });
 
-    expect.assertions(2);
+    expect.assertions(3);
 
-    await handler(contextMock as any, input);
+    const res = await handler(contextMock as any, input);
+    expect(ActivityResultSuccess.is(res)).toBeTruthy();
 
-    expect(buildNHServiceMock).toHaveBeenCalledTimes(1);
-    expect(buildNHServiceMock).toBeCalledWith(aNHConfig);
+    expect(mockBuildNHService).toHaveBeenCalledTimes(1);
+    expect(mockBuildNHService).toBeCalledWith(aNHConfig);
   });
 
   it("should trigger a retry if CreateOrUpdateInstallation fails", async () => {
-    buildNHServiceMockBuilder(createOrUpdateInstallation_WithError_Mock);
+    mockNotificationHubService.createOrUpdateInstallation = jest
+      .fn()
+      .mockImplementation((_, cb) =>
+        cb(new Error("createOrUpdateInstallation error"))
+      );
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,
@@ -104,9 +98,9 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     try {
       await handler(contextMock as any, input);
     } catch (e) {
-      expect(createOrUpdateInstallation_WithError_Mock).toHaveBeenCalledTimes(
-        1
-      );
+      expect(
+        mockNotificationHubService.createOrUpdateInstallation
+      ).toHaveBeenCalledTimes(1);
       expect(e).toBeInstanceOf(Error);
     }
   });

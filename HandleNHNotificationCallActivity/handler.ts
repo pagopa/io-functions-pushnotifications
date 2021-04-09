@@ -10,11 +10,16 @@ import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/Creat
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
 import { NotificationMessage } from "../HandleNHNotificationCall/handler";
+
 import {
   createOrUpdateInstallation,
   deleteInstallation,
   notify
 } from "../utils/notification";
+import {
+  buildNHService,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 import { initTelemetryClient } from "../utils/appinsights";
 import {
@@ -25,10 +30,6 @@ import {
   retryActivity,
   success
 } from "../utils/durable/activities";
-import {
-  buildNHService,
-  NotificationHubConfig
-} from "../utils/notificationhubServicePartition";
 
 // Activity input
 export const HandleNHNotificationCallActivityInput = t.interface({
@@ -52,10 +53,12 @@ export const getCallNHServiceActivityHandler = (
   logPrefix = "NHCallServiceActivity"
 ) => async (context: Context, input: unknown) => {
   const logger = createLogger(context, logPrefix);
-  const failure = failActivity(logger);
   return fromEither(HandleNHNotificationCallActivityInput.decode(input))
     .mapLeft(errs =>
-      failure("Error decoding activity input", readableReport(errs))
+      failActivity(logger)(
+        "Error decoding activity input",
+        readableReport(errs)
+      )
     )
     .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
       context.log.info(
@@ -97,7 +100,7 @@ export const getCallNHServiceActivityHandler = (
             e => {
               // do not trigger a retry as delete may fail in case of 404
               context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
-              return failure(e.message);
+              return failActivity(logger)(e.message);
             }
           );
         default:

@@ -1,3 +1,4 @@
+import NotificationHubService = require("azure-sb/lib/notificationhubservice");
 import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
@@ -10,10 +11,7 @@ import {
   retryActivity
 } from "../utils/durable/activities";
 import { createOrUpdateInstallation } from "../utils/notification";
-import {
-  buildNHService,
-  NotificationHubConfig
-} from "../utils/notificationhubServicePartition";
+import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
@@ -32,7 +30,9 @@ export type ActivityBodyImpl = ActivityBody<
   ActivityResultSuccess
 >;
 
-export const activityBody: ActivityBodyImpl = ({ input, logger }) => {
+export const getActivityBody = (
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
   return createOrUpdateInstallation(

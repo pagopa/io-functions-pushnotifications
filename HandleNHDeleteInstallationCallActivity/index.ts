@@ -1,6 +1,7 @@
-import { createActivity } from "../utils/durable/activities";
+﻿import { createActivity } from "../utils/durable/activities";
 import { buildNHService } from "../utils/notificationhubServicePartition";
 import {
+  ActivityBodyImpl,
   ActivityInput,
   ActivityResultSuccess,
   getActivityBody
@@ -11,9 +12,9 @@ export {
   ActivityInput,
   ActivityResultSuccess
 } from "./handler";
-export const activityName = "HandleNHCreateOrUpdateInstallationCallActivity";
+export const activityName = "HandleNHDeleteInstallationCallActivity";
 
-const activityFunctionHandler = createActivity(
+const activityFunctionHandler = createActivity<ActivityBodyImpl>(
   activityName,
   ActivityInput,
   ActivityResultSuccess,

@@ -11,6 +11,7 @@ import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstall
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
 
 import { OrchestratorName as CreateOrUpdateInstallationOrchestrator } from "../HandleNHCreateOrUpdateInstallationCallOrchestrator/handler";
+import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
 
 export const NotificationMessage = t.union([
   NotifyMessage,
@@ -34,7 +35,7 @@ export const getHandler = () => async (
   const client = df.getClient(context);
   switch (notificationHubMessage.kind) {
     case DeleteKind.DeleteInstallation:
-      await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
+      await client.startNew(DeleteInstallationOrchestratorName, undefined, {
         message: notificationHubMessage
       });
       break;

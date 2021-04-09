@@ -9,7 +9,7 @@ import {
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 import { HandleNHNotificationCallActivityInput } from "../../HandleNHNotificationCallActivity/handler";
 import { NhNotificationOrchestratorInput, getHandler } from "../handler";
-import { success } from "../../utils/durable/activities";
+import { success } from "../../utils/durable/orchestrators";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 
