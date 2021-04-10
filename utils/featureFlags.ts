@@ -24,10 +24,10 @@ export const getIsInActiveSubset = (
 
     case NHPartitionFeatureFlag.canary:
       // Todo
-      return fromEither(right(false));
+      return taskEither.of(false);
 
     case NHPartitionFeatureFlag.none:
     default:
-      return fromEither(right(false));
+      return taskEither.of(false);
   }
 };
