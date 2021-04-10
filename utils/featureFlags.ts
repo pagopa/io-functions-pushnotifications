@@ -1,7 +1,16 @@
-import { right } from "fp-ts/lib/Either";
-import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
+import { toString } from "fp-ts/lib/function";
+import { taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { NHPartitionFeatureFlag } from "./config";
+
+export function assertExhaustive(
+  value: never,
+  message: string = `Reached unexpected case in "enabledFeatureFlag" exhaustive switch ${toString(
+    value
+  )}`
+): never {
+  throw new Error(message);
+}
 
 /**
  *
@@ -17,7 +26,7 @@ export const getIsInActiveSubset = (
 ): TaskEither<Error, boolean> => {
   switch (enabledFeatureFlag) {
     case NHPartitionFeatureFlag.all:
-      return fromEither(right(true));
+      return taskEither.of(true);
 
     case NHPartitionFeatureFlag.beta:
       return isUserATestUser(sha);
@@ -27,7 +36,9 @@ export const getIsInActiveSubset = (
       return taskEither.of(false);
 
     case NHPartitionFeatureFlag.none:
-    default:
       return taskEither.of(false);
+
+    default:
+      assertExhaustive(enabledFeatureFlag);
   }
 };
