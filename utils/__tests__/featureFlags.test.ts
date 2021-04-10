@@ -9,9 +9,11 @@ import { fromEither } from "fp-ts/lib/TaskEither";
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
 describe("featureFlags", () => {
-  it("should return `true` when feature flag `all` is enabled", () => {
-    expect.assertions(2);
+  beforeAll(() => {
+    jest.clearAllMocks();
+  });
 
+  it("should return true when feature flag all is enabled", done => {
     featureFlags
       .getIsInActiveSubset(_ => fromEither(right(false)))(
         NHPartitionFeatureFlag.all,
@@ -21,14 +23,13 @@ describe("featureFlags", () => {
       .then(v => {
         expect(isRight(v)).toBe(true);
         expect(v.value).toBe(true);
+        done();
       });
   });
 
-  it("should return `false` when feature flag `none` is enabled", () => {
-    expect.assertions(2);
-
+  it("should return false when feature flag none is enabled", done => {
     featureFlags
-      .getIsInActiveSubset(_ => fromEither(right(false)))(
+      .getIsInActiveSubset(_ => fromEither(right(true)))(
         NHPartitionFeatureFlag.none,
         aFiscalCodeHash
       )
@@ -36,12 +37,11 @@ describe("featureFlags", () => {
       .then(v => {
         expect(isRight(v)).toBe(true);
         expect(v.value).toBe(false);
+        done();
       });
   });
 
-  it("should return `true` when feature flag `beta` is enabled adn user is a beta test user", () => {
-    expect.assertions(2);
-
+  it("should return true when feature flag beta is enabled adn user is a beta test user", done => {
     featureFlags
       .getIsInActiveSubset(_ => fromEither(right(true)))(
         NHPartitionFeatureFlag.beta,
@@ -51,12 +51,11 @@ describe("featureFlags", () => {
       .then(v => {
         expect(isRight(v)).toBe(true);
         expect(v.value).toBe(true);
+        done();
       });
   });
 
-  it("should return `false` when feature flag `beta` is enabled adn user is NOT a beta test user", () => {
-    expect.assertions(2);
-
+  it("should return false when feature flag beta is enabled adn user is NOT a beta test user", done => {
     featureFlags
       .getIsInActiveSubset(_ => fromEither(right(false)))(
         NHPartitionFeatureFlag.beta,
@@ -66,6 +65,8 @@ describe("featureFlags", () => {
       .then(v => {
         expect(isRight(v)).toBe(true);
         expect(v.value).toBe(false);
+
+        done();
       });
   });
 });
