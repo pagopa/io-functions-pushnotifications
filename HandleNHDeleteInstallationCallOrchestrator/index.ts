@@ -34,7 +34,6 @@ const legacyNotificationHubConfig = getNHLegacyConfig(config);
 
 const handler = getHandler({
   deleteInstallationActivity,
-  enabledNHFeatureFlag: config.NH_PARTITION_FEATURE_FLAG,
   isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig
 });

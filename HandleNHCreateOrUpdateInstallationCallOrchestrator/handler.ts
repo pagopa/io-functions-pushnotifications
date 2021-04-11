@@ -1,7 +1,6 @@
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
-import { NHPartitionFeatureFlag } from "../utils/config";
 import * as o from "../utils/durable/orchestrators";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
@@ -30,14 +29,12 @@ interface IHandlerParams {
     IsUserInActiveSubsetActivityBodyImpl
   >;
   notificationHubConfig: NotificationHubConfig;
-  enabledNHFeatureFlag: NHPartitionFeatureFlag;
 }
 
 export const getHandler = ({
   createOrUpdateActivity,
   isUserInActiveTestSubsetActivity,
-  notificationHubConfig,
-  enabledNHFeatureFlag
+  notificationHubConfig
 }: IHandlerParams) => {
   return o.createOrchestrator(
     OrchestratorName,
@@ -50,7 +47,6 @@ export const getHandler = ({
       logger
     }): Generator<Task, void, Task> {
       const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
-        enabledFeatureFlag: enabledNHFeatureFlag,
         installationId
       });
 

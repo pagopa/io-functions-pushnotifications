@@ -1,7 +1,7 @@
 ﻿import * as df from "durable-functions";
 import * as o from "../utils/durable/orchestrators";
 
-import { getConfigOrThrow, NHPartitionFeatureFlag } from "../utils/config";
+import { getConfigOrThrow } from "../utils/config";
 import { getHandler } from "./handler";
 
 import {
@@ -37,7 +37,6 @@ const notificationHubConfig = getNHLegacyConfig(config);
 
 const handler = getHandler({
   createOrUpdateActivity,
-  enabledNHFeatureFlag: NHPartitionFeatureFlag.all,
   isUserInActiveTestSubsetActivity,
   notificationHubConfig
 });

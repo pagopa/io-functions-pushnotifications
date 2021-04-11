@@ -30,7 +30,6 @@ import {
 } from "../../utils/durable/orchestrators";
 import { ActivityBodyImpl as CreateOrUpdateActivityBody } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 import { ActivityBodyImpl as IsUserInActiveSubsetActivityBody } from "../../IsUserInActiveSubsetActivity";
-import { NHPartitionFeatureFlag } from "../../utils/config";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -106,8 +105,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -140,8 +138,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -170,8 +167,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -194,8 +190,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);

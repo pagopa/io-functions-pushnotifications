@@ -28,7 +28,6 @@ import { ActivityBodyImpl as IsUserInActiveSubsetActivityBody } from "../../IsUs
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { readableReport } from "italia-ts-commons/lib/reporters";
-import { NHPartitionFeatureFlag } from "../../utils/config";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const anInstallationId = aFiscalCodeHash;
@@ -95,8 +94,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
     // call orchestrator 1 time
@@ -121,8 +119,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
     // call orchestrator 1 time
@@ -148,8 +145,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      legacyNotificationHubConfig: aNotificationHubConfig,
-      enabledNHFeatureFlag: NHPartitionFeatureFlag.all
+      legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
     var res = orchestratorHandler.next();

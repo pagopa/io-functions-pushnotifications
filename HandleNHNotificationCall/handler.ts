@@ -1,7 +1,8 @@
 import { Context } from "@azure/functions";
 import * as df from "durable-functions";
-import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
+import { assertNever } from "../utils/types";
+
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
@@ -20,10 +21,6 @@ export const NotificationMessage = t.union([
 ]);
 
 export type NotificationHubMessage = t.TypeOf<typeof NotificationMessage>;
-
-const assertNever = (x: never): never => {
-  throw new Error(`Unexpected object: ${toString(x)}`);
-};
 
 /**
  * Invoke Orchestrator to manage Notification Hub Service call with data provided by an enqued message

@@ -65,7 +65,6 @@ export const getHandler = (
     // Dummy implementation for testing
 
     const isUserEnabledForTestActivityInput: IsUserInActiveSubsetActivityInput = {
-      enabledFeatureFlag: envConfig.NH_PARTITION_FEATURE_FLAG,
       installationId:
         errorOrNHCallOrchestratorInput.value.message.installationId
     };

@@ -1,44 +1,38 @@
-import { toString } from "fp-ts/lib/function";
-import { taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 import { InstallationId } from "../generated/notifications/InstallationId";
-import { NHPartitionFeatureFlag } from "./config";
 
-export function assertExhaustive(
-  value: never,
-  message: string = `Reached unexpected case in "enabledFeatureFlag" exhaustive switch ${toString(
-    value
-  )}`
-): never {
-  throw new Error(message);
-}
+import * as checkTestUser from "./checkTestUsers";
+import { NHPartitionFeatureFlag } from "./config";
+import { assertNever } from "./types";
 
 /**
  *
  * @param enabledFeatureFlag The feature flag currntly enabled
  * @param sha the installation id of the user
+ * @param betaUsersTable the betaUserTable
  * @returns `true` if the user is enabled for the new feature, `false` otherwise
  */
 export const getIsInActiveSubset = (
-  isUserATestUser: (InstallationId) => TaskEither<Error, boolean>
+  isUserATestUser: ReturnType<typeof checkTestUser.getIsUserATestUser>
 ) => (
   enabledFeatureFlag: NHPartitionFeatureFlag,
-  sha: InstallationId
-): TaskEither<Error, boolean> => {
+  sha: InstallationId,
+  betaUsersTable: ReadonlyArray<{ RowKey: string }>
+): boolean => {
   switch (enabledFeatureFlag) {
     case NHPartitionFeatureFlag.all:
-      return taskEither.of(true);
+      return true;
 
     case NHPartitionFeatureFlag.beta:
-      return isUserATestUser(sha);
+      return isUserATestUser(betaUsersTable, sha);
 
     case NHPartitionFeatureFlag.canary:
       // Todo
-      return taskEither.of(false);
+      return false;
 
     case NHPartitionFeatureFlag.none:
-      return taskEither.of(false);
+      return false;
 
     default:
-      assertExhaustive(enabledFeatureFlag);
+      assertNever(enabledFeatureFlag);
   }
 };
