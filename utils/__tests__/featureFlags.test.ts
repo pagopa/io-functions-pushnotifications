@@ -1,4 +1,3 @@
-import { NHPartitionFeatureFlag } from "../config";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import * as featureFlags from "../featureFlags";
 
@@ -42,6 +41,25 @@ describe("featureFlags", () => {
       aFiscalCodeHash,
       [{ RowKey: aFiscalCodeHash }]
     );
+    expect(res).toBe(false);
+  });
+});
+
+describe("getIsUserABetaTestUser", () => {
+  beforeAll(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return true if sha is contained in beta users table", () => {
+    const res = featureFlags.getIsUserABetaTestUser()(
+      [{ RowKey: aFiscalCodeHash }],
+      aFiscalCodeHash
+    );
+    expect(res).toBe(true);
+  });
+
+  it("should return false if sha is NOT contained in beta users table", () => {
+    const res = featureFlags.getIsUserABetaTestUser()([], aFiscalCodeHash);
     expect(res).toBe(false);
   });
 });

@@ -11,7 +11,7 @@ import { assertNever } from "./types";
  * @returns `true` if the user is enabled for the new feature, `false` otherwise
  */
 export const getIsInActiveSubset = (
-  isUserATestUser: ReturnType<typeof getIsUserATestUser>
+  isUserATestUser: ReturnType<typeof getIsUserABetaTestUser>
 ) => (
   enabledFeatureFlag: NHPartitionFeatureFlag,
   sha: InstallationId,
@@ -41,7 +41,7 @@ export const getIsInActiveSubset = (
  * @param sha the value to search
  * @returns A function that return `true` if user if sha is present in table, false otherwise
  */
-export const getIsUserATestUser = () => (
+export const getIsUserABetaTestUser = () => (
   betaUsersTable: ReadonlyArray<{ RowKey: string }>,
   sha: InstallationId
 ): boolean => betaUsersTable.filter(u => u.RowKey === sha).length > 0;
