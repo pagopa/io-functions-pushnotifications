@@ -3,10 +3,7 @@ import * as df from "durable-functions";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
-import {
-  retryActivity,
-  success as activitySuccess
-} from "../../utils/durable/activities";
+import { success as activitySuccess } from "../../utils/durable/activities";
 
 import { KindEnum as NotifyMessageKind } from "../../generated/notifications/NotifyMessage";
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
@@ -23,11 +20,12 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 import {
   callableActivity,
   OrchestratorFailure,
-  OrchestratorSuccess,
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
+
+import { consumeGenerator } from "../../utils/durable/utils";
 
 const aNotificationHubConfig: NotificationHubConfig = {
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
@@ -94,24 +92,18 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
     );
   });
 
-  it("should end the activity with SUCCESS in two steps", async () => {
+  it("should end the activity with SUCCESS", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
-    // call orchestrator 1 time
-    const res = orchestratorHandler.next();
-    expect(res.done).toBeFalsy();
+    const res = consumeGenerator(orchestratorHandler);
 
-    // call orchestrator 2nd time (expected to be the last one)
-    const res2 = orchestratorHandler.next(res.value as any);
-    expect(res2.done).toBeTruthy();
-
-    expect(res2.value).toEqual(orchestratorSuccess());
+    expect(res).toEqual(orchestratorSuccess());
   });
 
-  it("should not start activity with wrong inputs", async () => {
+  it("should NOT start activity with wrong inputs", async () => {
     const nhCallOrchestratorInput = {
       message: "aMessage"
     };
@@ -123,12 +115,10 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
-    var res = orchestratorHandler.next();
+    const res = consumeGenerator(orchestratorHandler);
 
-    expect(res.done).toBeTruthy();
-    expect((res.value as OrchestratorFailure).kind).toEqual(
-      "FAILURE_INVALID_INPUT"
-    );
+    expect(OrchestratorFailure.is(res)).toBe(true);
+
     expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
   });
 });

@@ -89,14 +89,11 @@ describe("HandleNHNotificationCall", () => {
       kind: "WrongMessage" as any
     };
 
-    // tslint:disable-next-line: no-let
-    let hasError = false;
+    expect.assertions(1);
     try {
       await getHandler()(context as any, aWrongMessage);
     } catch (error) {
-      hasError = true;
+      expect(error).toBeInstanceOf(Error);
     }
-
-    expect(hasError).toBe(true);
   });
 });

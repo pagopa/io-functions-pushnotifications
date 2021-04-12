@@ -82,7 +82,7 @@ describe("HandleNHNotifyMessageCallActivity", () => {
   it("should trigger a retry if notify fails", async () => {
     mockNotificationHubService.send = jest
       .fn()
-      .mockImplementation((_1, _2, _3, cb) => cb(new Error("send error")));
+      .mockImplementation((_, __, ___, cb) => cb(new Error("send error")));
 
     const input = NHServiceActivityInput.encode({
       message: aNotifyMessage,
