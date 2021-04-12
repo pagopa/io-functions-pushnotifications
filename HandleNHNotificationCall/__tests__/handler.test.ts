@@ -1,5 +1,4 @@
-// eslint-disable @typescript-eslint/no-explicit-any
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as df from "durable-functions";
 import { DurableOrchestrationClient } from "durable-functions/lib/src/durableorchestrationclient";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";

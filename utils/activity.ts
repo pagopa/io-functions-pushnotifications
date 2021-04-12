@@ -56,7 +56,7 @@ export const failActivity = (
 };
 
 // trigger a rety in case the notification fail
-export const retryActivity = (context: Context, msg: string): Error => {
+export const retryActivity = (context: Context, msg: string): never => {
   context.log.error(msg);
   throw toError(msg);
 };
