@@ -1,13 +1,12 @@
-﻿import { getIsUserATestUser } from "../utils/checkTestUsers";
-import { getConfigOrThrow } from "../utils/config";
+﻿import { getConfigOrThrow } from "../utils/config";
 import { createActivity } from "../utils/durable/activities";
-import { getIsInActiveSubset } from "../utils/featureFlags";
+import { getIsInActiveSubset, getIsUserATestUser } from "../utils/featureFlags";
 
 import {
   ActivityBodyImpl,
   ActivityInput,
-  activityResultSuccessWithValue,
   ActivityResultSuccessWithValue,
+  activityResultSuccessWithValue,
   getActivityBody
 } from "./handler";
 

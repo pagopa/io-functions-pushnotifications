@@ -1,6 +1,5 @@
 import { InstallationId } from "../generated/notifications/InstallationId";
 
-import * as checkTestUser from "./checkTestUsers";
 import { NHPartitionFeatureFlag } from "./config";
 import { assertNever } from "./types";
 
@@ -12,27 +11,37 @@ import { assertNever } from "./types";
  * @returns `true` if the user is enabled for the new feature, `false` otherwise
  */
 export const getIsInActiveSubset = (
-  isUserATestUser: ReturnType<typeof checkTestUser.getIsUserATestUser>
+  isUserATestUser: ReturnType<typeof getIsUserATestUser>
 ) => (
   enabledFeatureFlag: NHPartitionFeatureFlag,
   sha: InstallationId,
   betaUsersTable: ReadonlyArray<{ RowKey: string }>
 ): boolean => {
   switch (enabledFeatureFlag) {
-    case NHPartitionFeatureFlag.all:
+    case "all":
       return true;
 
-    case NHPartitionFeatureFlag.beta:
+    case "beta":
       return isUserATestUser(betaUsersTable, sha);
 
-    case NHPartitionFeatureFlag.canary:
+    case "canary":
       // Todo
       return false;
 
-    case NHPartitionFeatureFlag.none:
+    case "none":
       return false;
 
     default:
       assertNever(enabledFeatureFlag);
   }
 };
+
+/**
+ * @param betaUsersTable the table where to search into
+ * @param sha the value to search
+ * @returns A function that return `true` if user if sha is present in table, false otherwise
+ */
+export const getIsUserATestUser = () => (
+  betaUsersTable: ReadonlyArray<{ RowKey: string }>,
+  sha: InstallationId
+): boolean => betaUsersTable.filter(u => u.RowKey === sha).length > 0;
