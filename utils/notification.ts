@@ -67,7 +67,7 @@ class ExtendedNotificationHubService extends NotificationHubService {
       });
     };
     // tslint:disable-next-line: no-string-literal  no-any
-    // @ts-ignore /* _buildRequestOptions is not defined in the Azure type NotificationHubService: the error is caused by strict=ture tsc configuration and will be ignored */
+    // @ts-ignore  although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
     return super._buildRequestOptions(
       webResource,
       body,
