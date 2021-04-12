@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "name",
+      "type": "activityTrigger",
+      "direction": "in"
+    }
+  ],
+  "scriptFile": "../dist/HandleNHNotifyMessageCallActivity/index.js",
+  "entryPoint": "default"
+}

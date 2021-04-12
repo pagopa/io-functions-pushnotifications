@@ -10,8 +10,8 @@ import { DeleteInstallationMessage } from "../../generated/notifications/DeleteI
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 
-import { success } from "../../utils/activity";
-import HandleNHNotificationCall from "../index";
+import { success } from "../../utils/durable/activities";
+import { getHandler } from "../handler";
 
 const dfClient = ({
   startNew: jest.fn().mockImplementation((_, __, ___) => success())
@@ -48,10 +48,10 @@ const aNotifyMessage: NotifyMessage = {
 
 describe("HandleNHNotificationCall", () => {
   it("should call Delete Orchestrator when message is DeleteInstallation", async () => {
-    await HandleNHNotificationCall(context as any, aDeleteInStalltionMessage);
+    await getHandler()(context as any, aDeleteInStalltionMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHDeleteInstallationCallOrchestrator",
       undefined,
       {
         message: aDeleteInStalltionMessage
@@ -60,13 +60,10 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call CreateOrUpdate Orchestrator when message is CreateorUpdateInstallation", async () => {
-    await HandleNHNotificationCall(
-      context as any,
-      aCreateOrUpdateInstallationMessage
-    );
+    await getHandler()(context as any, aCreateOrUpdateInstallationMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHCreateOrUpdateInstallationCallOrchestrator",
       undefined,
       {
         message: aCreateOrUpdateInstallationMessage
@@ -75,10 +72,10 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call Notify Orchestrator when message is NotifyMessage", async () => {
-    await HandleNHNotificationCall(context as any, aNotifyMessage);
+    await getHandler()(context as any, aNotifyMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHNotifyMessageCallOrchestrator",
       undefined,
       {
         message: aNotifyMessage
@@ -86,20 +83,17 @@ describe("HandleNHNotificationCall", () => {
     );
   });
 
-  // it("should not call any Orchestrator when message kind is not correct", async () => {
-  //   const aWrongMessage = {
-  //     installationId: aFiscalCodeHash,
-  //     kind: "WrongMessage" as any
-  //   };
+  it("should not call any Orchestrator when message kind is not correct", async () => {
+    const aWrongMessage = {
+      installationId: aFiscalCodeHash,
+      kind: "WrongMessage" as any
+    };
 
-  //   // tslint:disable-next-line: no-let
-  //   let hasError = false;
-  //   try {
-  //     await HandleNHNotificationCall(context as any, aWrongMessage);
-  //   } catch (error) {
-  //     hasError = true;
-  //   }
-
-  //   expect(hasError).toBe(true);
-  // });
+    expect.assertions(1);
+    try {
+      await getHandler()(context as any, aWrongMessage);
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+    }
+  });
 });

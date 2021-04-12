@@ -2,7 +2,17 @@
   "version": "2.0",
   "logging": {
     "logLevel": {
-      "default": "Trace"
+      "default": "Information",
+      "DurableTask.AzureStorage": "Warning",
+      "DurableTask.Core": "Warning"
+    },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 5,
+        "includedTypes": "PageView;Trace;Dependency;Request",
+        "excludedTypes": "Exception;Event;CustomEvent"
+      }
     }
   },
   "extensions": {

@@ -6,7 +6,10 @@ import * as t from "io-ts";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-import { NotificationMessage } from "../HandleNHNotificationCall";
+import { NotificationMessage } from "../HandleNHNotificationCall/handler";
+import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
+import { IConfig } from "../utils/config";
+import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 
 /**
  * Carries information about Notification Hub Message payload
@@ -19,39 +22,43 @@ export type NhNotificationOrchestratorInput = t.TypeOf<
   typeof NhNotificationOrchestratorInput
 >;
 
-export const handler = function*(
-  context: IOrchestrationFunctionContext
-): Generator<unknown> {
-  const logPrefix = `NHCallOrchestrator`;
+export const getHandler = (envConfig: IConfig) =>
+  function*(context: IOrchestrationFunctionContext): Generator<unknown> {
+    const logPrefix = `NHCallOrchestrator`;
 
-  const retryOptions = {
-    ...new df.RetryOptions(5000, 10),
-    backoffCoefficient: 1.5
-  };
+    const retryOptions = {
+      ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
+      backoffCoefficient: 1.5
+    };
 
-  // Get and decode orchestrator input
-  const input = context.df.getInput();
-  const errorOrNHCallOrchestratorInput = NhNotificationOrchestratorInput.decode(
-    input
-  );
-
-  if (isLeft(errorOrNHCallOrchestratorInput)) {
-    context.log.error(`${logPrefix}|Error decoding input`);
-    context.log.verbose(
-      `${logPrefix}|Error decoding input|ERROR=${readableReport(
-        errorOrNHCallOrchestratorInput.value
-      )}`
+    // Get and decode orchestrator input
+    const input = context.df.getInput();
+    const errorOrNHCallOrchestratorInput = NhNotificationOrchestratorInput.decode(
+      input
     );
-    return false;
-  }
 
-  const nhCallOrchestratorInput = errorOrNHCallOrchestratorInput.value;
+    if (isLeft(errorOrNHCallOrchestratorInput)) {
+      context.log.error(`${logPrefix}|Error decoding input`);
+      context.log.verbose(
+        `${logPrefix}|Error decoding input|ERROR=${readableReport(
+          errorOrNHCallOrchestratorInput.value
+        )}`
+      );
+      return false;
+    }
 
-  yield context.df.callActivityWithRetry(
-    "HandleNHNotificationCallActivity",
-    retryOptions,
-    nhCallOrchestratorInput
-  );
+    const nhConfig = getNHLegacyConfig(envConfig);
 
-  return true;
-};
+    const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
+      ...errorOrNHCallOrchestratorInput.value,
+      notificationHubConfig: nhConfig
+    };
+
+    yield context.df.callActivityWithRetry(
+      "HandleNHNotificationCallActivity",
+      retryOptions,
+      nhCallOrchestratorInput
+    );
+
+    return true;
+  };

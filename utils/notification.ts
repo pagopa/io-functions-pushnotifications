@@ -12,7 +12,6 @@ import {
   newHttpsAgent
 } from "italia-ts-commons/lib/agent";
 import { Platform, PlatformEnum } from "../generated/backend/Platform";
-import { getConfigOrThrow } from "../utils/config";
 
 /**
  * Notification template.
@@ -39,15 +38,13 @@ export enum APNSPushType {
   MDM = "mdm"
 }
 
-const config = getConfigOrThrow();
-
 const httpsAgent = newHttpsAgent(getKeepAliveAgentOptions(process.env));
 
 // Monkey patch azure-sb package in order to use agentkeepalive
 // when calling the Notification Hub API.
 // @FIXME: remove this part and upgrade to @azure/notification-hubs
 // once this goes upstream: https://github.com/Azure/azure-sdk-for-js/pull/11977
-class ExtendedNotificationHubService extends NotificationHubService {
+export class ExtendedNotificationHubService extends NotificationHubService {
   constructor(hubName: string, endpointOrConnectionString: string) {
     super(hubName, endpointOrConnectionString, "", "");
   }
@@ -67,7 +64,7 @@ class ExtendedNotificationHubService extends NotificationHubService {
       });
     };
     // tslint:disable-next-line: no-string-literal  no-any
-    // @ts-ignore  although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
+    // @ts-ignore -- although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
     return super._buildRequestOptions(
       webResource,
       body,
@@ -76,11 +73,6 @@ class ExtendedNotificationHubService extends NotificationHubService {
     );
   }
 }
-
-const notificationHubService = new ExtendedNotificationHubService(
-  config.AZURE_NH_HUB_NAME,
-  config.AZURE_NH_ENDPOINT
-);
 
 /**
  * A template suitable for Apple's APNs.
@@ -148,6 +140,7 @@ const successNH = () =>
   });
 
 export const notify = (
+  notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
   payload: NotifyPayload
 ) => {
@@ -180,6 +173,7 @@ export const notify = (
 };
 
 export const createOrUpdateInstallation = (
+  notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
   platform: Platform,
   pushChannel: string,
@@ -220,7 +214,10 @@ export const createOrUpdateInstallation = (
   );
 };
 
-export const deleteInstallation = (installationId: NonEmptyString) => {
+export const deleteInstallation = (
+  notificationHubService: NotificationHubService,
+  installationId: NonEmptyString
+) => {
   return tryCatch(
     () => {
       return new Promise<NHResultSuccess>((resolve, reject) =>
