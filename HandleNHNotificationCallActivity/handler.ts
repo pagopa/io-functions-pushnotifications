@@ -49,6 +49,7 @@ const assertNever = (x: never): never => {
  * For each Notification Hub Message calls related Notification Hub service
  */
 export const getCallNHServiceActivityHandler = (
+  // tslint:disable-next-line: no-unused-variable
   telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
 ) => async (context: Context, input: unknown) => {

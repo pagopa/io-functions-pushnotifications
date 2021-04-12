@@ -12,6 +12,7 @@ import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage
 
 import { OrchestratorName as CreateOrUpdateInstallationOrchestrator } from "../HandleNHCreateOrUpdateInstallationCallOrchestrator/handler";
 import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
+import { OrchestratorName as NotifyMessageOrchestratorName } from "../HandleNHNotifyMessageCallOrchestrator/handler";
 
 export const NotificationMessage = t.union([
   NotifyMessage,
@@ -44,9 +45,8 @@ export const getHandler = () => async (
         message: notificationHubMessage
       });
       break;
-    // tslint:disable-next-line: no-duplicated-branches
     case NotifyKind.Notify:
-      await client.startNew("HandleNHNotificationCallOrchestrator", undefined, {
+      await client.startNew(NotifyMessageOrchestratorName, undefined, {
         message: notificationHubMessage
       });
       break;

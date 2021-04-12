@@ -75,7 +75,7 @@ describe("HandleNHNotificationCall", () => {
     await getHandler()(context as any, aNotifyMessage);
 
     expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotificationCallOrchestrator",
+      "HandleNHNotifyMessageCallOrchestrator",
       undefined,
       {
         message: aNotifyMessage
@@ -83,20 +83,17 @@ describe("HandleNHNotificationCall", () => {
     );
   });
 
-  // it("should not call any Orchestrator when message kind is not correct", async () => {
-  //   const aWrongMessage = {
-  //     installationId: aFiscalCodeHash,
-  //     kind: "WrongMessage" as any
-  //   };
+  it("should not call any Orchestrator when message kind is not correct", async () => {
+    const aWrongMessage = {
+      installationId: aFiscalCodeHash,
+      kind: "WrongMessage" as any
+    };
 
-  //   // tslint:disable-next-line: no-let
-  //   let hasError = false;
-  //   try {
-  //     await HandleNHNotificationCall(context as any, aWrongMessage);
-  //   } catch (error) {
-  //     hasError = true;
-  //   }
-
-  //   expect(hasError).toBe(true);
-  // });
+    expect.assertions(1);
+    try {
+      await getHandler()(context as any, aWrongMessage);
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+    }
+  });
 });
