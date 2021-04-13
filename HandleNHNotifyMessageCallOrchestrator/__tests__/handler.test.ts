@@ -9,8 +9,8 @@ import { KindEnum as NotifyMessageKind } from "../../generated/notifications/Not
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
 import {
+  ActivityInput,
   ActivityInput as NHCallServiceActivityInput,
-  ActivityBodyImpl as NotifyMessageActivityBodyImpl,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../../HandleNHNotifyMessageCallActivity/handler";
 
@@ -53,7 +53,7 @@ const retryOptions = {
   backoffCoefficient: 1.5
 };
 
-const notifyMessageActivity = callableActivity<NotifyMessageActivityBodyImpl>(
+const notifyMessageActivity = callableActivity<ActivityInput>(
   "HandleNHNotifyMessageCallActivity",
   NotifyMessageActivityResultSuccess,
   retryOptions

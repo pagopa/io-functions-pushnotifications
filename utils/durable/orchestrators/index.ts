@@ -9,7 +9,6 @@ import { identity } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import {
-  ActivityBody,
   ActivityResult,
   ActivityResultFailure,
   ActivityResultSuccess

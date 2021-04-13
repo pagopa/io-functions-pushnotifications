@@ -6,7 +6,10 @@ import {
   getActivityBody
 } from "./handler";
 
-export { ActivityInput, ActivityResultSuccess } from "./handler";
+export {
+  CreateOrUpdateActivityInput as ActivityInput,
+  ActivityResultSuccess
+} from "./handler";
 export const activityName = "HandleNHCreateOrUpdateInstallationCallActivity";
 
 const activityFunctionHandler = createActivity(

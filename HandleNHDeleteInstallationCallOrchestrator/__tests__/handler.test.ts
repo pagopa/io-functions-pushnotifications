@@ -8,7 +8,6 @@ import { KindEnum as DeleteKind } from "../../generated/notifications/DeleteInst
 
 import { DeleteInstallationMessage } from "../../generated/notifications/DeleteInstallationMessage";
 import {
-  ActivityBodyImpl,
   ActivityInput as NHCallServiceActivityInput,
   ActivityName
 } from "../../HandleNHDeleteInstallationCallActivity/handler";
@@ -25,7 +24,7 @@ import {
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
 
-import { ActivityBodyImpl as DeleteInstallationActivityBody } from "../../HandleNHDeleteInstallationCallActivity";
+import { ActivityInput as DeleteInstallationActivityInput } from "../../HandleNHDeleteInstallationCallActivity";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { readableReport } from "italia-ts-commons/lib/reporters";
@@ -57,7 +56,7 @@ const aNotificationHubConfig = NotificationHubConfig.decode({
 });
 
 const deleteInstallationActivity = o.callableActivity<
-  DeleteInstallationActivityBody
+  DeleteInstallationActivityInput
 >(ActivityName, ActivityResultSuccess, retryOptions);
 
 const mockGetInput = jest.fn<unknown, []>(() => nhCallOrchestratorInput);

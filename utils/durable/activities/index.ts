@@ -25,6 +25,12 @@ export type ActivityBody<
   // bindings?: Bindings;
 }) => TaskEither<Failure, Success>;
 
+// All activity will return ActivityResultFailure, ActivityResultSuccess or some derived types
+type ActivityResult<R extends ActivityResultSuccess | ActivityResultFailure> =
+  | R
+  | ActivityResultFailure
+  | ActivityResultSuccess;
+
 /**
  * Wraps an activity execution so that types are enforced and errors are handled consistently.
  * The purpose is to reduce boilerplate in activity implementation and let developers define only what it matters in terms of business logic
@@ -46,7 +52,7 @@ export const createActivity = <
 ) => async (
   context: Context,
   rawInput: unknown
-): Promise<F | ActivityResultFailure | S | ActivityResultSuccess> => {
+): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
   return fromEither(InputCodec.decode(rawInput))
@@ -58,9 +64,6 @@ export const createActivity = <
     )
     .chain(input => body({ context, logger, input }))
     .map(e => OutputCodec.encode(e))
-    .fold<F | ActivityResultFailure | S | ActivityResultSuccess>(
-      identity,
-      identity
-    )
+    .fold<ActivityResult<F | S>>(identity, identity)
     .run();
 };
