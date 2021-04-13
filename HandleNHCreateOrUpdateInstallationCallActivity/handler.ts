@@ -14,7 +14,7 @@ import { createOrUpdateInstallation } from "../utils/notification";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // Activity input
-export type CreateOrUpdateActivityInput = t.TypeOf<typeof ActivityInput>;
+export type ActivityInput = t.TypeOf<typeof ActivityInput>;
 export const ActivityInput = t.interface({
   installationId: InstallationId,
   notificationHubConfig: NotificationHubConfig,
@@ -26,7 +26,7 @@ export const ActivityInput = t.interface({
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
 export type ActivityBodyImpl = ActivityBody<
-  CreateOrUpdateActivityInput,
+  ActivityInput,
   ActivityResultSuccess
 >;
 
