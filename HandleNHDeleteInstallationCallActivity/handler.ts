@@ -25,15 +25,16 @@ export const ActivityInput = t.interface({
 // Activity Result
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
-export type ActivityBodyImpl = ActivityBody<ActivityInput>;
-
 /**
  * For each Notification Hub Message of type "Delete" calls related Notification Hub service
  */
 
 export const getActivityBody = (
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
-): ActivityBodyImpl => ({ input, logger }) => {
+): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
+  input,
+  logger
+}) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
 

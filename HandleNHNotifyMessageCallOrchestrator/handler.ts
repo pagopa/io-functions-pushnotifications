@@ -2,7 +2,10 @@ import * as t from "io-ts";
 
 import { Task } from "durable-functions/lib/src/classes";
 
-import { ActivityBodyImpl as NotifyMessageActivityBodyImpl } from "../HandleNHNotifyMessageCallActivity";
+import {
+  ActivityInput as NotifyMessageActivityInput,
+  ActivityResultSuccess as NotifyMessageActivityResultSuccess
+} from "../HandleNHNotifyMessageCallActivity";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
@@ -29,7 +32,10 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  notifyMessageActivity: CallableActivity<NotifyMessageActivityBodyImpl>;
+  notifyMessageActivity: CallableActivity<
+    NotifyMessageActivityInput,
+    NotifyMessageActivityResultSuccess
+  >;
   legacyNotificationHubConfig: NotificationHubConfig;
 }
 

@@ -14,7 +14,7 @@ export { createLogger } from "./log";
 export * from "./returnTypes";
 
 export type ActivityBody<
-  Input,
+  Input = unknown,
   Success extends ActivityResultSuccess = ActivityResultSuccess,
   Failure extends ActivityResultFailure = ActivityResultFailure
   // Bindings extends Array<unknown> = []
@@ -25,26 +25,6 @@ export type ActivityBody<
   // bindings?: Bindings;
 }) => TaskEither<Failure, Success>;
 
-// extract the input type from an ActivityBody type
-export type InputOfActivityBody<B extends ActivityBody<unknown>> = B extends (
-  p: infer P
-) => TaskEither<infer _, infer __>
-  ? P extends { context: Context; input: infer I }
-    ? I
-    : never
-  : never;
-
-// extract the success type from an ActivityBody type
-export type SuccessOfActivityBody<B extends ActivityBody<unknown>> = B extends (
-  p: infer P
-) => TaskEither<infer _, infer S>
-  ? P extends { context: Context; input: infer __ }
-    ? S extends ActivityResultSuccess
-      ? S
-      : never
-    : never
-  : never;
-
 /**
  * Wraps an activity execution so that types are enforced and errors are handled consistently.
  * The purpose is to reduce boilerplate in activity implementation and let developers define only what it matters in terms of business logic
@@ -54,16 +34,19 @@ export type SuccessOfActivityBody<B extends ActivityBody<unknown>> = B extends (
  * @param OutputCodec an io-ts codec which maps the expected output structure
  * @returns
  */
-export const createActivity = <B extends ActivityBody<unknown>>(
+export const createActivity = <
+  I extends unknown = unknown,
+  S extends ActivityResultSuccess = ActivityResultSuccess,
+  F extends ActivityResultFailure = ActivityResultFailure
+>(
   activityName: string,
-  InputCodec: t.Type<InputOfActivityBody<B>>,
-  OutputCodec: t.Type<SuccessOfActivityBody<B>>,
-  body: B
+  InputCodec: t.Type<I>,
+  OutputCodec: t.Type<S>,
+  body: ActivityBody<I, S, F>
 ) => async (
   context: Context,
   rawInput: unknown
-): Promise<ActivityResultFailure | SuccessOfActivityBody<B>> => {
-  // TODO: define type variable TNext so that
+): Promise<F | ActivityResultFailure | S | ActivityResultSuccess> => {
   const logger = createLogger(context, activityName);
 
   return fromEither(InputCodec.decode(rawInput))
@@ -74,7 +57,10 @@ export const createActivity = <B extends ActivityBody<unknown>>(
       )
     )
     .chain(input => body({ context, logger, input }))
-    .map(OutputCodec.encode)
-    .fold(identity, identity)
+    .map(e => OutputCodec.encode(e))
+    .fold<F | ActivityResultFailure | S | ActivityResultSuccess>(
+      identity,
+      identity
+    )
     .run();
 };

@@ -5,7 +5,7 @@ import { getConfigOrThrow } from "../utils/config";
 import { getHandler } from "./handler";
 
 import {
-  ActivityBodyImpl as CreateOrUpdateActivityBodyImpl,
+  ActivityInput as CreateOrUpdateActivityBodyImpl,
   activityName as CreateOrUpdateActivityName,
   ActivityResultSuccess as CreateOrUpdateActivityResultSuccess
 } from "../HandleNHCreateOrUpdateInstallationCallActivity";

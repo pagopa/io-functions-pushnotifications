@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as o from "../utils/durable/orchestrators";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
-import { ActivityBodyImpl as CreateOrUpdateActivityBodyImpl } from "../HandleNHCreateOrUpdateInstallationCallActivity";
+import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 export const OrchestratorName =
@@ -21,7 +21,7 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityBodyImpl>;
+  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityInput>;
   notificationHubConfig: NotificationHubConfig;
 }
 
