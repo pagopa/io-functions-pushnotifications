@@ -14,8 +14,8 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { withDefault } from "italia-ts-commons/lib/types";
 
 // global app configuration
-export type IConfig = t.TypeOf<typeof iConfig>;
-export const iConfig = t.intersection([
+export type IConfig = t.TypeOf<typeof IConfig>;
+export const IConfig = t.intersection([
   t.interface({
     APPINSIGHTS_INSTRUMENTATIONKEY: NonEmptyString,
     // the internal function runtime has MaxTelemetryItem per second set to 20 by default
@@ -36,7 +36,7 @@ export const iConfig = t.intersection([
 ]);
 
 // No need to re-evaluate this object for each call
-const errorOrConfig: t.Validation<IConfig> = iConfig.decode({
+const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
   ...process.env,
   isProduction: process.env.NODE_ENV === "production"
 });
