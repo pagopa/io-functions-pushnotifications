@@ -2,13 +2,12 @@
 import { getConfigOrThrow } from "../utils/config";
 import { callableActivity } from "../utils/durable/orchestrators";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
-import { getHandler } from "./handler";
-
 import {
   ActivityBodyImpl as NotifyMessageActivityBodyImpl,
   activityName as NotifyMessageActivityName,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../HandleNHNotifyMessageCallActivity";
+import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 const legacyNotificationHubConfig = getNHLegacyConfig(config);

@@ -14,6 +14,7 @@ import { OrchestratorName as CreateOrUpdateInstallationOrchestrator } from "../H
 import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
 import { OrchestratorName as NotifyMessageOrchestratorName } from "../HandleNHNotifyMessageCallOrchestrator/handler";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationMessage = t.union([
   NotifyMessage,
   CreateOrUpdateInstallationMessage,

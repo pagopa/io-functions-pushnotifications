@@ -8,6 +8,7 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationHubConfig = t.interface({
   /* eslint-disable @typescript-eslint/naming-convention */
   AZURE_NH_ENDPOINT: NonEmptyString,

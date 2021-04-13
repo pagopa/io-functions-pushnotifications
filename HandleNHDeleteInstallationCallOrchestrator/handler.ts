@@ -11,40 +11,38 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 /**
  * Orchestrator Name
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName = "HandleNHDeleteInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
 export type OrchestratorCallInput = t.TypeOf<typeof OrchestratorCallInput>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorCallInput = t.interface({
   message: DeleteInstallationMessage
 });
 
 interface IHandlerParams {
-  deleteInstallationActivity: o.CallableActivity<
+  readonly deleteInstallationActivity: o.CallableActivity<
     DeleteInstallationActivityBodyImpl
   >;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   deleteInstallationActivity,
   legacyNotificationHubConfig
-}: IHandlerParams) => {
-  return o.createOrchestrator(
-    OrchestratorName,
-    OrchestratorCallInput,
-    function*({
-      context,
-      input: {
-        message: { installationId }
-      } /* , logger */
-    }): Generator<Task, void, Task> {
-      yield* deleteInstallationActivity(context, {
-        installationId,
-        notificationHubConfig: legacyNotificationHubConfig
-      });
-    }
-  );
-};
+}: IHandlerParams) =>
+  o.createOrchestrator(OrchestratorName, OrchestratorCallInput, function*({
+    context,
+    input: {
+      message: { installationId }
+    } /* , logger */
+  }): Generator<Task, void, Task> {
+    yield* deleteInstallationActivity(context, {
+      installationId,
+      notificationHubConfig: legacyNotificationHubConfig
+    });
+  });

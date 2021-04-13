@@ -17,9 +17,11 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 
 // message: t.string,
 // message_id: t.string,
+// eslint-disable-next-line extra-rules/no-commented-out-code
 // title: t.string
 
 // Activity input
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityInput = t.interface({
   message: NotifyMessage,
   notificationHubConfig: NotificationHubConfig
@@ -43,6 +45,7 @@ export type ActivityBodyImpl = ActivityBody<
 export const getActivityBody = (
   telemetryClient: TelemetryClient,
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.message.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);

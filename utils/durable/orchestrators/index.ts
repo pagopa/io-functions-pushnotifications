@@ -32,14 +32,15 @@ export * from "./returnTypes";
 type TNextDefault = unknown;
 
 type OrchestratorBody<I, TNext> = (p: {
-  context: IOrchestrationFunctionContext;
-  logger: IOrchestratorLogger;
-  input: I;
+  readonly context: IOrchestrationFunctionContext;
+  readonly logger: IOrchestratorLogger;
+  readonly input: I;
 }) => Generator<Task, void, TNext>;
 
 /**
  * Wraps an orchestrator execution so that types are enforced and errors are handled consistently.
  * The purpose is to reduce boilerplate in orchestrator implementation and let developers define only what it matters in terms of business logic
+ *
  * @param orchestratorName name of the orchestrator (as it's defined in the Azure Runtime)
  * @param InputCodec an io-ts codec which maps the expected input structure
  * @param body a generator function which implements the business logic; it's meant to either return void or throw respectively in case of success or failure
@@ -47,6 +48,7 @@ type OrchestratorBody<I, TNext> = (p: {
  */
 export const createOrchestrator = <I, TNext = TNextDefault>(
   orchestratorName: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   InputCodec: t.Type<I>,
   body: OrchestratorBody<I, TNext>
 ) =>
@@ -64,6 +66,7 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
         throw failureInvalidInput(rawInput, `${readableReport(err)}`);
       });
 
+      // eslint-disable-next-line sort-keys
       yield* body({ context, logger, input });
 
       return success();
@@ -80,6 +83,7 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
 /**
  * Creates a callable for an activity to be used into an orchestrator function.
  * Types are enforced from a ActivityBody definition so that they are bound to the actual activity implementation
+ *
  * @param activityName the name of the activity to be called
  * @param OutputCodec a codec for the result value
  * @param retryOptions if provided, the activity will be retried when failing
@@ -87,6 +91,7 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
  */
 export const callableActivity = <B extends ActivityBody<unknown> = undefined>(
   activityName: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   OutputCodec: t.Type<SuccessOfActivityBody<B>>,
   retryOptions?: RetryOptions
 ) =>

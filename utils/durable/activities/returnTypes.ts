@@ -3,16 +3,19 @@ import * as t from "io-ts";
 import { ActivityLogger } from "./log";
 
 export type ActivityResultSuccess = t.TypeOf<typeof ActivityResultSuccess>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
 });
 
 export type ActivityResultFailure = t.TypeOf<typeof ActivityResultFailure>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityResultFailure = t.interface({
   kind: t.literal("FAILURE"),
   reason: t.string
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityResult = t.taggedUnion("kind", [
   ActivityResultSuccess,
   ActivityResultFailure

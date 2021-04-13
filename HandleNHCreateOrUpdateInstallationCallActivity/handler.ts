@@ -15,6 +15,7 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 
 // Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityInput = t.interface({
   installationId: InstallationId,
   notificationHubConfig: NotificationHubConfig,
@@ -32,6 +33,7 @@ export type ActivityBodyImpl = ActivityBody<
 
 export const getActivityBody = (
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);

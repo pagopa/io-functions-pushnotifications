@@ -32,8 +32,10 @@ import {
 } from "../utils/durable/activities";
 
 // Activity input
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const HandleNHNotificationCallActivityInput = t.interface({
   message: NotificationMessage,
+  // eslint-disable-next-line sort-keys, @typescript-eslint/naming-convention
   NotificationHubConfig
 });
 
@@ -52,6 +54,7 @@ export const getCallNHServiceActivityHandler = (
   // tslint:disable-next-line: no-unused-variable
   telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => async (context: Context, input: unknown) => {
   const logger = createLogger(context, logPrefix);
   return fromEither(HandleNHNotificationCallActivityInput.decode(input))
@@ -64,7 +67,7 @@ export const getCallNHServiceActivityHandler = (
     .chain<ActivityResultSuccess>(
       ({
         message,
-        // eslint-disable-next-line @typescript-eslint/no-shadow
+        // eslint-disable-next-line @typescript-eslint/no-shadow, @typescript-eslint/naming-convention
         NotificationHubConfig
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }): TaskEither<any, ActivityResultSuccess> => {
@@ -102,6 +105,7 @@ export const getCallNHServiceActivityHandler = (
                   })
                 )
               );
+          // eslint-disable-next-line sonarjs/no-duplicated-branches, no-duplicate-case
           case NotifyKind.Notify:
             return notify(nhService, message.installationId, message.payload)
               .mapLeft(e =>

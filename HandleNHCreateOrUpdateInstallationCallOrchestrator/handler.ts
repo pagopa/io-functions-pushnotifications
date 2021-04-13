@@ -6,12 +6,14 @@ import { CreateOrUpdateInstallationMessage } from "../generated/notifications/Cr
 import { ActivityBodyImpl as CreateOrUpdateActivityBodyImpl } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NhCreateOrUpdateInstallationOrchestratorCallInput = t.interface({
   message: CreateOrUpdateInstallationMessage
 });
@@ -21,15 +23,18 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityBodyImpl>;
-  notificationHubConfig: NotificationHubConfig;
+  readonly createOrUpdateActivity: o.CallableActivity<
+    CreateOrUpdateActivityBodyImpl
+  >;
+  readonly notificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   createOrUpdateActivity,
   notificationHubConfig
-}: IHandlerParams) => {
-  return o.createOrchestrator(
+}: IHandlerParams) =>
+  o.createOrchestrator(
     OrchestratorName,
     NhCreateOrUpdateInstallationOrchestratorCallInput,
     function*({
@@ -47,4 +52,3 @@ export const getHandler = ({
       });
     }
   );
-};

@@ -15,11 +15,13 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 /**
  * Orchestrator Name
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName = "HandleNHNotifyMessageCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NhNotifyMessageOrchestratorCallInput = t.interface({
   message: NotifyMessage
 });
@@ -29,15 +31,18 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  notifyMessageActivity: CallableActivity<NotifyMessageActivityBodyImpl>;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly notifyMessageActivity: CallableActivity<
+    NotifyMessageActivityBodyImpl
+  >;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   notifyMessageActivity,
   legacyNotificationHubConfig
-}: IHandlerParams) => {
-  return createOrchestrator(
+}: IHandlerParams) =>
+  createOrchestrator(
     OrchestratorName,
     NhNotifyMessageOrchestratorCallInput,
     function*({ context, input: { message } }): Generator<Task, void, Task> {
@@ -47,4 +52,3 @@ export const getHandler = ({
       });
     }
   );
-};
