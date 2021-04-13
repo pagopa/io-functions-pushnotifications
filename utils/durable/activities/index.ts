@@ -47,7 +47,9 @@ export const createActivity = <
   F extends ActivityResultFailure = ActivityResultFailure
 >(
   activityName: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   InputCodec: t.Type<I>,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   OutputCodec: t.Type<S>,
   body: ActivityBody<I, S, F>
 ) => async (
@@ -64,9 +66,10 @@ export const createActivity = <
           readableReport(errs)
         )
       )
-    )
-    .chain(input => body({ context, logger, input }))
-    .map(e => OutputCodec.encode(e))
-    .fold<ActivityResult<F | S>>(identity, identity)
-    .run();
+      // eslint-disable-next-line sort-keys
+      .chain(input => body({ context, logger, input }))
+      .map(e => OutputCodec.encode(e))
+      .fold<ActivityResult<F | S>>(identity, identity)
+      .run()
+  );
 };

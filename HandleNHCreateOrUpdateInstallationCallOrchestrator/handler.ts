@@ -23,8 +23,10 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityInput>;
-  notificationHubConfig: NotificationHubConfig;
+  readonly createOrUpdateActivity: o.CallableActivity<
+    CreateOrUpdateActivityInput
+  >;
+  readonly notificationHubConfig: NotificationHubConfig;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

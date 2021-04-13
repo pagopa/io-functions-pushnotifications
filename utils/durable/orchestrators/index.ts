@@ -82,6 +82,7 @@ export type CallableActivity<
   I extends unknown = unknown,
   S extends ActivityResultSuccess = ActivityResultSuccess,
   // Failures aren't mapped as they are thrown
+  // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
   __ extends ActivityResultFailure = ActivityResultFailure
 > = (context: IOrchestrationFunctionContext, input: I) => Generator<Task, S>;
 
@@ -97,9 +98,11 @@ export type CallableActivity<
 export const callableActivity = <
   I extends unknown = unknown,
   S extends ActivityResultSuccess = ActivityResultSuccess,
+  // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
   __ extends ActivityResultFailure = ActivityResultFailure
 >(
   activityName: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   OutputCodec: t.Type<S>,
   retryOptions?: RetryOptions
 ) =>

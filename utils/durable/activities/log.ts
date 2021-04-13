@@ -14,10 +14,12 @@ export const createLogger = (
   logPrefix: string = ""
 ): ActivityLogger =>
   new Proxy(context.log, {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     get: (t, key) =>
       // wrap logger functions
       key === "info" || key === "error" || key === "info" || key === "verbose"
-        ? (arg0: string) => t[key](`${logPrefix}|${arg0}`)
+        ? // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+          (arg0: string) => t[key](`${logPrefix}|${arg0}`)
         : // for other props, just return them
         key in t
         ? // tslint:disable-next-line:no-useless-cast

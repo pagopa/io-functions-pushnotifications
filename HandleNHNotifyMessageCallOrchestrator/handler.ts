@@ -34,11 +34,11 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  notifyMessageActivity: CallableActivity<
+  readonly notifyMessageActivity: CallableActivity<
     NotifyMessageActivityInput,
     NotifyMessageActivityResultSuccess
   >;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

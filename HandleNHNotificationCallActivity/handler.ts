@@ -73,6 +73,7 @@ export const getCallNHServiceActivityHandler = (
 
         const nhService = buildNHService(NotificationHubConfig);
 
+        // eslint-disable-next-line default-case
         switch (message.kind) {
           case CreateOrUpdateKind.CreateOrUpdateInstallation:
             return createOrUpdateInstallation(

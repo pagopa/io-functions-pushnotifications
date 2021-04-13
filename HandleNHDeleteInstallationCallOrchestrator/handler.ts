@@ -24,7 +24,7 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  deleteInstallationActivity: o.CallableActivity<
+  readonly deleteInstallationActivity: o.CallableActivity<
     DeleteInstallationActivityInput
   >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
