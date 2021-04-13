@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import * as o from "../utils/durable/orchestrators";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
-import { ActivityBodyImpl as CreateOrUpdateActivityBodyImpl } from "../HandleNHCreateOrUpdateInstallationCallActivity";
+import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -23,10 +23,8 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  readonly createOrUpdateActivity: o.CallableActivity<
-    CreateOrUpdateActivityBodyImpl
-  >;
-  readonly notificationHubConfig: NotificationHubConfig;
+  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityInput>;
+  notificationHubConfig: NotificationHubConfig;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

@@ -32,12 +32,6 @@ export type ActivityInput = t.TypeOf<typeof ActivityInput>;
 // Activity Result
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
-// ActivityBody
-export type ActivityBodyImpl = ActivityBody<
-  ActivityInput,
-  ActivityResultSuccess
->;
-
 /**
  * For each Notification Hub Message of type "Delete" calls related Notification Hub service
  */
@@ -45,8 +39,10 @@ export type ActivityBodyImpl = ActivityBody<
 export const getActivityBody = (
   telemetryClient: TelemetryClient,
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-): ActivityBodyImpl => ({ input, logger }) => {
+): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
+  input,
+  logger
+}) => {
   logger.info(`INSTALLATION_ID=${input.message.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
   return notify(nhService, input.message.installationId, input.message.payload)

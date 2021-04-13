@@ -14,7 +14,7 @@ export { createLogger } from "./log";
 export * from "./returnTypes";
 
 export type ActivityBody<
-  Input,
+  Input = unknown,
   Success extends ActivityResultSuccess = ActivityResultSuccess,
   Failure extends ActivityResultFailure = ActivityResultFailure
   // Bindings extends Array<unknown> = []
@@ -25,27 +25,11 @@ export type ActivityBody<
   // bindings?: Bindings;
 }) => TaskEither<Failure, Success>;
 
-// extract the input type from an ActivityBody type
-export type InputOfActivityBody<B extends ActivityBody<unknown>> = B extends (
-  p: infer P
-) => // eslint-disable-next-line @typescript-eslint/no-unused-vars
-TaskEither<infer _, infer __>
-  ? P extends { readonly context: Context; readonly input: infer I }
-    ? I
-    : never
-  : never;
-
-// extract the success type from an ActivityBody type
-export type SuccessOfActivityBody<B extends ActivityBody<unknown>> = B extends (
-  p: infer P
-) => // eslint-disable-next-line @typescript-eslint/no-unused-vars
-TaskEither<infer _, infer S> // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ? P extends { readonly context: Context; readonly input: infer __ }
-    ? S extends ActivityResultSuccess
-      ? S
-      : never
-    : never
-  : never;
+// All activity will return ActivityResultFailure, ActivityResultSuccess or some derived types
+type ActivityResult<R extends ActivityResultSuccess | ActivityResultFailure> =
+  | R
+  | ActivityResultFailure
+  | ActivityResultSuccess;
 
 /**
  * Wraps an activity execution so that types are enforced and errors are handled consistently.
@@ -57,18 +41,19 @@ TaskEither<infer _, infer S> // eslint-disable-next-line @typescript-eslint/no-u
  * @param OutputCodec an io-ts codec which maps the expected output structure
  * @returns
  */
-export const createActivity = <B extends ActivityBody<unknown>>(
+export const createActivity = <
+  I extends unknown = unknown,
+  S extends ActivityResultSuccess = ActivityResultSuccess,
+  F extends ActivityResultFailure = ActivityResultFailure
+>(
   activityName: string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  InputCodec: t.Type<InputOfActivityBody<B>>,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  OutputCodec: t.Type<SuccessOfActivityBody<B>>,
-  body: B
+  InputCodec: t.Type<I>,
+  OutputCodec: t.Type<S>,
+  body: ActivityBody<I, S, F>
 ) => async (
   context: Context,
   rawInput: unknown
-): Promise<ActivityResultFailure | SuccessOfActivityBody<B>> => {
-  // TODO: define type variable TNext so that
+): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
   return (
@@ -79,10 +64,9 @@ export const createActivity = <B extends ActivityBody<unknown>>(
           readableReport(errs)
         )
       )
-      // eslint-disable-next-line sort-keys
-      .chain(input => body({ context, logger, input }))
-      .map(OutputCodec.encode)
-      .fold(identity, identity)
-      .run()
-  );
+    )
+    .chain(input => body({ context, logger, input }))
+    .map(e => OutputCodec.encode(e))
+    .fold<ActivityResult<F | S>>(identity, identity)
+    .run();
 };

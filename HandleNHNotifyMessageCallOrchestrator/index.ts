@@ -3,7 +3,7 @@ import { getConfigOrThrow } from "../utils/config";
 import { callableActivity } from "../utils/durable/orchestrators";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 import {
-  ActivityBodyImpl as NotifyMessageActivityBodyImpl,
+  ActivityInput as NotifyMessageActivityInput,
   activityName as NotifyMessageActivityName,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../HandleNHNotifyMessageCallActivity";
@@ -12,7 +12,7 @@ import { getHandler } from "./handler";
 const config = getConfigOrThrow();
 const legacyNotificationHubConfig = getNHLegacyConfig(config);
 
-const notifyMessageActivity = callableActivity<NotifyMessageActivityBodyImpl>(
+const notifyMessageActivity = callableActivity<NotifyMessageActivityInput>(
   NotifyMessageActivityName,
   NotifyMessageActivityResultSuccess,
   {

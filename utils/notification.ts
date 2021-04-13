@@ -67,8 +67,8 @@ export class ExtendedNotificationHubService extends NotificationHubService {
         agent: httpsAgent
       });
     };
-    // eslint-disable-next-line @typescript-eslint/dot-notation
-    return super["_buildRequestOptions"](
+    // @ts-ignore -- although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
+    return super._buildRequestOptions(
       webResource,
       body,
       options,

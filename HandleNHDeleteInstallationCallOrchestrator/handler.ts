@@ -3,7 +3,7 @@ import * as t from "io-ts";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 
-import { ActivityBodyImpl as DeleteInstallationActivityBodyImpl } from "../HandleNHDeleteInstallationCallActivity";
+import { ActivityInput as DeleteInstallationActivityInput } from "../HandleNHDeleteInstallationCallActivity";
 
 import * as o from "../utils/durable/orchestrators";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
@@ -24,8 +24,8 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  readonly deleteInstallationActivity: o.CallableActivity<
-    DeleteInstallationActivityBodyImpl
+  deleteInstallationActivity: o.CallableActivity<
+    DeleteInstallationActivityInput
   >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
 }

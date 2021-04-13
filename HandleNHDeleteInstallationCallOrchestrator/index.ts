@@ -1,6 +1,6 @@
 import * as df from "durable-functions";
 import {
-  ActivityBodyImpl as DeleteInstallationActivityBodyImpl,
+  ActivityInput as DeleteInstallationActivityInput,
   activityName as DeleteInstallationActivityName,
   ActivityResultSuccess as DeleteInstallationActivityResultSuccess
 } from "../HandleNHDeleteInstallationCallActivity";
@@ -12,7 +12,7 @@ import { getHandler } from "./handler";
 const config = getConfigOrThrow();
 
 const deleteInstallationActivity = o.callableActivity<
-  DeleteInstallationActivityBodyImpl
+  DeleteInstallationActivityInput
 >(DeleteInstallationActivityName, DeleteInstallationActivityResultSuccess, {
   ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
   backoffCoefficient: 1.5

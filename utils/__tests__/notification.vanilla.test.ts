@@ -1,10 +1,12 @@
-// tslint:disable-next-line: no-object-mutation
-process.env = {
+const env = {
   ...process.env,
   AZURE_NH_ENDPOINT:
     "Endpoint=sb://127.0.0.1:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",
   AZURE_NH_HUB_NAME: "io-notification-hub-mock"
 };
+
+// tslint:disable-next-line: no-object-mutation
+process.env = env;
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import * as nock from "nock";
@@ -13,8 +15,8 @@ import { ExtendedNotificationHubService, notify } from "../notification";
 describe("NotificationHubService", () => {
   it("should not use agentkeepalive when calling notification hub", async () => {
     const notificationHubService = new ExtendedNotificationHubService(
-      process.env.AZURE_NH_HUB_NAME,
-      process.env.AZURE_NH_ENDPOINT
+      env.AZURE_NH_HUB_NAME,
+      env.AZURE_NH_ENDPOINT
     );
     const responseSpy = jest.fn();
     nock("https://127.0.0.1:30000")

@@ -4,7 +4,7 @@ import * as o from "../utils/durable/orchestrators";
 import { getConfigOrThrow } from "../utils/config";
 
 import {
-  ActivityBodyImpl as CreateOrUpdateActivityBodyImpl,
+  ActivityInput as CreateOrUpdateActivityInput,
   activityName as CreateOrUpdateActivityName,
   ActivityResultSuccess as CreateOrUpdateActivityResultSuccess
 } from "../HandleNHCreateOrUpdateInstallationCallActivity";
@@ -13,12 +13,14 @@ import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 
-const createOrUpdateActivity = o.callableActivity<
-  CreateOrUpdateActivityBodyImpl
->(CreateOrUpdateActivityName, CreateOrUpdateActivityResultSuccess, {
-  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-  backoffCoefficient: 1.5
-});
+const createOrUpdateActivity = o.callableActivity<CreateOrUpdateActivityInput>(
+  CreateOrUpdateActivityName,
+  CreateOrUpdateActivityResultSuccess,
+  {
+    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+    backoffCoefficient: 1.5
+  }
+);
 
 const notificationHubConfig = getNHLegacyConfig(config);
 
