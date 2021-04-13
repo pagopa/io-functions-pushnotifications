@@ -18,11 +18,12 @@ import { Platform, PlatformEnum } from "../generated/backend/Platform";
  *
  * @see https://msdn.microsoft.com/en-us/library/azure/mt621153.aspx
  */
-export const iNotificationTemplate = t.interface({
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const INotificationTemplate = t.interface({
   body: t.string
 });
 
-export type INotificationTemplate = t.TypeOf<typeof iNotificationTemplate>;
+export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
 
 /**
  * APNS apns-push-type available values
@@ -81,7 +82,8 @@ export class ExtendedNotificationHubService extends NotificationHubService {
  *
  * @see https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
  */
-const apnsTemplate: INotificationTemplate = {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const APNSTemplate: INotificationTemplate = {
   body:
     '{"aps": {"alert": {"title": "$(title)", "body": "$(message)"}}, "message_id": "$(message_id)"}'
 };
@@ -91,7 +93,8 @@ const apnsTemplate: INotificationTemplate = {
  *
  * @see https://developers.google.com/cloud-messaging/concept-options
  */
-const gcmTemplate: INotificationTemplate = {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const GCMTemplate: INotificationTemplate = {
   body:
     '{"data": {"title": "$(title)", "message": "$(message)", "message_id": "$(message_id)", "smallIcon": "ic_notification", "largeIcon": "ic_notification"}}'
 };
@@ -115,7 +118,7 @@ const createOrUpdateInstallationOptions = t.interface({
   pushChannel: t.string,
   tags: t.array(t.string),
   templates: t.interface({
-    template: iNotificationTemplate
+    template: INotificationTemplate
   })
 });
 
@@ -193,7 +196,7 @@ export const createOrUpdateInstallation = (
     pushChannel,
     tags: [...tags],
     templates: {
-      template: platform === PlatformEnum.apns ? apnsTemplate : gcmTemplate
+      template: platform === PlatformEnum.apns ? APNSTemplate : GCMTemplate
     }
   };
 
