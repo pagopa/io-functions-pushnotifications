@@ -2,22 +2,16 @@ import * as t from "io-ts";
 
 import { Task } from "durable-functions/lib/src/classes";
 
-import {
-  ActivityInput as NotifyMessageActivityInput,
-  ActivityResultSuccess as NotifyMessageActivityResultSuccess
-} from "../HandleNHNotifyMessageCallActivity";
-import {
-  ActivityInput as IsUserInActiveSubsetActivityInput,
-  ActivityResultSuccessWithValue as IsUserInActiveSubsetActivityResultSuccess
-} from "../IsUserInActiveSubsetActivity";
+import { getCallableActivity as getNotifyCallableActivity } from "../HandleNHNotifyMessageCallActivity";
+import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
+import { createOrchestrator } from "../utils/durable/orchestrators";
 import {
-  CallableActivity,
-  createOrchestrator
-} from "../utils/durable/orchestrators";
-import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+  getNotificationHubPartitionConfig,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 /**
  * Orchestrator Name
@@ -36,22 +30,22 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  readonly notifyMessageActivity: CallableActivity<
-    NotifyMessageActivityInput,
-    NotifyMessageActivityResultSuccess
-  >;
-  readonly isUserInActiveTestSubsetActivity: CallableActivity<
-    IsUserInActiveSubsetActivityInput,
-    IsUserInActiveSubsetActivityResultSuccess
+  readonly notifyMessageActivity: ReturnType<typeof getNotifyCallableActivity>;
+  readonly isUserInActiveTestSubsetActivity: ReturnType<
+    typeof getIsUserInActiveSubsetActivityCallableActivity
   >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
+  readonly notificationHubConfigPartitionChooser: ReturnType<
+    typeof getNotificationHubPartitionConfig
+  >;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   notifyMessageActivity,
   isUserInActiveTestSubsetActivity,
-  legacyNotificationHubConfig
+  legacyNotificationHubConfig,
+  notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
   createOrchestrator(
     OrchestratorName,
@@ -63,17 +57,26 @@ export const getHandler = ({
     }): Generator<Task, void, Task> {
       const { installationId } = message;
 
-      // just for logging for now
-      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
-        installationId
-      });
-      logger.info(
-        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
-      );
-
       yield* notifyMessageActivity(context, {
         message,
         notificationHubConfig: legacyNotificationHubConfig
       });
+
+      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+        installationId
+      });
+
+      if (isUserATestUser.value) {
+        logger.info(`TEST_USER:${installationId}`);
+
+        const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
+          installationId
+        );
+
+        yield* notifyMessageActivity(context, {
+          message,
+          notificationHubConfig: notificationHubConfigPartition
+        });
+      }
     }
   );

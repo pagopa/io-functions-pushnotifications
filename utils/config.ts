@@ -10,6 +10,7 @@ import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { withDefault } from "italia-ts-commons/lib/types";
+import { nhDisjoitedFirstCharacterPartitionReadonlyArray } from "./types";
 
 export type NHPartitionFeatureFlag = t.TypeOf<typeof NHPartitionFeatureFlag>;
 export const NHPartitionFeatureFlag = t.keyof({
@@ -28,9 +29,6 @@ export const IConfig = t.intersection([
     // @see https://github.com/Azure/azure-functions-host/blob/master/src/WebJobs.Script/Config/ApplicationInsightsLoggerOptionsSetup.cs#L29
     APPINSIGHTS_SAMPLING_PERCENTAGE: withDefault(IntegerFromString, 5),
 
-    AZURE_NH_ENDPOINT: NonEmptyString,
-    AZURE_NH_HUB_NAME: NonEmptyString,
-
     AzureWebJobsStorage: NonEmptyString,
 
     NOTIFICATIONS_STORAGE_CONNECTION_STRING: NonEmptyString,
@@ -38,6 +36,14 @@ export const IConfig = t.intersection([
 
     isProduction: t.boolean
   }),
+
+  t.interface({
+    AZURE_NH_ENDPOINT: NonEmptyString,
+    AZURE_NH_HUB_NAME: NonEmptyString,
+
+    AZURE_NOTIFICATION_HUB_PARTITIONS: nhDisjoitedFirstCharacterPartitionReadonlyArray
+  }),
+
   t.interface({
     BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
     BETA_USERS_TABLE_NAME: NonEmptyString,
@@ -50,6 +56,7 @@ export const IConfig = t.intersection([
 // No need to re-evaluate this object for each call
 const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
   ...process.env,
+
   isProduction: process.env.NODE_ENV === "production"
 });
 

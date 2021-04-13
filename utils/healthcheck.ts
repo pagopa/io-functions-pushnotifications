@@ -15,10 +15,16 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import { readableReport } from "italia-ts-commons/lib/reporters";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
-import { buildNHService } from "./notificationhubServicePartition";
+import {
+  buildNHConnectionString,
+  buildNHService
+} from "./notificationhubServicePartition";
+
+import { NotificationHubPartitions } from "./types";
 
 type ProblemSource = "AzureStorage" | "AzureNotificationHub" | "Config" | "Url";
 export type HealthProblem<S extends ProblemSource> = string & {
@@ -62,24 +68,40 @@ export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
  */
 export const checkAzureNotificationHub = ({
   AZURE_NH_ENDPOINT,
-  AZURE_NH_HUB_NAME
+  AZURE_NH_HUB_NAME,
+  AZURE_NOTIFICATION_HUB_PARTITIONS
 }: IConfig): HealthCheck<"AzureNotificationHub"> =>
-  tryCatch(
-    () =>
-      new Promise<NHResultSuccess>((resolve, reject) =>
-        buildNHService({
-          AZURE_NH_ENDPOINT,
-          AZURE_NH_HUB_NAME
-        }).deleteInstallation(
-          "aFakeInstallation",
-          (err, _) =>
-            err == null
-              ? resolve({ kind: "SUCCESS" })
-              : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+  array
+    .sequence(taskEither)(
+      [
+        { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
+        ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
+          AZURE_NH_ENDPOINT: buildNHConnectionString({
+            namespace: p.namespace,
+            sharedAccessKey: p.sharedAccessKey
+          } as NotificationHubPartitions) as NonEmptyString,
+          AZURE_NH_HUB_NAME: p.name
+        }))
+      ].map(connString =>
+        tryCatch(
+          () =>
+            new Promise<NHResultSuccess>((resolve, reject) =>
+              buildNHService({
+                AZURE_NH_ENDPOINT: connString.AZURE_NH_ENDPOINT,
+                AZURE_NH_HUB_NAME: connString.AZURE_NH_HUB_NAME
+              }).deleteInstallation(
+                "aFakeInstallation",
+                (err, _) =>
+                  err == null
+                    ? resolve({ kind: "SUCCESS" })
+                    : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+              )
+            ),
+          toHealthProblems("AzureNotificationHub")
         )
-      ),
-    toHealthProblems("AzureNotificationHub")
-  ).map(_ => true);
+      )
+    )
+    .map(_ => true);
 
 /**
  * Check the application can connect to an Azure Storage

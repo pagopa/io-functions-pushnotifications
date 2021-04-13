@@ -2,15 +2,15 @@ import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
 import * as o from "../utils/durable/orchestrators";
-import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+import {
+  getNotificationHubPartitionConfig,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 
-import { ActivityInput as DeleteInstallationActivityInput } from "../HandleNHDeleteInstallationCallActivity";
-import {
-  ActivityInput as IsUserInActiveSubsetActivityInput,
-  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
-} from "../IsUserInActiveSubsetActivity";
+import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
+import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 /**
  * Orchestrator Name
@@ -26,21 +26,24 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  readonly deleteInstallationActivity: o.CallableActivity<
-    DeleteInstallationActivityInput
+  readonly deleteInstallationActivity: ReturnType<
+    typeof getDeleteInstallationCallableActivity
   >;
-  readonly isUserInActiveTestSubsetActivity: o.CallableActivity<
-    IsUserInActiveSubsetActivityInput,
-    IsUserInActiveSubsetResultSuccess
+  readonly isUserInActiveTestSubsetActivity: ReturnType<
+    typeof getIsUserInActiveSubsetActivityCallableActivity
   >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
+  readonly notificationHubConfigPartitionChooser: ReturnType<
+    typeof getNotificationHubPartitionConfig
+  >;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   deleteInstallationActivity,
   isUserInActiveTestSubsetActivity,
-  legacyNotificationHubConfig
+  legacyNotificationHubConfig,
+  notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
   o.createOrchestrator(OrchestratorName, OrchestratorCallInput, function*({
     context,
@@ -49,16 +52,25 @@ export const getHandler = ({
     },
     logger
   }): Generator<Task, void, Task> {
-    // just for logging for now
-    const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
-      installationId
-    });
-    logger.info(
-      `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
-    );
-
     yield* deleteInstallationActivity(context, {
       installationId,
       notificationHubConfig: legacyNotificationHubConfig
     });
+
+    const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+      installationId
+    });
+
+    if (isUserATestUser.value) {
+      logger.info(`TEST_USER:${installationId}`);
+
+      const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
+        installationId
+      );
+
+      yield* deleteInstallationActivity(context, {
+        installationId,
+        notificationHubConfig: notificationHubConfigPartition
+      });
+    }
   });

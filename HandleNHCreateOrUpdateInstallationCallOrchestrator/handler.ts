@@ -1,15 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
 import * as o from "../utils/durable/orchestrators";
-import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
+
+import {
+  getNotificationHubPartitionConfig,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
-import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity";
-import {
-  ActivityInput as IsUserInActiveSubsetActivityInput,
-  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
-} from "../IsUserInActiveSubsetActivity";
+
+import { getCallableActivity as getCreateOrUpdateCallableActivity } from "../HandleNHCreateOrUpdateInstallationCallActivity";
+import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
+import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
@@ -26,21 +30,28 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  readonly createOrUpdateActivity: o.CallableActivity<
-    CreateOrUpdateActivityInput
+  readonly createOrUpdateActivity: ReturnType<
+    typeof getCreateOrUpdateCallableActivity
   >;
-  readonly isUserInActiveTestSubsetActivity: o.CallableActivity<
-    IsUserInActiveSubsetActivityInput,
-    IsUserInActiveSubsetResultSuccess
+  readonly deleteInstallationActivity: ReturnType<
+    typeof getDeleteInstallationCallableActivity
   >;
-  readonly notificationHubConfig: NotificationHubConfig;
+  readonly isUserInActiveTestSubsetActivity: ReturnType<
+    typeof getIsUserInActiveSubsetActivityCallableActivity
+  >;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
+  readonly notificationHubConfigPartitionChooser: ReturnType<
+    typeof getNotificationHubPartitionConfig
+  >;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   createOrUpdateActivity,
+  deleteInstallationActivity,
   isUserInActiveTestSubsetActivity,
-  notificationHubConfig
+  legacyNotificationHubConfig,
+  notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
   o.createOrchestrator(
     OrchestratorName,
@@ -56,13 +67,14 @@ export const getHandler = ({
       const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
         installationId
       });
-      logger.info(
-        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
-      );
+
+      if (isUserATestUser.value) {
+        logger.info(`TEST_USER:${installationId}`);
+      }
 
       yield* createOrUpdateActivity(context, {
         installationId,
-        notificationHubConfig,
+        notificationHubConfig: legacyNotificationHubConfig,
         platform,
         pushChannel,
         tags

@@ -1,12 +1,11 @@
-/**
- * This file contains the functions used to create and return Notification Hub service
- */
+import { NotificationHubService } from "azure-sb";
 import * as t from "io-ts";
 
-import { NotificationHubService } from "azure-sb";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { InstallationId } from "../generated/notifications/InstallationId";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
+import { NotificationHubPartitions } from "./types";
 
 export const NotificationHubConfig = t.interface({
   AZURE_NH_ENDPOINT: NonEmptyString,
@@ -17,6 +16,9 @@ export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
 
 /**
  * It returns the configuration related to the Legacy Notification Hub instance
+ *
+ * @param envConfig the env config, containing
+ *                  `AZURE_NH_ENDPOINT` and `AZURE_NH_HUB_NAME` variables
  */
 export const getNHLegacyConfig = (
   envConfig: IConfig
@@ -26,17 +28,47 @@ export const getNHLegacyConfig = (
 });
 
 /**
- * It returns an ExtendedNotificationHubService related to one of the new Notification Hub instances
+ * @param sha The sha to test
+ * @returns
+ */
+export const testShaForPartitionRegex = (
+  regex: string,
+  sha: InstallationId
+): boolean => new RegExp(regex).test(sha);
+
+/**
+ * @returns A connection string based on NH namespace and sharedAccessKey provided
+ */
+export const buildNHConnectionString = ({
+  namespace,
+  sharedAccessKey
+}: NotificationHubPartitions): string =>
+  `Endpoint=sb://${namespace}.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=${sharedAccessKey}`;
+
+/**
+ * It returns the configuration related to one of the new Notification Hub instances
  * based on the partion mechanism defined
  *
- * @param fiscalCodeHash a valid hash256 representing a Fiscal Code
+ * @param envConfig the env config with Notification Hub connection strings and names
+ * @param sha a valid hash256 representing a Fiscal Code
  */
-export const getNHService = (
-  fiscalCodeHash: string
-): ExtendedNotificationHubService => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fs = fiscalCodeHash;
-  throw new Error("It should not be called");
+export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
+  sha: InstallationId
+): NotificationHubConfig => {
+  const partition = envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS.find(p =>
+    testShaForPartitionRegex(p.partitionRegex, sha)
+  );
+
+  if (partition) {
+    const connectionString = buildNHConnectionString(partition);
+
+    return {
+      AZURE_NH_ENDPOINT: connectionString as NonEmptyString,
+      AZURE_NH_HUB_NAME: partition.name
+    };
+  }
+
+  throw new Error(`Unable to find Notification Hub partition for ${sha}`);
 };
 
 /**
