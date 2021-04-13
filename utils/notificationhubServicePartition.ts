@@ -8,14 +8,14 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
-export const notificationHubConfig = t.interface({
+export const NotificationHubConfig = t.interface({
   /* eslint-disable @typescript-eslint/naming-convention */
   AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString
   /* eslint-enable @typescript-eslint/naming-convention */
 });
 
-export type NotificationHubConfig = t.TypeOf<typeof notificationHubConfig>;
+export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
 
 /**
  * It returns the configuration related to the Legacy Notification Hub instance

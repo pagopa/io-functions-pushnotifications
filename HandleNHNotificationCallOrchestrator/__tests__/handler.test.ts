@@ -6,9 +6,9 @@ import {
   CreateOrUpdateInstallationMessage,
   KindEnum as CreateOrUpdateInstallationKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
-import { handleNHNotificationCallActivityInput } from "../../HandleNHNotificationCallActivity/handler";
-import { nhNotificationOrchestratorInput, getHandler } from "../handler";
-import { success } from "../../utils/activity";
+import { HandleNHNotificationCallActivityInput } from "../../HandleNHNotificationCallActivity/handler";
+import { NhNotificationOrchestratorInput, getHandler } from "../handler";
+import { success } from "../../utils/durable/orchestrators";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 
@@ -31,7 +31,7 @@ const callNHServiceActivitySuccessResult = success();
 
 describe("HandleNHNotificationCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
-    const nhCallOrchestratorInput = nhNotificationOrchestratorInput.encode({
+    const nhCallOrchestratorInput = NhNotificationOrchestratorInput.encode({
       message: aNotificationHubMessage
     });
 
@@ -52,9 +52,9 @@ describe("HandleNHNotificationCallOrchestrator", () => {
     expect(contextMockWithDf.df.callActivityWithRetry).toBeCalledWith(
       "HandleNHNotificationCallActivity",
       retryOptions,
-      handleNHNotificationCallActivityInput.encode({
+      HandleNHNotificationCallActivityInput.encode({
         message: aNotificationHubMessage,
-        notificationHubConfig: {
+        NotificationHubConfig: {
           AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
           AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
         }

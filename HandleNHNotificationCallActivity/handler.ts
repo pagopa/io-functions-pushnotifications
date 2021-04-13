@@ -9,34 +9,36 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 import { KindEnum as CreateOrUpdateKind } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { KindEnum as DeleteKind } from "../generated/notifications/DeleteInstallationMessage";
 import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage";
-import { notificationMessage } from "../HandleNHNotificationCall/handler";
+import { NotificationMessage } from "../HandleNHNotificationCall/handler";
+
 import {
   createOrUpdateInstallation,
   deleteInstallation,
   notify
 } from "../utils/notification";
+import {
+  buildNHService,
+  NotificationHubConfig
+} from "../utils/notificationhubServicePartition";
 
+import { initTelemetryClient } from "../utils/appinsights";
 import {
   ActivityResult,
   ActivityResultSuccess,
+  createLogger,
   failActivity,
   retryActivity,
   success
-} from "../utils/activity";
-import { initTelemetryClient } from "../utils/appinsights";
-import {
-  buildNHService,
-  notificationHubConfig
-} from "../utils/notificationhubServicePartition";
+} from "../utils/durable/activities";
 
 // Activity input
-export const handleNHNotificationCallActivityInput = t.interface({
-  message: notificationMessage,
-  notificationHubConfig
+export const HandleNHNotificationCallActivityInput = t.interface({
+  message: NotificationMessage,
+  NotificationHubConfig
 });
 
 export type HandleNHNotificationCallActivityInput = t.TypeOf<
-  typeof handleNHNotificationCallActivityInput
+  typeof HandleNHNotificationCallActivityInput
 >;
 
 const assertNever = (x: never): never => {
@@ -47,26 +49,30 @@ const assertNever = (x: never): never => {
  * For each Notification Hub Message calls related Notification Hub service
  */
 export const getCallNHServiceActivityHandler = (
+  // tslint:disable-next-line: no-unused-variable
   telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
-) => async (context: Context, input: unknown): Promise<ActivityResult> => {
-  const failure = failActivity(context, logPrefix);
-  return fromEither(handleNHNotificationCallActivityInput.decode(input))
+) => async (context: Context, input: unknown) => {
+  const logger = createLogger(context, logPrefix);
+  return fromEither(HandleNHNotificationCallActivityInput.decode(input))
     .mapLeft(errs =>
-      failure("Error decoding activity input", readableReport(errs))
+      failActivity(logger)(
+        "Error decoding activity input",
+        readableReport(errs)
+      )
     )
     .chain<ActivityResultSuccess>(
       ({
         message,
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        notificationHubConfig
+        NotificationHubConfig
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }): TaskEither<any, ActivityResultSuccess> => {
         context.log.info(
           `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
         );
 
-        const nhService = buildNHService(notificationHubConfig);
+        const nhService = buildNHService(NotificationHubConfig);
 
         switch (message.kind) {
           case CreateOrUpdateKind.CreateOrUpdateInstallation:
@@ -77,12 +83,29 @@ export const getCallNHServiceActivityHandler = (
               message.pushChannel,
               message.tags
             ).mapLeft(e =>
-              retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
+              retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
             );
           case NotifyKind.Notify:
             return notify(nhService, message.installationId, message.payload)
               .mapLeft(e =>
-                retryActivity(context, `${logPrefix}|ERROR=${toString(e)}`)
+                retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
+              )
+              .chainFirst(
+                taskEither.of(
+                  telemetryClient.trackEvent({
+                    name: "api.messages.notification.push.sent",
+                    properties: {
+                      isSuccess: "true",
+                      messageId: message.payload.message_id
+                    },
+                    tagOverrides: { samplingEnabled: "false" }
+                  })
+                )
+              );
+          case NotifyKind.Notify:
+            return notify(nhService, message.installationId, message.payload)
+              .mapLeft(e =>
+                retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
               )
               .chainFirst(
                 taskEither.of(
@@ -103,7 +126,7 @@ export const getCallNHServiceActivityHandler = (
             ).mapLeft(e => {
               // do not trigger a retry as delete may fail in case of 404
               context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
-              return failure(e.message);
+              return failActivity(logger)(e.message);
             });
           default:
             assertNever(message);

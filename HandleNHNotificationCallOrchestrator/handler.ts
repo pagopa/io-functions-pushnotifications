@@ -6,7 +6,7 @@ import * as t from "io-ts";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
-import { notificationMessage } from "../HandleNHNotificationCall/handler";
+import { NotificationMessage } from "../HandleNHNotificationCall/handler";
 import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
 import { IConfig } from "../utils/config";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
@@ -14,12 +14,12 @@ import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 /**
  * Carries information about Notification Hub Message payload
  */
-export const nhNotificationOrchestratorInput = t.interface({
-  message: notificationMessage
+export const NhNotificationOrchestratorInput = t.interface({
+  message: NotificationMessage
 });
 
 export type NhNotificationOrchestratorInput = t.TypeOf<
-  typeof nhNotificationOrchestratorInput
+  typeof NhNotificationOrchestratorInput
 >;
 
 export const getHandler = (envConfig: IConfig) =>
@@ -33,7 +33,7 @@ export const getHandler = (envConfig: IConfig) =>
 
     // Get and decode orchestrator input
     const input = context.df.getInput();
-    const errorOrNHCallOrchestratorInput = nhNotificationOrchestratorInput.decode(
+    const errorOrNHCallOrchestratorInput = NhNotificationOrchestratorInput.decode(
       input
     );
 
@@ -51,7 +51,7 @@ export const getHandler = (envConfig: IConfig) =>
 
     const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
       ...errorOrNHCallOrchestratorInput.value,
-      notificationHubConfig: nhConfig
+      NotificationHubConfig: nhConfig
     };
 
     yield context.df.callActivityWithRetry(
