@@ -129,7 +129,7 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
-    })(contextMockWithDf as any);
+    })(contextMockWithDf);
 
     expect.assertions(2);
     try {

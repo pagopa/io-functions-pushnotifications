@@ -125,7 +125,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     );
   });
 
-  it("should call CreateOrUpdate activity with legacy parameters if user is a test user", async () => {
+  it("should call CreateOrUpdate activity with new NH parameters if user is a test user", async () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
@@ -146,11 +146,17 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
             platform: aCreateOrUpdateInstallationMessage.platform,
             tags: aCreateOrUpdateInstallationMessage.tags,
             pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
-            notificationHubConfig: legacyNotificationHubConfig
+            notificationHubConfig: newNotificationHubConfig
           })
         );
 
-        expect(mockDeleteInstallationActivitySuccess).not.toHaveBeenCalled();
+        expect(mockDeleteInstallationActivitySuccess).toBeCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            installationId: aCreateOrUpdateInstallationMessage.installationId,
+            notificationHubConfig: legacyNotificationHubConfig
+          })
+        );
       }
     );
   });
@@ -195,16 +201,16 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     };
     mockGetInput.mockImplementationOnce(() => input);
 
-    const orchestratorHandler = getHandler({
-      createOrUpdateActivity: mockCreateOrUpdateActivity,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
-      legacyNotificationHubConfig: legacyNotificationHubConfig,
-      notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
-      deleteInstallationActivity: mockDeleteInstallationActivitySuccess
-    })(contextMockWithDf);
-
-    expect.assertions(2);
     try {
+      const orchestratorHandler = getHandler({
+        createOrUpdateActivity: mockCreateOrUpdateActivity,
+        isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
+        legacyNotificationHubConfig: legacyNotificationHubConfig,
+        notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
+        deleteInstallationActivity: mockDeleteInstallationActivitySuccess
+      })(contextMockWithDf);
+
+      expect.assertions(2);
       consumeGenerator(orchestratorHandler);
     } catch (err) {
       expect(OrchestratorInvalidInputFailure.is(err)).toBe(true);
