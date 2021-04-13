@@ -41,10 +41,6 @@ export type HandleNHNotificationCallActivityInput = t.TypeOf<
   typeof HandleNHNotificationCallActivityInput
 >;
 
-const assertNever = (x: never): never => {
-  throw new Error(`Unexpected object: ${toString(x)}`);
-};
-
 /**
  * For each Notification Hub Message calls related Notification Hub service
  */
@@ -104,8 +100,6 @@ export const getCallNHServiceActivityHandler = (
               return failActivity(logger)(e.message);
             }
           );
-        default:
-          assertNever(message);
       }
     })
     .fold<ActivityResult>(identity, success)

@@ -9,11 +9,9 @@ import { identity } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import {
-  ActivityBody,
   ActivityResult,
   ActivityResultFailure,
-  InputOfActivityBody,
-  SuccessOfActivityBody
+  ActivityResultSuccess
 } from "../activities";
 import { createLogger, IOrchestratorLogger } from "./log";
 import {
@@ -77,6 +75,13 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
     }
   };
 
+export type CallableActivity<
+  I extends unknown = unknown,
+  S extends ActivityResultSuccess = ActivityResultSuccess,
+  // Failures aren't mapped as they are thrown
+  __ extends ActivityResultFailure = ActivityResultFailure
+> = (context: IOrchestrationFunctionContext, input: I) => Generator<Task, S>;
+
 /**
  * Creates a callable for an activity to be used into an orchestrator function.
  * Types are enforced from a ActivityBody definition so that they are bound to the actual activity implementation
@@ -85,15 +90,19 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
  * @param retryOptions if provided, the activity will be retried when failing
  * @returns a generator function which takes an orchestrator context and an input for the activity
  */
-export const callableActivity = <B extends ActivityBody<unknown> = undefined>(
+export const callableActivity = <
+  I extends unknown = unknown,
+  S extends ActivityResultSuccess = ActivityResultSuccess,
+  __ extends ActivityResultFailure = ActivityResultFailure
+>(
   activityName: string,
-  OutputCodec: t.Type<SuccessOfActivityBody<B>>,
+  OutputCodec: t.Type<S>,
   retryOptions?: RetryOptions
 ) =>
   function*(
     context: IOrchestrationFunctionContext,
-    input: InputOfActivityBody<B>
-  ): Generator<Task, SuccessOfActivityBody<B>> {
+    input: I
+  ): Generator<Task, S> {
     const result = yield typeof retryOptions === "undefined"
       ? context.df.callActivity(activityName, input)
       : context.df.callActivityWithRetry(activityName, retryOptions, input);
@@ -132,8 +141,3 @@ export const callableActivity = <B extends ActivityBody<unknown> = undefined>(
         identity
       );
   };
-
-export type CallableActivity<B extends ActivityBody<unknown> = undefined> = (
-  context: IOrchestrationFunctionContext,
-  input: InputOfActivityBody<B>
-) => Generator<Task, SuccessOfActivityBody<B>>;

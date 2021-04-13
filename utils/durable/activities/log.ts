@@ -13,15 +13,14 @@ export const createLogger = (
   logPrefix: string = ""
 ): ActivityLogger =>
   new Proxy(context.log, {
-    get: (t, key) => {
-      switch (key) {
-        case "info":
-        case "error":
-        case "warn":
-        case "verbose":
-          return (arg0: string) => t[key](`${logPrefix}|${arg0}`);
-        default:
-          return t[key];
-      }
-    }
+    get: (t, key) =>
+      // wrap logger functions
+      key === "info" || key === "error" || key === "info" || key === "verbose"
+        ? (arg0: string) => t[key](`${logPrefix}|${arg0}`)
+        : // for other props, just return them
+        key in t
+        ? // tslint:disable-next-line:no-useless-cast
+          t[key as keyof typeof t] // we need this cast in order to tell TS that key is actually part of Logger
+        : // else, the propo does not exists so it's just undefined
+          undefined
   });

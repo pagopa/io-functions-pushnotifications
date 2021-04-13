@@ -1,5 +1,4 @@
-// tslint:disable-next-line: no-object-mutation
-process.env = {
+const env = {
   ...process.env,
   AZURE_NH_ENDPOINT:
     "Endpoint=sb://127.0.0.1:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",
@@ -12,6 +11,9 @@ process.env = {
   FETCH_KEEPALIVE_TIMEOUT: "60000"
 };
 
+// keepalive settings are red straight from the environment :(
+process.env = env; // tslint:disable-line: no-object-mutation
+
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import * as nock from "nock";
 import { ExtendedNotificationHubService, notify } from "../notification";
@@ -19,8 +21,8 @@ import { ExtendedNotificationHubService, notify } from "../notification";
 describe("NotificationHubService", () => {
   it("should use agentkeepalive when calling notification hub", async () => {
     const notificationHubService = new ExtendedNotificationHubService(
-      process.env.AZURE_NH_HUB_NAME,
-      process.env.AZURE_NH_ENDPOINT
+      env.AZURE_NH_HUB_NAME,
+      env.AZURE_NH_ENDPOINT
     );
 
     const responseSpy = jest.fn();
@@ -38,7 +40,7 @@ describe("NotificationHubService", () => {
       title: "beef"
     }).run();
     expect(responseSpy).toHaveBeenCalledWith(
-      parseInt(process.env.FETCH_KEEPALIVE_MAX_SOCKETS, 10)
+      parseInt(env.FETCH_KEEPALIVE_MAX_SOCKETS, 10)
     );
   });
 });

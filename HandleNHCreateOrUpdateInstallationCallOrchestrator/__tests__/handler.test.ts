@@ -21,14 +21,13 @@ import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorches
 import {
   CallableActivity,
   failureActivity,
-  failureInvalidInput,
   OrchestratorActivityFailure,
   OrchestratorFailure,
   OrchestratorInvalidInputFailure,
   OrchestratorSuccess,
   OrchestratorUnhandledFailure
 } from "../../utils/durable/orchestrators";
-import { ActivityBodyImpl as CreateOrUpdateActivityBody } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
+import { ActivityInput as CreateOrUpdateActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -64,7 +63,7 @@ const aNotificationHubConfig = NotificationHubConfig.decode({
 });
 
 type CallableCreateOrUpdateActivity = CallableActivity<
-  CreateOrUpdateActivityBody // FIXME: the editor marks it as type error, but tests compile correctly
+  CreateOrUpdateActivityInput // FIXME: the editor marks it as type error, but tests compile correctly
 >;
 const mockCreateOrUpdateActivity = jest.fn<
   ReturnType<CallableCreateOrUpdateActivity>,

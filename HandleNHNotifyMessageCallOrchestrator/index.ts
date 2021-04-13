@@ -5,7 +5,7 @@ import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 import { getHandler } from "./handler";
 
 import {
-  ActivityBodyImpl as NotifyMessageActivityBodyImpl,
+  ActivityInput as NotifyMessageActivityInput,
   activityName as NotifyMessageActivityName,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../HandleNHNotifyMessageCallActivity";
@@ -13,7 +13,7 @@ import {
 const config = getConfigOrThrow();
 const legacyNotificationHubConfig = getNHLegacyConfig(config);
 
-const notifyMessageActivity = callableActivity<NotifyMessageActivityBodyImpl>(
+const notifyMessageActivity = callableActivity<NotifyMessageActivityInput>(
   NotifyMessageActivityName,
   NotifyMessageActivityResultSuccess,
   {

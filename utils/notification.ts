@@ -63,8 +63,9 @@ export class ExtendedNotificationHubService extends NotificationHubService {
         agent: httpsAgent
       });
     };
-    // tslint:disable-next-line: no-string-literal
-    return super["_buildRequestOptions"](
+    // tslint:disable-next-line: no-string-literal  no-any
+    // @ts-ignore -- although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
+    return super._buildRequestOptions(
       webResource,
       body,
       options,
