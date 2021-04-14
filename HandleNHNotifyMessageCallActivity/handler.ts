@@ -15,10 +15,6 @@ import { notify } from "../utils/notification";
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
-// message: t.string,
-// message_id: t.string,
-// eslint-disable-next-line extra-rules/no-commented-out-code
-// title: t.string
 
 // Activity input
 // eslint-disable-next-line @typescript-eslint/naming-convention
