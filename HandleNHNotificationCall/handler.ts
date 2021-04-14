@@ -42,7 +42,6 @@ export const getHandler = () => async (
       });
       break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
-
       await client.startNew(CreateOrUpdateInstallationOrchestrator, undefined, {
         message: notificationHubMessage
       });
