@@ -36,14 +36,13 @@ export const getHandler = () => async (
 ): Promise<void> => {
   const client = df.getClient(context);
   switch (notificationHubMessage.kind) {
-    // eslint-disable-next-line sonarjs/no-duplicated-branches
     case DeleteKind.DeleteInstallation:
       await client.startNew(DeleteInstallationOrchestratorName, undefined, {
         message: notificationHubMessage
       });
       break;
-    // eslint-disable-next-line sonarjs/no-duplicated-branches
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
+
       await client.startNew(CreateOrUpdateInstallationOrchestrator, undefined, {
         message: notificationHubMessage
       });
