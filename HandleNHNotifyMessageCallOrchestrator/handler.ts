@@ -40,7 +40,7 @@ interface IHandlerParams {
     NotifyMessageActivityInput,
     NotifyMessageActivityResultSuccess
   >;
-  isUserInActiveTestSubsetActivity: CallableActivity<
+  readonly isUserInActiveTestSubsetActivity: CallableActivity<
     IsUserInActiveSubsetActivityInput,
     IsUserInActiveSubsetActivityResultSuccess
   >;
@@ -61,12 +61,12 @@ export const getHandler = ({
       input: { message },
       logger
     }): Generator<Task, void, Task> {
-      const installationId = message.installationId;
+      const { installationId } = message;
 
+      // just for logging for now
       const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
         installationId
       });
-
       logger.info(
         `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
       );

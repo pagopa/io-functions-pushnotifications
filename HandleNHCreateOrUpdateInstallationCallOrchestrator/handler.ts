@@ -26,12 +26,14 @@ export type NhCreateOrUpdateInstallationOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  createOrUpdateActivity: o.CallableActivity<CreateOrUpdateActivityInput>;
-  isUserInActiveTestSubsetActivity: o.CallableActivity<
+  readonly createOrUpdateActivity: o.CallableActivity<
+    CreateOrUpdateActivityInput
+  >;
+  readonly isUserInActiveTestSubsetActivity: o.CallableActivity<
     IsUserInActiveSubsetActivityInput,
     IsUserInActiveSubsetResultSuccess
   >;
-  notificationHubConfig: NotificationHubConfig;
+  readonly notificationHubConfig: NotificationHubConfig;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -50,10 +52,10 @@ export const getHandler = ({
       },
       logger
     }): Generator<Task, void, Task> {
+      // just for logging for now
       const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
         installationId
       });
-
       logger.info(
         `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
       );

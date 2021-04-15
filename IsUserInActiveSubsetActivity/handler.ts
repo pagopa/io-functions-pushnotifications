@@ -23,24 +23,31 @@ export type ActivityResultSuccessWithValue = t.TypeOf<
   typeof activityResultSuccessWithValue
 >;
 
-export function errorsToError(errors: t.Errors): Error {
-  return new Error(errorsToReadableMessages(errors).join(" / "));
-}
+export const errorsToError = (errors: t.Errors): Error =>
+  new Error(errorsToReadableMessages(errors).join(" / "));
 
-export const successWithValue = (value: boolean) =>
+export const successWithValue = (
+  value: boolean
+): ActivityResultSuccessWithValue =>
   activityResultSuccessWithValue.encode({
     kind: "SUCCESS",
     value
   });
 
 export const getActivityBody = (param: {
-  enabledFeatureFlag: NHPartitionFeatureFlag;
-  isInActiveSubset: ReturnType<typeof featureFlags.getIsInActiveSubset>;
-}): ActivityBody<ActivityInput, ActivityResultSuccessWithValue> => ({
+  readonly enabledFeatureFlag: NHPartitionFeatureFlag;
+  readonly isInActiveSubset: ReturnType<
+    typeof featureFlags.getIsInActiveSubset
+  >;
+}) => ({
   context,
   input,
   logger
-}) => {
+}: Parameters<
+  ActivityBody<ActivityInput, ActivityResultSuccessWithValue>
+>[0]): ReturnType<
+  ActivityBody<ActivityInput, ActivityResultSuccessWithValue>
+> => {
   logger.info(
     `ENABLED_FF=${param.enabledFeatureFlag}|INSTALLATION_ID=${input.installationId}`
   );

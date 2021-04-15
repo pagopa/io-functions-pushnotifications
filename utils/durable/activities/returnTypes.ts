@@ -56,7 +56,7 @@ export const retryActivity = (logger: ActivityLogger, msg: string): never => {
 /**
  * @returns an `ActivityResultSuccess`
  */
-export const success = () =>
+export const success = (): ActivityResultSuccess =>
   ActivityResultSuccess.encode({
     kind: "SUCCESS"
   });

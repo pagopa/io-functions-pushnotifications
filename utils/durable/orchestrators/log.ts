@@ -59,7 +59,7 @@ export const trackExceptionAndThrow = (
   context: IOrchestrationFunctionContext,
   aiTelemetry: ai.TelemetryClient,
   logPrefix: string
-) => (err: Error | t.Errors, name: string) => {
+) => (err: Error | t.Errors, name: string): never => {
   const errMessage = err instanceof Error ? err.message : readableReport(err);
   context.log.verbose(`${logPrefix}|ERROR=${errMessage}`);
   aiTelemetry.trackException({

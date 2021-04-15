@@ -41,29 +41,24 @@ export const getHandler = ({
   deleteInstallationActivity,
   isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig
-}: IHandlerParams) => {
-  return o.createOrchestrator(
-    OrchestratorName,
-    OrchestratorCallInput,
-    function*({
-      context,
-      input: {
-        message: { installationId }
-      },
-      logger
-    }): Generator<Task, void, Task> {
-      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
-        installationId
-      });
+}: IHandlerParams) =>
+  o.createOrchestrator(OrchestratorName, OrchestratorCallInput, function*({
+    context,
+    input: {
+      message: { installationId }
+    },
+    logger
+  }): Generator<Task, void, Task> {
+    // just for logging for now
+    const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+      installationId
+    });
+    logger.info(
+      `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
+    );
 
-      logger.info(
-        `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
-      );
-
-      yield* deleteInstallationActivity(context, {
-        installationId,
-        notificationHubConfig: legacyNotificationHubConfig
-      });
-    }
-  );
-};
+    yield* deleteInstallationActivity(context, {
+      installationId,
+      notificationHubConfig: legacyNotificationHubConfig
+    });
+  });

@@ -39,10 +39,9 @@ export const IConfig = t.intersection([
     isProduction: t.boolean
   }),
   t.interface({
-    NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag,
-
     BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
-    BETA_USERS_TABLE_NAME: NonEmptyString
+    BETA_USERS_TABLE_NAME: NonEmptyString,
+    NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag
   }),
   t.partial({ APPINSIGHTS_DISABLE: t.string })
 ]);

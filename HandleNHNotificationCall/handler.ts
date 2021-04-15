@@ -1,7 +1,6 @@
 import { Context } from "@azure/functions";
 import * as df from "durable-functions";
 import * as t from "io-ts";
-import { assertNever } from "../utils/types";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
@@ -29,26 +28,26 @@ export type NotificationHubMessage = t.TypeOf<typeof NotificationMessage>;
 export const getHandler = () => async (
   context: Context,
   notificationHubMessage: NotificationHubMessage
-): Promise<void> => {
+): Promise<string> => {
   const client = df.getClient(context);
+
+  // eslint-disable-next-line default-case
   switch (notificationHubMessage.kind) {
     case DeleteKind.DeleteInstallation:
-      await client.startNew(DeleteInstallationOrchestratorName, undefined, {
+      return client.startNew(DeleteInstallationOrchestratorName, undefined, {
         message: notificationHubMessage
       });
-      break;
     case CreateOrUpdateKind.CreateOrUpdateInstallation:
-      await client.startNew(CreateOrUpdateInstallationOrchestrator, undefined, {
-        message: notificationHubMessage
-      });
-      break;
+      return client.startNew(
+        CreateOrUpdateInstallationOrchestrator,
+        undefined,
+        {
+          message: notificationHubMessage
+        }
+      );
     case NotifyKind.Notify:
-      await client.startNew(NotifyMessageOrchestratorName, undefined, {
+      return client.startNew(NotifyMessageOrchestratorName, undefined, {
         message: notificationHubMessage
       });
-      break;
-    default:
-      assertNever(notificationHubMessage);
-      break;
   }
 };

@@ -62,7 +62,7 @@ export const createActivity = <
         readableReport(errs)
       )
     )
-    .chain(input => body({ context, logger, input }))
+    .chain(input => body({ context, input, logger }))
     .map(e => OutputCodec.encode(e))
     .fold<ActivityResult<F | S>>(identity, identity)
     .run();
