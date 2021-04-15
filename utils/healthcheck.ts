@@ -19,7 +19,10 @@ import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
 
 type ProblemSource = "AzureCosmosDB" | "AzureStorage" | "Config" | "Url";
-export type HealthProblem<S extends ProblemSource> = string & { __source: S };
+export type HealthProblem<S extends ProblemSource> = string & {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  readonly __source: S;
+};
 export type HealthCheck<
   S extends ProblemSource = ProblemSource,
   T = true
@@ -78,6 +81,7 @@ export const checkAzureStorageHealth = (
                 azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
               >((resolve, reject) =>
                 createService(connStr).getServiceProperties((err, result) => {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                   err
                     ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
                     : resolve(result);
@@ -114,7 +118,7 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
       // TODO: once we upgrade to fp-ts >= 1.19 we can use Validation to collect all errors, not just the first to happen
       sequenceT(taskEither)<
         ReadonlyArray<HealthProblem<ProblemSource>>,
-        // tslint:disable readonly-array beacuse the following is actually mutable
+        // eslint-disable-next-line functional/prefer-readonly-type
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
       >(checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING))
     )

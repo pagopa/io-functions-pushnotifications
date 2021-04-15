@@ -34,12 +34,13 @@ interface IHandlerParams {
   notificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   createOrUpdateActivity,
   isUserInActiveTestSubsetActivity,
   notificationHubConfig
-}: IHandlerParams) => {
-  return o.createOrchestrator(
+}: IHandlerParams) =>
+  o.createOrchestrator(
     OrchestratorName,
     NhCreateOrUpdateInstallationOrchestratorCallInput,
     function*({
@@ -66,4 +67,3 @@ export const getHandler = ({
       });
     }
   );
-};

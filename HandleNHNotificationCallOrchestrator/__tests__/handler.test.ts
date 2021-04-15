@@ -1,5 +1,4 @@
-/* tslint:disable:no-any */
-// tslint:disable-next-line: no-object-mutation
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
@@ -8,11 +7,12 @@ import {
   KindEnum as CreateOrUpdateInstallationKind
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 import { NhNotificationOrchestratorInput, getHandler } from "../handler";
+import { HandleNHNotificationCallActivityInput } from "../HandleNHNotificationCallActivity/handler";
+
 import { success } from "../../utils/durable/orchestrators";
-import { initTelemetryClient } from "../../utils/appinsights";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
-import { TelemetryClient } from "applicationinsights";
+import { defaultClient as telemetryClient } from "applicationinsights";
 
 import * as config from "../../utils/config";
 
@@ -37,37 +37,38 @@ jest.spyOn(config, "getConfigOrThrow").mockImplementation(() => envConfig);
 
 describe("HandleNHNotificationCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
-    // const nhCallOrchestratorInput: NhNotificationOrchestratorInput = {
-    //   message: aNotificationHubMessage
-    // };
-    // const contextMockWithDf = {
-    //   ...contextMock,
-    //   df: {
-    //     callActivityWithRetry: jest
-    //       .fn()
-    //       // IsUserInActiveSubsetActivity
-    //       .mockReturnValueOnce({ kind: "SUCCESS", value: true })
-    //       // HandleNHNotificationCallActivity
-    //       .mockReturnValueOnce(callNHServiceActivitySuccessResult),
-    //     getInput: jest.fn(() => nhCallOrchestratorInput)
-    //   }
-    // };
-    // const orchestratorHandler = getHandler(
-    //   envConfig,
-    //   initTelemetryClient(envConfig) as TelemetryClient
-    // )(contextMockWithDf as any);
-    // const res = consumeGenerator(orchestratorHandler);
-    // expect(contextMockWithDf.df.callActivityWithRetry).toBeCalledWith(
-    //   "HandleNHNotificationCallActivity",
-    //   retryOptions,
-    //   HandleNHNotificationCallActivityInput.encode({
-    //     message: aNotificationHubMessage,
-    //     notificationHubConfig: {
-    //       AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
-    //       AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
-    //     }
-    //   })
-    // );
+    const nhCallOrchestratorInput = NhNotificationOrchestratorInput.encode({
+      message: aNotificationHubMessage
+    });
+
+    const contextMockWithDf = {
+      ...contextMock,
+      df: {
+        callActivityWithRetry: jest
+          .fn()
+          .mockReturnValueOnce(callNHServiceActivitySuccessResult),
+        getInput: jest.fn(() => nhCallOrchestratorInput)
+      }
+    };
+
+    const orchestratorHandler = getHandler(
+      envConfig,
+      telemetryClient
+    )(contextMockWithDf as any);
+
+    orchestratorHandler.next();
+
+    expect(contextMockWithDf.df.callActivityWithRetry).toBeCalledWith(
+      "HandleNHNotificationCallActivity",
+      retryOptions,
+      HandleNHNotificationCallActivityInput.encode({
+        message: aNotificationHubMessage,
+        NotificationHubConfig: {
+          AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
+          AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
+        }
+      })
+    );
   });
 
   // it("should NOT start the activities if user is not in active subset", async () => {

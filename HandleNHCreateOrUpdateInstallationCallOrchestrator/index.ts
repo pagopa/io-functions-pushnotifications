@@ -2,7 +2,6 @@
 import * as o from "../utils/durable/orchestrators";
 
 import { getConfigOrThrow } from "../utils/config";
-import { getHandler } from "./handler";
 
 import {
   ActivityInput as CreateOrUpdateActivityInput,
@@ -17,6 +16,7 @@ import {
 } from "../IsUserInActiveSubsetActivity";
 
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 

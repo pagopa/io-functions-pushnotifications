@@ -23,7 +23,7 @@ export type ActivityResult = t.TypeOf<typeof ActivityResult>;
 export const failure = (logger: ActivityLogger) => (
   err: Error,
   description: string = ""
-) => {
+): ActivityResult => {
   const logMessage =
     description === ""
       ? `FAILURE=${err.message}`

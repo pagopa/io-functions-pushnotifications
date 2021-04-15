@@ -26,16 +26,17 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  deleteInstallationActivity: o.CallableActivity<
+  readonly deleteInstallationActivity: o.CallableActivity<
     DeleteInstallationActivityInput
   >;
-  isUserInActiveTestSubsetActivity: o.CallableActivity<
+  readonly isUserInActiveTestSubsetActivity: o.CallableActivity<
     IsUserInActiveSubsetActivityInput,
     IsUserInActiveSubsetResultSuccess
   >;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   deleteInstallationActivity,
   isUserInActiveTestSubsetActivity,

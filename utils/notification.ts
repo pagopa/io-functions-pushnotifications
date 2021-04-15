@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 import { NotificationHubService } from "azure-sb";
-import { tryCatch } from "fp-ts/lib/TaskEither";
+import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import {
   getKeepAliveAgentOptions,
   newHttpsAgent
@@ -48,23 +48,25 @@ export class ExtendedNotificationHubService extends NotificationHubService {
   constructor(hubName: string, endpointOrConnectionString: string) {
     super(hubName, endpointOrConnectionString, "", "");
   }
-  // tslint:disable-next-line: typedef
+
   public _buildRequestOptions(
     webResource: unknown,
     body: unknown,
     options: unknown,
-    // tslint:disable-next-line: ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
     cb: Function
-  ) {
-    // tslint:disable-next-line: no-any
-    const patchedCallback = (err: any, cbOptions: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patchedCallback = (err: any, cbOptions: any): any => {
       cb(err, {
         ...cbOptions,
         agent: httpsAgent
       });
     };
-    // tslint:disable-next-line: no-string-literal  no-any
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore -- although _buildRequestOptions is not defined in the Azure type NotificationHubService, we need to hack its internals to use keepalive feature. Compiling in strict mode would fail, so we prefer TS to just ignore this line
+    // eslint-disable-next-line no-underscore-dangle
     return super._buildRequestOptions(
       webResource,
       body,
@@ -97,10 +99,11 @@ const GCMTemplate: INotificationTemplate = {
 // send the push notification only to the last
 // device that set the installationId
 // see https://docs.microsoft.com/en-us/azure/notification-hubs/notification-hubs-push-notification-registration-management#installations
-export const toNotificationTag = (fiscalCodeHash: NonEmptyString) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const toNotificationTag = (fiscalCodeHash: NonEmptyString): any =>
   `$InstallationId:{${fiscalCodeHash}}`;
 
-const CreateOrUpdateInstallationOptions = t.interface({
+const createOrUpdateInstallationOptions = t.interface({
   installationId: t.string,
   platform: t.keyof({
     adm: null,
@@ -117,25 +120,25 @@ const CreateOrUpdateInstallationOptions = t.interface({
 });
 
 type CreateOrUpdateInstallationOptions = t.TypeOf<
-  typeof CreateOrUpdateInstallationOptions
+  typeof createOrUpdateInstallationOptions
 >;
 
-const NotifyPayload = t.interface({
+const notifyPayload = t.interface({
   message: t.string,
   message_id: t.string,
   title: t.string
 });
 
-type NotifyPayload = t.TypeOf<typeof NotifyPayload>;
+type NotifyPayload = t.TypeOf<typeof notifyPayload>;
 // NH result
-export const NHResultSuccess = t.interface({
+export const nhResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
 });
 
-export type NHResultSuccess = t.TypeOf<typeof NHResultSuccess>;
+export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 
-const successNH = () =>
-  NHResultSuccess.encode({
+const successNH = (): NHResultSuccess =>
+  nhResultSuccess.encode({
     kind: "SUCCESS"
   });
 
@@ -143,10 +146,10 @@ export const notify = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
   payload: NotifyPayload
-) => {
-  return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+): TaskEither<Error, NHResultSuccess> =>
+  tryCatch(
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.send(
           toNotificationTag(installationId),
           payload,
@@ -154,8 +157,8 @@ export const notify = (
             // Add required headers for APNS notification to iOS 13
             // https://azure.microsoft.com/en-us/updates/azure-notification-hubs-updates-ios13/
             headers: {
-              ["apns-push-type"]: APNSPushType.ALERT,
-              ["apns-priority"]: 10
+              ["apns-priority"]: 10,
+              ["apns-push-type"]: APNSPushType.ALERT
             }
           },
           (error, _) =>
@@ -165,12 +168,10 @@ export const notify = (
                   `Error while sending notification to NotificationHub|${error.message}`
                 )
         )
-      );
-    },
+      ),
     errs =>
       new Error(`Error while sending notification to NotificationHub|${errs}`)
   );
-};
 
 export const createOrUpdateInstallation = (
   notificationHubService: NotificationHubService,
@@ -178,7 +179,7 @@ export const createOrUpdateInstallation = (
   platform: Platform,
   pushChannel: string,
   tags: ReadonlyArray<string>
-) => {
+): TaskEither<Error, NHResultSuccess> => {
   const azureInstallationOptions: CreateOrUpdateInstallationOptions = {
     // When a single active session per user is allowed, the installation that must be created or updated
     // will have an unique installationId referred to that user.
@@ -193,8 +194,8 @@ export const createOrUpdateInstallation = (
   };
 
   return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.createOrUpdateInstallation(
           azureInstallationOptions,
           (err, _) =>
@@ -205,8 +206,7 @@ export const createOrUpdateInstallation = (
                     ${installationId}] [${err.message}]`
                 )
         )
-      );
-    },
+      ),
     errs =>
       new Error(
         `Error while creating or updating installation on NotificationHub [${installationId}] [${errs}]`
@@ -217,10 +217,10 @@ export const createOrUpdateInstallation = (
 export const deleteInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString
-) => {
-  return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+): TaskEither<Error, NHResultSuccess> =>
+  tryCatch(
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.deleteInstallation(installationId, (e, _) =>
           e == null
             ? resolve(successNH())
@@ -228,11 +228,9 @@ export const deleteInstallation = (
                 `Error while deleting installation on NotificationHub [${installationId}] [${e.message}]`
               )
         )
-      );
-    },
+      ),
     errs =>
       new Error(
         `Error while deleting installation on NotificationHub [${installationId}] [${errs}]`
       )
   );
-};

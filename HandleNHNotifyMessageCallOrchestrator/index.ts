@@ -2,8 +2,6 @@
 import { getConfigOrThrow } from "../utils/config";
 import { callableActivity } from "../utils/durable/orchestrators";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
-import { getHandler } from "./handler";
-
 import {
   ActivityInput as NotifyMessageActivityInput,
   activityName as NotifyMessageActivityName,
@@ -15,6 +13,7 @@ import {
   ActivityResultSuccessWithValue as IsUserInActiveSubsetActivitySuccess,
   activityResultSuccessWithValue as isUserInActiveSubsetActivitySuccess
 } from "../IsUserInActiveSubsetActivity";
+import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 const legacyNotificationHubConfig = getNHLegacyConfig(config);

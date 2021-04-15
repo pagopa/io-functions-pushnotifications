@@ -36,7 +36,7 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 >;
 
 interface IHandlerParams {
-  notifyMessageActivity: CallableActivity<
+  readonly notifyMessageActivity: CallableActivity<
     NotifyMessageActivityInput,
     NotifyMessageActivityResultSuccess
   >;
@@ -44,15 +44,16 @@ interface IHandlerParams {
     IsUserInActiveSubsetActivityInput,
     IsUserInActiveSubsetActivityResultSuccess
   >;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   notifyMessageActivity,
   isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig
-}: IHandlerParams) => {
-  return createOrchestrator(
+}: IHandlerParams) =>
+  createOrchestrator(
     OrchestratorName,
     NhNotifyMessageOrchestratorCallInput,
     function*({
@@ -76,4 +77,3 @@ export const getHandler = ({
       });
     }
   );
-};
