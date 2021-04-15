@@ -37,9 +37,9 @@ export const getActivityBody = (param: {
   enabledFeatureFlag: NHPartitionFeatureFlag;
   isInActiveSubset: ReturnType<typeof featureFlags.getIsInActiveSubset>;
 }): ActivityBody<ActivityInput, ActivityResultSuccessWithValue> => ({
+  context,
   input,
-  logger,
-  betaTestUser
+  logger
 }) => {
   logger.info(
     `ENABLED_FF=${param.enabledFeatureFlag}|INSTALLATION_ID=${input.installationId}`
@@ -50,7 +50,7 @@ export const getActivityBody = (param: {
       param.isInActiveSubset(
         param.enabledFeatureFlag,
         input.installationId,
-        betaTestUser
+        context.bindings.betaTestUser
       )
     )
   );

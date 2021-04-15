@@ -34,8 +34,7 @@ import {
 // Activity input
 export const HandleNHNotificationCallActivityInput = t.interface({
   message: NotificationMessage,
-  // eslint-disable-next-line sort-keys
-  NotificationHubConfig
+  notificationHubConfig: NotificationHubConfig
 });
 
 export type HandleNHNotificationCallActivityInput = t.TypeOf<
@@ -63,14 +62,14 @@ export const getCallNHServiceActivityHandler = (
       ({
         message,
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        NotificationHubConfig
+        notificationHubConfig
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }): TaskEither<any, ActivityResultSuccess> => {
         context.log.info(
           `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
         );
 
-        const nhService = buildNHService(NotificationHubConfig);
+        const nhService = buildNHService(notificationHubConfig);
 
         // eslint-disable-next-line default-case
         switch (message.kind) {

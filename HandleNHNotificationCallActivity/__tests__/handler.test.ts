@@ -93,7 +93,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aDeleteInStalltionMessage,
-      NotificationHubConfig: aNHConfig
+      notificationHubConfig: aNHConfig
     });
     expect.assertions(2);
     await handler(contextMock as any, input);
@@ -105,7 +105,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aCreateOrUpdateInstallationMessage,
-      NotificationHubConfig: aNHConfig
+      notificationHubConfig: aNHConfig
     });
 
     expect.assertions(2);
@@ -121,7 +121,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aNotifyMessage,
-      NotificationHubConfig: aNHConfig
+      notificationHubConfig: aNHConfig
     });
     expect.assertions(2);
     try {
@@ -135,7 +135,7 @@ describe("HandleNHNotificationCallActivity", () => {
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
-      NotificationHubConfig: aNHConfig,
+      notificationHubConfig: aNHConfig,
       message: aDeleteInStalltionMessage
     });
     const res = await handler(contextMock as any, input);

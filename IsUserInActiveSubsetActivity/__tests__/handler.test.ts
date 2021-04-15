@@ -30,7 +30,12 @@ describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
       installationId: aFiscalCodeHash
     };
     const result = await handler({
-      context: contextMock as any,
+      context: {
+        ...contextMock,
+        bindings: {
+          betaTestUser: []
+        }
+      },
       input,
       logger: mockLogger
     })
@@ -52,7 +57,12 @@ describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
       installationId: aFiscalCodeHash
     };
     const result = await handler({
-      context: contextMock as any,
+      context: {
+        ...contextMock,
+        bindings: {
+          betaTestUser: []
+        }
+      },
       input,
       logger: mockLogger
     })

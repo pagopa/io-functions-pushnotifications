@@ -55,16 +55,14 @@ export const createActivity = <
 ): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
-  return (
-    fromEither(InputCodec.decode(rawInput))
-      .mapLeft(errs =>
-        failActivity(logger)(
-          "Error decoding activity input",
-          readableReport(errs)
-        )
+  return fromEither(InputCodec.decode(rawInput))
+    .mapLeft(errs =>
+      failActivity(logger)(
+        "Error decoding activity input",
+        readableReport(errs)
       )
     )
-    .chain(input => body({ context, logger, input, ...context.bindings }))
+    .chain(input => body({ context, logger, input }))
     .map(e => OutputCodec.encode(e))
     .fold<ActivityResult<F | S>>(identity, identity)
     .run();
