@@ -1,6 +1,7 @@
 import { Context } from "@azure/functions";
 import * as df from "durable-functions";
 import * as t from "io-ts";
+import { toString } from "fp-ts/lib/function";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
@@ -49,5 +50,14 @@ export const getHandler = () => async (
       return client.startNew(NotifyMessageOrchestratorName, undefined, {
         message: notificationHubMessage
       });
+    default:
+      context.log.error(
+        `HandleNHNotificationCall|ERROR=Unknown message kind, message: ${toString(
+          notificationHubMessage
+        )}`
+      );
+      throw new Error(
+        `Unknown message kind, message: ${toString(notificationHubMessage)}`
+      );
   }
 };
