@@ -142,15 +142,14 @@ const successNH = (): NHResultSuccess =>
     kind: "SUCCESS"
   });
 
-/* eslint-disable arrow-body-style */
 export const notify = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
   payload: NotifyPayload
-): TaskEither<Error, NHResultSuccess> => {
-  return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+): TaskEither<Error, NHResultSuccess> =>
+  tryCatch(
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.send(
           toNotificationTag(installationId),
           payload,
@@ -169,12 +168,10 @@ export const notify = (
                   `Error while sending notification to NotificationHub|${error.message}`
                 )
         )
-      );
-    },
+      ),
     errs =>
       new Error(`Error while sending notification to NotificationHub|${errs}`)
   );
-};
 
 export const createOrUpdateInstallation = (
   notificationHubService: NotificationHubService,
@@ -197,8 +194,8 @@ export const createOrUpdateInstallation = (
   };
 
   return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.createOrUpdateInstallation(
           azureInstallationOptions,
           (err, _) =>
@@ -209,8 +206,7 @@ export const createOrUpdateInstallation = (
                     ${installationId}] [${err.message}]`
                 )
         )
-      );
-    },
+      ),
     errs =>
       new Error(
         `Error while creating or updating installation on NotificationHub [${installationId}] [${errs}]`
@@ -221,10 +217,10 @@ export const createOrUpdateInstallation = (
 export const deleteInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString
-): TaskEither<Error, NHResultSuccess> => {
-  return tryCatch(
-    () => {
-      return new Promise<NHResultSuccess>((resolve, reject) =>
+): TaskEither<Error, NHResultSuccess> =>
+  tryCatch(
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.deleteInstallation(installationId, (e, _) =>
           e == null
             ? resolve(successNH())
@@ -232,11 +228,9 @@ export const deleteInstallation = (
                 `Error while deleting installation on NotificationHub [${installationId}] [${e.message}]`
               )
         )
-      );
-    },
+      ),
     errs =>
       new Error(
         `Error while deleting installation on NotificationHub [${installationId}] [${errs}]`
       )
   );
-};
