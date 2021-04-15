@@ -46,7 +46,6 @@ type OrchestratorBody<I, TNext> = (p: {
  */
 export const createOrchestrator = <I, TNext = TNextDefault>(
   orchestratorName: string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   InputCodec: t.Type<I>,
   body: OrchestratorBody<I, TNext>
 ) =>
@@ -82,7 +81,7 @@ export type CallableActivity<
   I extends unknown = unknown,
   S extends ActivityResultSuccess = ActivityResultSuccess,
   // Failures aren't mapped as they are thrown
-  // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
   __ extends ActivityResultFailure = ActivityResultFailure
 > = (context: IOrchestrationFunctionContext, input: I) => Generator<Task, S>;
 
@@ -98,11 +97,10 @@ export type CallableActivity<
 export const callableActivity = <
   I extends unknown = unknown,
   S extends ActivityResultSuccess = ActivityResultSuccess,
-  // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
   __ extends ActivityResultFailure = ActivityResultFailure
 >(
   activityName: string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   OutputCodec: t.Type<S>,
   retryOptions?: RetryOptions
 ) =>

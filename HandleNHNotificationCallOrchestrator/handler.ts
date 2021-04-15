@@ -14,7 +14,6 @@ import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
 /**
  * Carries information about Notification Hub Message payload
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NhNotificationOrchestratorInput = t.interface({
   message: NotificationMessage
 });
@@ -52,7 +51,6 @@ export const getHandler = (envConfig: IConfig) =>
 
     const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
       ...errorOrNHCallOrchestratorInput.value,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       NotificationHubConfig: nhConfig
     };
 

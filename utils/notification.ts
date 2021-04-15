@@ -18,7 +18,6 @@ import { Platform, PlatformEnum } from "../generated/backend/Platform";
  *
  * @see https://msdn.microsoft.com/en-us/library/azure/mt621153.aspx
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const INotificationTemplate = t.interface({
   body: t.string
 });
@@ -31,14 +30,12 @@ export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
  * @see https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns
  */
 export enum APNSPushType {
-  /* eslint-disable @typescript-eslint/naming-convention */
   ALERT = "alert",
   BACKGROUND = "background",
   VOIP = "voip",
   COMPLICATION = "complication",
   FILEPROVIDER = "fileprovider",
   MDM = "mdm"
-  /* eslint-enable @typescript-eslint/naming-convention */
 }
 
 const httpsAgent = newHttpsAgent(getKeepAliveAgentOptions(process.env));
@@ -84,7 +81,6 @@ export class ExtendedNotificationHubService extends NotificationHubService {
  *
  * @see https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const APNSTemplate: INotificationTemplate = {
   body:
     '{"aps": {"alert": {"title": "$(title)", "body": "$(message)"}}, "message_id": "$(message_id)"}'
@@ -95,7 +91,6 @@ const APNSTemplate: INotificationTemplate = {
  *
  * @see https://developers.google.com/cloud-messaging/concept-options
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const GCMTemplate: INotificationTemplate = {
   body:
     '{"data": {"title": "$(title)", "message": "$(message)", "message_id": "$(message_id)", "smallIcon": "ic_notification", "largeIcon": "ic_notification"}}'
@@ -130,7 +125,6 @@ type CreateOrUpdateInstallationOptions = t.TypeOf<
 
 const notifyPayload = t.interface({
   message: t.string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   message_id: t.string,
   title: t.string
 });

@@ -15,7 +15,6 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 
 // Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityInput = t.interface({
   installationId: InstallationId,
   notificationHubConfig: NotificationHubConfig,

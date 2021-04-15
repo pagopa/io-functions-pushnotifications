@@ -2,7 +2,6 @@ import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 export type OrchestratorSuccess = t.TypeOf<typeof OrchestratorSuccess>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorSuccess = t.interface({
   kind: t.literal("SUCCESS")
 });
@@ -10,7 +9,6 @@ export const OrchestratorSuccess = t.interface({
 export type OrchestratorInvalidInputFailure = t.TypeOf<
   typeof OrchestratorInvalidInputFailure
 >;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorInvalidInputFailure = t.interface({
   input: t.unknown,
   kind: t.literal("FAILURE_INVALID_INPUT"),
@@ -20,7 +18,6 @@ export const OrchestratorInvalidInputFailure = t.interface({
 export type OrchestratorActivityFailure = t.TypeOf<
   typeof OrchestratorActivityFailure
 >;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorActivityFailure = t.interface({
   activityName: t.string,
   kind: t.literal("FAILURE_ACTIVITY"),
@@ -30,14 +27,12 @@ export const OrchestratorActivityFailure = t.interface({
 export type OrchestratorUnhandledFailure = t.TypeOf<
   typeof OrchestratorUnhandledFailure
 >;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorUnhandledFailure = t.interface({
   kind: t.literal("FAILURE_UNHANDLED"),
   reason: t.string
 });
 
 export type OrchestratorFailure = t.TypeOf<typeof OrchestratorFailure>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorFailure = t.union([
   OrchestratorActivityFailure,
   OrchestratorInvalidInputFailure,

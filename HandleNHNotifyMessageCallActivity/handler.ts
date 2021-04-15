@@ -16,7 +16,6 @@ import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // Activity input
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityInput = t.interface({
   message: NotifyMessage,
   notificationHubConfig: NotificationHubConfig

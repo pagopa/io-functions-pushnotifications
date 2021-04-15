@@ -32,10 +32,9 @@ import {
 } from "../utils/durable/activities";
 
 // Activity input
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const HandleNHNotificationCallActivityInput = t.interface({
   message: NotificationMessage,
-  // eslint-disable-next-line sort-keys, @typescript-eslint/naming-convention
+  // eslint-disable-next-line sort-keys
   NotificationHubConfig
 });
 
@@ -63,7 +62,7 @@ export const getCallNHServiceActivityHandler = (
     .chain<ActivityResultSuccess>(
       ({
         message,
-        // eslint-disable-next-line @typescript-eslint/no-shadow, @typescript-eslint/naming-convention
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         NotificationHubConfig
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }): TaskEither<any, ActivityResultSuccess> => {

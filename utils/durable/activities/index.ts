@@ -47,9 +47,7 @@ export const createActivity = <
   F extends ActivityResultFailure = ActivityResultFailure
 >(
   activityName: string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   InputCodec: t.Type<I>,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   OutputCodec: t.Type<S>,
   body: ActivityBody<I, S, F>
 ) => async (

@@ -5,8 +5,6 @@
  * The configuration is evaluate eagerly at the first access to the module. The module exposes convenient methods to access such value.
  */
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import * as t from "io-ts";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";

@@ -11,14 +11,12 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 /**
  * Orchestrator Name
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName = "HandleNHDeleteInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
 export type OrchestratorCallInput = t.TypeOf<typeof OrchestratorCallInput>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorCallInput = t.interface({
   message: DeleteInstallationMessage
 });

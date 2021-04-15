@@ -13,12 +13,10 @@ import { deleteInstallation } from "../utils/notification";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
 // Activity name for df
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityName = "HandleNHDeleteInstallationCallActivity";
 
 // Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ActivityInput = t.interface({
   installationId: NonEmptyString,
   notificationHubConfig: NotificationHubConfig

@@ -18,13 +18,11 @@ import { NotificationHubConfig } from "../utils/notificationhubServicePartition"
 /**
  * Orchestrator Name
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName = "HandleNHNotifyMessageCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NhNotifyMessageOrchestratorCallInput = t.interface({
   message: NotifyMessage
 });

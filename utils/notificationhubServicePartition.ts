@@ -8,12 +8,9 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationHubConfig = t.interface({
-  /* eslint-disable @typescript-eslint/naming-convention */
   AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString
-  /* eslint-enable @typescript-eslint/naming-convention */
 });
 
 export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
@@ -24,10 +21,8 @@ export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
 export const getNHLegacyConfig = (
   envConfig: IConfig
 ): NotificationHubConfig => ({
-  /* eslint-disable @typescript-eslint/naming-convention */
   AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
-  /* eslint-enable @typescript-eslint/naming-convention */
 });
 
 /**
@@ -49,14 +44,7 @@ export const getNHService = (
  * @returns a NotificationHubService used to call Notification Hub APIs
  */
 export const buildNHService = ({
-  /* eslint-disable @typescript-eslint/naming-convention */
   AZURE_NH_HUB_NAME,
   AZURE_NH_ENDPOINT
-}: /* eslint-enable @typescript-eslint/naming-convention */
-NotificationHubConfig): NotificationHubService =>
-  new ExtendedNotificationHubService(
-    /* eslint-disable @typescript-eslint/naming-convention */
-    AZURE_NH_HUB_NAME,
-    AZURE_NH_ENDPOINT
-    /* eslint-enable @typescript-eslint/naming-convention */
-  );
+}: NotificationHubConfig): NotificationHubService =>
+  new ExtendedNotificationHubService(AZURE_NH_HUB_NAME, AZURE_NH_ENDPOINT);

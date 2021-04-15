@@ -6,14 +6,12 @@ import { CreateOrUpdateInstallationMessage } from "../generated/notifications/Cr
 import { ActivityInput as CreateOrUpdateActivityInput } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
 
 /**
  * Carries information about Notification Hub Message payload
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NhCreateOrUpdateInstallationOrchestratorCallInput = t.interface({
   message: CreateOrUpdateInstallationMessage
 });
