@@ -32,6 +32,7 @@ export type ActivityBodyImpl = ActivityBody<
 
 export const getActivityBody = (
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);

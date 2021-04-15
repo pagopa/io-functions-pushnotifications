@@ -15,10 +15,6 @@ import { notify } from "../utils/notification";
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
-// message: t.string,
-// message_id: t.string,
-// title: t.string
-
 // Activity input
 export const ActivityInput = t.interface({
   message: NotifyMessage,
@@ -37,6 +33,7 @@ export { ActivityResultSuccess } from "../utils/durable/activities";
 export const getActivityBody = (
   telemetryClient: TelemetryClient,
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
   input,
   logger

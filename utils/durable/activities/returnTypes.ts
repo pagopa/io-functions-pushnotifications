@@ -23,7 +23,7 @@ export type ActivityResult = t.TypeOf<typeof ActivityResult>;
 export const failure = (logger: ActivityLogger) => (
   err: Error,
   description: string = ""
-) => {
+): ActivityResult => {
   const logMessage =
     description === ""
       ? `FAILURE=${err.message}`
@@ -53,7 +53,7 @@ export const retryActivity = (logger: ActivityLogger, msg: string): never => {
   throw toError(msg);
 };
 
-export const success = () =>
+export const success = (): ActivityResult =>
   ActivityResultSuccess.encode({
     kind: "SUCCESS"
   });

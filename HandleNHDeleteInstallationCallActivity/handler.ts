@@ -31,6 +31,7 @@ export { ActivityResultSuccess } from "../utils/durable/activities";
 
 export const getActivityBody = (
   buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
   input,
   logger

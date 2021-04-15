@@ -2,7 +2,7 @@ import * as t from "io-ts";
 
 import { Context } from "@azure/functions";
 import { identity, toString } from "fp-ts/lib/function";
-import { fromEither, taskEither } from "fp-ts/lib/TaskEither";
+import { fromEither, taskEither, TaskEither } from "fp-ts/lib/TaskEither";
 
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
@@ -34,7 +34,8 @@ import {
 // Activity input
 export const HandleNHNotificationCallActivityInput = t.interface({
   message: NotificationMessage,
-  notificationHubConfig: NotificationHubConfig
+  // eslint-disable-next-line sort-keys
+  NotificationHubConfig
 });
 
 export type HandleNHNotificationCallActivityInput = t.TypeOf<
@@ -48,6 +49,7 @@ export const getCallNHServiceActivityHandler = (
   // tslint:disable-next-line: no-unused-variable
   telemetryClient: ReturnType<typeof initTelemetryClient>,
   logPrefix = "NHCallServiceActivity"
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => async (context: Context, input: unknown) => {
   const logger = createLogger(context, logPrefix);
   return fromEither(HandleNHNotificationCallActivityInput.decode(input))
@@ -57,51 +59,78 @@ export const getCallNHServiceActivityHandler = (
         readableReport(errs)
       )
     )
-    .chain<ActivityResultSuccess>(({ message, notificationHubConfig }) => {
-      context.log.info(
-        `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
-      );
+    .chain<ActivityResultSuccess>(
+      ({
+        message,
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        NotificationHubConfig
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }): TaskEither<any, ActivityResultSuccess> => {
+        context.log.info(
+          `${logPrefix}|${message.kind}|INSTALLATION_ID=${message.installationId}`
+        );
 
-      const nhService = buildNHService(notificationHubConfig);
+        const nhService = buildNHService(NotificationHubConfig);
 
-      switch (message.kind) {
-        case CreateOrUpdateKind.CreateOrUpdateInstallation:
-          return createOrUpdateInstallation(
-            nhService,
-            message.installationId,
-            message.platform,
-            message.pushChannel,
-            message.tags
-          ).mapLeft(e =>
-            retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
-          );
-        case NotifyKind.Notify:
-          return notify(nhService, message.installationId, message.payload)
-            .mapLeft(e =>
+        // eslint-disable-next-line default-case
+        switch (message.kind) {
+          case CreateOrUpdateKind.CreateOrUpdateInstallation:
+            return createOrUpdateInstallation(
+              nhService,
+              message.installationId,
+              message.platform,
+              message.pushChannel,
+              message.tags
+            ).mapLeft(e =>
               retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
-            )
-            .chainFirst(
-              taskEither.of(
-                telemetryClient.trackEvent({
-                  name: "api.messages.notification.push.sent",
-                  properties: {
-                    isSuccess: "true",
-                    messageId: message.payload.message_id
-                  },
-                  tagOverrides: { samplingEnabled: "false" }
-                })
-              )
             );
-        case DeleteKind.DeleteInstallation:
-          return deleteInstallation(nhService, message.installationId).mapLeft(
-            e => {
+          case NotifyKind.Notify:
+            return notify(nhService, message.installationId, message.payload)
+              .mapLeft(e =>
+                retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
+              )
+              .chainFirst(
+                taskEither.of(
+                  telemetryClient.trackEvent({
+                    name: "api.messages.notification.push.sent",
+                    properties: {
+                      isSuccess: "true",
+                      messageId: message.payload.message_id
+                    },
+                    tagOverrides: { samplingEnabled: "false" }
+                  })
+                )
+              );
+          // eslint-disable-next-line sonarjs/no-duplicated-branches, no-duplicate-case
+          case NotifyKind.Notify:
+            return notify(nhService, message.installationId, message.payload)
+              .mapLeft(e =>
+                retryActivity(logger, `${logPrefix}|ERROR=${toString(e)}`)
+              )
+              .chainFirst(
+                taskEither.of(
+                  telemetryClient.trackEvent({
+                    name: "api.messages.notification.push.sent",
+                    properties: {
+                      isSuccess: "true",
+                      messageId: message.payload.message_id
+                    },
+                    tagOverrides: { samplingEnabled: "false" }
+                  })
+                )
+              );
+          case DeleteKind.DeleteInstallation:
+            return deleteInstallation(
+              nhService,
+              message.installationId
+            ).mapLeft(e => {
               // do not trigger a retry as delete may fail in case of 404
               context.log.error(`${logPrefix}|ERROR=${toString(e)}`);
               return failActivity(logger)(e.message);
-            }
-          );
+            });
+        }
       }
-    })
+    )
     .fold<ActivityResult>(identity, success)
     .run();
 };

@@ -19,9 +19,9 @@ export type ActivityBody<
   Failure extends ActivityResultFailure = ActivityResultFailure
   // Bindings extends Array<unknown> = []
 > = (p: {
-  context: Context;
-  logger: ActivityLogger;
-  input: Input;
+  readonly context: Context;
+  readonly logger: ActivityLogger;
+  readonly input: Input;
   // bindings?: Bindings;
 }) => TaskEither<Failure, Success>;
 
@@ -34,6 +34,7 @@ type ActivityResult<R extends ActivityResultSuccess | ActivityResultFailure> =
 /**
  * Wraps an activity execution so that types are enforced and errors are handled consistently.
  * The purpose is to reduce boilerplate in activity implementation and let developers define only what it matters in terms of business logic
+ *
  * @param activityName name of the activity (as it's defined in the Azure Runtime)
  * @param InputCodec an io-ts codec which maps the expected input structure
  * @param body the activity logic implementation
@@ -55,15 +56,18 @@ export const createActivity = <
 ): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
-  return fromEither(InputCodec.decode(rawInput))
-    .mapLeft(errs =>
-      failActivity(logger)(
-        "Error decoding activity input",
-        readableReport(errs)
+  return (
+    fromEither(InputCodec.decode(rawInput))
+      .mapLeft(errs =>
+        failActivity(logger)(
+          "Error decoding activity input",
+          readableReport(errs)
+        )
       )
-    )
-    .chain(input => body({ context, logger, input }))
-    .map(e => OutputCodec.encode(e))
-    .fold<ActivityResult<F | S>>(identity, identity)
-    .run();
+      // eslint-disable-next-line sort-keys
+      .chain(input => body({ context, logger, input }))
+      .map(e => OutputCodec.encode(e))
+      .fold<ActivityResult<F | S>>(identity, identity)
+      .run()
+  );
 };

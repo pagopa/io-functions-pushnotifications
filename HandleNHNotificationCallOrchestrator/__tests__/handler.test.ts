@@ -1,5 +1,4 @@
-/* tslint:disable:no-any */
-// tslint:disable-next-line: no-object-mutation
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
@@ -55,7 +54,7 @@ describe("HandleNHNotificationCallOrchestrator", () => {
       retryOptions,
       HandleNHNotificationCallActivityInput.encode({
         message: aNotificationHubMessage,
-        notificationHubConfig: {
+        NotificationHubConfig: {
           AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
           AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
         }

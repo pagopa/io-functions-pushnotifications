@@ -51,7 +51,7 @@ export const getHandler = (envConfig: IConfig) =>
 
     const nhCallOrchestratorInput: HandleNHNotificationCallActivityInput = {
       ...errorOrNHCallOrchestratorInput.value,
-      notificationHubConfig: nhConfig
+      NotificationHubConfig: nhConfig
     };
 
     yield context.df.callActivityWithRetry(

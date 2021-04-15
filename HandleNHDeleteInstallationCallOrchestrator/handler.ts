@@ -22,29 +22,25 @@ export const OrchestratorCallInput = t.interface({
 });
 
 interface IHandlerParams {
-  deleteInstallationActivity: o.CallableActivity<
+  readonly deleteInstallationActivity: o.CallableActivity<
     DeleteInstallationActivityInput
   >;
-  legacyNotificationHubConfig: NotificationHubConfig;
+  readonly legacyNotificationHubConfig: NotificationHubConfig;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   deleteInstallationActivity,
   legacyNotificationHubConfig
-}: IHandlerParams) => {
-  return o.createOrchestrator(
-    OrchestratorName,
-    OrchestratorCallInput,
-    function*({
-      context,
-      input: {
-        message: { installationId }
-      } /* , logger */
-    }): Generator<Task, void, Task> {
-      yield* deleteInstallationActivity(context, {
-        installationId,
-        notificationHubConfig: legacyNotificationHubConfig
-      });
-    }
-  );
-};
+}: IHandlerParams) =>
+  o.createOrchestrator(OrchestratorName, OrchestratorCallInput, function*({
+    context,
+    input: {
+      message: { installationId }
+    } /* , logger */
+  }): Generator<Task, void, Task> {
+    yield* deleteInstallationActivity(context, {
+      installationId,
+      notificationHubConfig: legacyNotificationHubConfig
+    });
+  });

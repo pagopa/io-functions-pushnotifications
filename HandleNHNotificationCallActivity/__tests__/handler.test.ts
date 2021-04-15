@@ -1,5 +1,4 @@
-/* tslint:disable: no-any */
-// tslint:disable-next-line: no-object-mutation
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/backend/Platform";
@@ -94,7 +93,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aDeleteInStalltionMessage,
-      notificationHubConfig: aNHConfig
+      NotificationHubConfig: aNHConfig
     });
     expect.assertions(2);
     await handler(contextMock as any, input);
@@ -106,7 +105,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aCreateOrUpdateInstallationMessage,
-      notificationHubConfig: aNHConfig
+      NotificationHubConfig: aNHConfig
     });
 
     expect.assertions(2);
@@ -122,7 +121,7 @@ describe("HandleNHNotificationCallActivity", () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
       message: aNotifyMessage,
-      notificationHubConfig: aNHConfig
+      NotificationHubConfig: aNHConfig
     });
     expect.assertions(2);
     try {
@@ -136,7 +135,7 @@ describe("HandleNHNotificationCallActivity", () => {
   it("should NOT trigger a retry if deleteInstallation fails", async () => {
     const handler = getCallNHServiceActivityHandler(mockTelemetryClient);
     const input = NHServiceActivityInput.encode({
-      notificationHubConfig: aNHConfig,
+      NotificationHubConfig: aNHConfig,
       message: aDeleteInStalltionMessage
     });
     const res = await handler(contextMock as any, input);

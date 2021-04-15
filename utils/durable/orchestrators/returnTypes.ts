@@ -39,8 +39,10 @@ export const OrchestratorFailure = t.union([
   OrchestratorUnhandledFailure
 ]);
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const success = () => OrchestratorSuccess.encode({ kind: "SUCCESS" });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const failureInvalidInput = (input: unknown, reason: string) =>
   OrchestratorInvalidInputFailure.encode({
     input,
@@ -48,6 +50,7 @@ export const failureInvalidInput = (input: unknown, reason: string) =>
     reason
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const failureActivity = (activityName: string, reason: string) =>
   OrchestratorActivityFailure.encode({
     activityName,
@@ -55,6 +58,7 @@ export const failureActivity = (activityName: string, reason: string) =>
     reason
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const failureUnhandled = (error: unknown) =>
   OrchestratorUnhandledFailure.encode({
     kind: "FAILURE_UNHANDLED",

@@ -50,8 +50,12 @@ generated
 *.zip
 
 *.js
+!.eslintrc.js
 !jest.config.js
 !.release-it.js
 
 
 azure-functions-core-tools
+
+# Exclude ESLint cache file
+.eslintcache
