@@ -17,6 +17,8 @@ import {
 import { getHandler, NhNotifyMessageOrchestratorCallInput } from "../handler";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
+import { getMockIsUserATestUserActivity } from "../../__mocks__/activities-mocks";
+
 import {
   callableActivity,
   OrchestratorFailure,
@@ -68,6 +70,8 @@ const contextMockWithDf = ({
   }
 } as unknown) as IOrchestrationFunctionContext;
 
+const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
 describe("HandleNHNotifyMessageCallOrchestrator", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -76,6 +80,7 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
@@ -95,6 +100,7 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
   it("should end the activity with SUCCESS", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
@@ -112,6 +118,7 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler({
       notifyMessageActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 

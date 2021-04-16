@@ -12,7 +12,6 @@ import {
   ActivityName
 } from "../../HandleNHDeleteInstallationCallActivity/handler";
 import {
-  ActivityResult,
   ActivityResultSuccess,
   success as activitySuccess
 } from "../../utils/durable/activities";
@@ -23,10 +22,15 @@ import {
   OrchestratorFailure,
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
+import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
 import { ActivityInput as DeleteInstallationActivityInput } from "../../HandleNHDeleteInstallationCallActivity";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetActivityResultSuccess
+} from "../../IsUserInActiveSubsetActivity";
+
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
-import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
@@ -59,6 +63,19 @@ const deleteInstallationActivity = o.callableActivity<
   DeleteInstallationActivityInput
 >(ActivityName, ActivityResultSuccess, retryOptions);
 
+type CallableIsUserInActiveSubsetActivity = CallableActivity<
+  IsUserInActiveSubsetActivityInput,
+  IsUserInActiveSubsetActivityResultSuccess
+>;
+
+const getMockIsUserATestUserActivity = (res: boolean) =>
+  jest.fn<
+    ReturnType<CallableIsUserInActiveSubsetActivity>,
+    Parameters<CallableIsUserInActiveSubsetActivity>
+  >(function*() {
+    return { kind: "SUCCESS", value: res };
+  });
+
 const mockGetInput = jest.fn<unknown, []>(() => nhCallOrchestratorInput);
 const contextMockWithDf = ({
   ...contextMockBase,
@@ -73,8 +90,11 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     jest.clearAllMocks();
   });
   it("should start the activities with the right inputs", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
@@ -95,8 +115,11 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
   });
 
   it("should end the activity with SUCCESS in two steps", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
@@ -118,8 +141,11 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
 
     mockGetInput.mockImplementationOnce(() => nhCallOrchestratorInput);
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       deleteInstallationActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 

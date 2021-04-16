@@ -29,6 +29,8 @@ import {
 } from "../../utils/durable/orchestrators";
 import { ActivityInput as CreateOrUpdateActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
+import { getMockIsUserATestUserActivity } from "../../__mocks__/activities-mocks";
+
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
   "fLKP3EATnBI:APA91bEy4go681jeSEpLkNqhtIrdPnEKu6Dfi-STtUiEnQn8RwMfBiPGYaqdWrmzJyXIh5Yms4017MYRS9O1LGPZwA4sOLCNIoKl4Fwg7cSeOkliAAtlQ0rVg71Kr5QmQiLlDJyxcq3p";
@@ -69,7 +71,7 @@ const mockCreateOrUpdateActivity = jest.fn<
   ReturnType<CallableCreateOrUpdateActivity>,
   Parameters<CallableCreateOrUpdateActivity>
 >(function*() {
-  return { kind: "SUCCESS", value: "foo" };
+  return { kind: "SUCCESS" };
 });
 
 const mockGetInput = jest.fn<unknown, []>(() => anOrchestratorInput);
@@ -86,8 +88,11 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     jest.clearAllMocks();
   });
   it("should start the activities with the right inputs", async () => {
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
@@ -116,8 +121,11 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     };
     mockGetInput.mockImplementationOnce(() => input);
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
@@ -142,8 +150,11 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
       throw new Error("any exception");
     });
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 
@@ -162,8 +173,11 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
       throw failureActivity("any activity name", "any reason");
     });
 
+    const mockIsUserATestUserActivity = getMockIsUserATestUserActivity(true);
+
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
+      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
       notificationHubConfig: aNotificationHubConfig
     })(contextMock);
 

@@ -7,6 +7,12 @@ import {
   activityName as NotifyMessageActivityName,
   ActivityResultSuccess as NotifyMessageActivityResultSuccess
 } from "../HandleNHNotifyMessageCallActivity";
+import {
+  ActivityInput as IsUserInActiveSubsetActivityInput,
+  activityName as IsUserInActiveSubsetActivityName,
+  ActivityResultSuccessWithValue as IsUserInActiveSubsetActivitySuccess,
+  activityResultSuccessWithValue as isUserInActiveSubsetActivitySuccess
+} from "../IsUserInActiveSubsetActivity";
 import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
@@ -21,7 +27,16 @@ const notifyMessageActivity = callableActivity<NotifyMessageActivityInput>(
   }
 );
 
+const isUserInActiveTestSubsetActivity = callableActivity<
+  IsUserInActiveSubsetActivityInput,
+  IsUserInActiveSubsetActivitySuccess
+>(IsUserInActiveSubsetActivityName, isUserInActiveSubsetActivitySuccess, {
+  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+  backoffCoefficient: 1.5
+});
+
 const handler = getHandler({
+  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notifyMessageActivity
 });

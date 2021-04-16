@@ -1,7 +1,10 @@
 import { Context } from "@azure/functions";
 import * as df from "durable-functions";
-import { toString } from "fp-ts/lib/function";
+import { DurableOrchestrationClient } from "durable-functions/lib/src/durableorchestrationclient";
+
 import * as t from "io-ts";
+import { toString } from "fp-ts/lib/function";
+
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
@@ -22,8 +25,42 @@ export const NotificationMessage = t.union([
 
 export type NotificationHubMessage = t.TypeOf<typeof NotificationMessage>;
 
-const assertNever = (x: never): never => {
-  throw new Error(`Unexpected object: ${toString(x)}`);
+const startOrchestrator = async (
+  notificationHubMessage: NotificationHubMessage,
+  context: Context,
+  client: DurableOrchestrationClient
+): Promise<string> => {
+  switch (notificationHubMessage.kind) {
+    case DeleteKind.DeleteInstallation:
+      return await client.startNew(
+        DeleteInstallationOrchestratorName,
+        undefined,
+        {
+          message: notificationHubMessage
+        }
+      );
+    case CreateOrUpdateKind.CreateOrUpdateInstallation:
+      return await client.startNew(
+        CreateOrUpdateInstallationOrchestrator,
+        undefined,
+        {
+          message: notificationHubMessage
+        }
+      );
+    case NotifyKind.Notify:
+      return await client.startNew(NotifyMessageOrchestratorName, undefined, {
+        message: notificationHubMessage
+      });
+    default:
+      context.log.error(
+        `HandleNHNotificationCall|ERROR=Unknown message kind, message: ${toString(
+          notificationHubMessage
+        )}`
+      );
+      throw new Error(
+        `Unknown message kind, message: ${toString(notificationHubMessage)}`
+      );
+  }
 };
 
 /**
@@ -32,26 +69,8 @@ const assertNever = (x: never): never => {
 export const getHandler = () => async (
   context: Context,
   notificationHubMessage: NotificationHubMessage
-): Promise<void> => {
+): Promise<string> => {
   const client = df.getClient(context);
-  switch (notificationHubMessage.kind) {
-    case DeleteKind.DeleteInstallation:
-      await client.startNew(DeleteInstallationOrchestratorName, undefined, {
-        message: notificationHubMessage
-      });
-      break;
-    case CreateOrUpdateKind.CreateOrUpdateInstallation:
-      await client.startNew(CreateOrUpdateInstallationOrchestrator, undefined, {
-        message: notificationHubMessage
-      });
-      break;
-    case NotifyKind.Notify:
-      await client.startNew(NotifyMessageOrchestratorName, undefined, {
-        message: notificationHubMessage
-      });
-      break;
-    default:
-      assertNever(notificationHubMessage);
-      break;
-  }
+
+  return startOrchestrator(notificationHubMessage, context, client);
 };
