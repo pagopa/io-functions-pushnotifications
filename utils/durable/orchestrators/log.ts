@@ -8,11 +8,20 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 
 import { OrchestratorFailure } from "./returnTypes";
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const defaultNever = <T>(_: never, d: T) => d;
+const defaultNever = <T>(_: never, d: T): T => d;
 
 export interface IOrchestratorLogger {
+  /**
+   * Logs a failure in the orchestrator execution
+   *
+   * @param failure an encoded orchestrator failure
+   */
   readonly error: (failure: OrchestratorFailure) => void;
+  /**
+   * Logs an info in the orchestrator execution
+   *
+   * @param s an info string
+   */
   readonly info: (s: string) => void;
 }
 
@@ -27,13 +36,7 @@ export const createLogger = (
   context: IOrchestrationFunctionContext,
   logPrefix: string = ""
 ): IOrchestratorLogger => ({
-  /**
-   * Logs a failure in the orchestrator execution
-   *
-   * @param failure an encoded orchestrator failure
-   */
-  // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-  error(failure: OrchestratorFailure): void {
+  error: (failure: OrchestratorFailure): void => {
     const log = `${logPrefix}|Error executing orchestrator: ${failure.kind}`;
     const verbose: string =
       failure.kind === "FAILURE_INVALID_INPUT"
@@ -49,8 +52,7 @@ export const createLogger = (
     context.log.error(log);
     context.log.verbose(`${log}|${verbose}`);
   },
-  // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-  info(s: string): void {
+  info: (s: string): void => {
     context.log.info(`${logPrefix}|${s}`);
   }
 });
