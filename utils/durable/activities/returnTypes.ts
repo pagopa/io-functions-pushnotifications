@@ -53,7 +53,10 @@ export const retryActivity = (logger: ActivityLogger, msg: string): never => {
   throw toError(msg);
 };
 
-export const success = (): ActivityResult =>
+/**
+ * @returns an `ActivityResultSuccess`
+ */
+export const success = (): ActivityResultSuccess =>
   ActivityResultSuccess.encode({
     kind: "SUCCESS"
   });

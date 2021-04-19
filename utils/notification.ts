@@ -157,9 +157,11 @@ const handleResponseOrError = (
   err == null
     ? resolve(successNH())
     : reject(
-        `[error message: ${err.message}][response: ${response.statusCode ??
+        `[error message: ${err.message}][response: ${response?.statusCode ??
           ""} - ${
-          dictionaryIsEmpty(response.body) ? "No response body" : response.body
+          !response?.body || dictionaryIsEmpty(response?.body)
+            ? "No response body"
+            : response?.body
         }]`
       );
 

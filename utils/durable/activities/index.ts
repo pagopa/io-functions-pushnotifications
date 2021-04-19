@@ -17,7 +17,6 @@ export type ActivityBody<
   Input = unknown,
   Success extends ActivityResultSuccess = ActivityResultSuccess,
   Failure extends ActivityResultFailure = ActivityResultFailure
-  // Bindings extends Array<unknown> = []
 > = (p: {
   readonly context: Context;
   readonly logger: ActivityLogger;
@@ -56,18 +55,15 @@ export const createActivity = <
 ): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
-  return (
-    fromEither(InputCodec.decode(rawInput))
-      .mapLeft(errs =>
-        failActivity(logger)(
-          "Error decoding activity input",
-          readableReport(errs)
-        )
+  return fromEither(InputCodec.decode(rawInput))
+    .mapLeft(errs =>
+      failActivity(logger)(
+        "Error decoding activity input",
+        readableReport(errs)
       )
-      // eslint-disable-next-line sort-keys
-      .chain(input => body({ context, logger, input }))
-      .map(e => OutputCodec.encode(e))
-      .fold<ActivityResult<F | S>>(identity, identity)
-      .run()
-  );
+    )
+    .chain(input => body({ context, input, logger }))
+    .map(e => OutputCodec.encode(e))
+    .fold<ActivityResult<F | S>>(identity, identity)
+    .run();
 };
