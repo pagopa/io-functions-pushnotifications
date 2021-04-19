@@ -64,7 +64,8 @@ const contextMockWithDf = ({
   ...contextMock,
   df: {
     callActivityWithRetry: jest.fn().mockReturnValue(activitySuccess()),
-    getInput: mockGetInput
+    getInput: mockGetInput,
+    setCustomStatus: jest.fn()
   }
 } as unknown) as IOrchestrationFunctionContext;
 

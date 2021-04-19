@@ -8,7 +8,10 @@ import {
 } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 import { HandleNHNotificationCallActivityInput } from "../../HandleNHNotificationCallActivity/handler";
 import { NhNotificationOrchestratorInput, getHandler } from "../handler";
-import { success } from "../../utils/durable/orchestrators";
+import {
+  OrchestratorFailure,
+  success
+} from "../../utils/durable/orchestrators";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 
@@ -41,7 +44,8 @@ describe("HandleNHNotificationCallOrchestrator", () => {
         callActivityWithRetry: jest
           .fn()
           .mockReturnValueOnce(callNHServiceActivitySuccessResult),
-        getInput: jest.fn(() => nhCallOrchestratorInput)
+        getInput: jest.fn(() => nhCallOrchestratorInput),
+        setCustomStatus: jest.fn()
       }
     };
 
@@ -79,8 +83,12 @@ describe("HandleNHNotificationCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler(envConfig)(contextMockWithDf as any);
 
-    orchestratorHandler.next();
-
-    expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    expect.assertions(2);
+    try {
+      orchestratorHandler.next();
+    } catch (err) {
+      expect(OrchestratorFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 });

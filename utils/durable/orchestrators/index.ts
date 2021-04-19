@@ -73,7 +73,8 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
       );
       logger.error(failure);
 
-      return failure;
+      context.df.setCustomStatus(failure);
+      throw failure;
     }
   };
 

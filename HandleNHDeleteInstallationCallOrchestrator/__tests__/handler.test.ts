@@ -21,6 +21,7 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 import {
   CallableActivity,
   OrchestratorFailure,
+  OrchestratorInvalidInputFailure,
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
 
@@ -64,7 +65,8 @@ const contextMockWithDf = ({
   ...contextMockBase,
   df: {
     callActivityWithRetry: jest.fn().mockReturnValue(activitySuccess()),
-    getInput: mockGetInput
+    getInput: mockGetInput,
+    setCustomStatus: jest.fn()
   }
 } as unknown) as IOrchestrationFunctionContext;
 
@@ -123,12 +125,12 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
-    var res = orchestratorHandler.next();
-
-    expect(res.done).toBeTruthy();
-    expect((res.value as OrchestratorFailure).kind).toEqual(
-      "FAILURE_INVALID_INPUT"
-    );
-    expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    expect.assertions(2);
+    try {
+      orchestratorHandler.next();
+    } catch (err) {
+      expect(OrchestratorInvalidInputFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 });

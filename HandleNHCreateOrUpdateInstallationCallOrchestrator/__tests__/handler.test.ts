@@ -73,11 +73,12 @@ const mockCreateOrUpdateActivity = jest.fn<
 });
 
 const mockGetInput = jest.fn<unknown, []>(() => anOrchestratorInput);
-const contextMock = ({
+const contextMockWithDf = ({
   ...contextMockBase,
   df: {
     callActivityWithRetry: jest.fn().mockReturnValueOnce(success()),
-    getInput: mockGetInput
+    getInput: mockGetInput,
+    setCustomStatus: jest.fn()
   }
 } as unknown) as IOrchestrationFunctionContext;
 
@@ -89,7 +90,7 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       notificationHubConfig: aNotificationHubConfig
-    })(contextMock);
+    })(contextMockWithDf);
 
     const result = consumeGenerator(orchestratorHandler);
 
@@ -119,22 +120,15 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       notificationHubConfig: aNotificationHubConfig
-    })(contextMock);
+    })(contextMockWithDf);
 
-    const result = consumeGenerator(orchestratorHandler);
-
-    expect(mockCreateOrUpdateActivity).not.toBeCalled();
-    OrchestratorFailure.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      decoded => {
-        expect(OrchestratorInvalidInputFailure.is(decoded)).toBe(true);
-        expect(decoded).toEqual(
-          expect.objectContaining({
-            input
-          })
-        );
-      }
-    );
+    expect.assertions(2);
+    try {
+      orchestratorHandler.next();
+    } catch (err) {
+      expect(OrchestratorInvalidInputFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 
   it("should fail if CreateOrUpdateActivity fails with unexpected throw", async () => {
@@ -145,16 +139,15 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       notificationHubConfig: aNotificationHubConfig
-    })(contextMock);
+    })(contextMockWithDf);
 
-    const result = consumeGenerator(orchestratorHandler);
-
-    OrchestratorFailure.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      decoded => {
-        expect(OrchestratorUnhandledFailure.is(decoded)).toBe(true);
-      }
-    );
+    expect.assertions(2);
+    try {
+      orchestratorHandler.next();
+    } catch (err) {
+      expect(OrchestratorUnhandledFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 
   it("should fail if CreateOrUpdateActivity fails ", async () => {
@@ -165,15 +158,14 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       notificationHubConfig: aNotificationHubConfig
-    })(contextMock);
+    })(contextMockWithDf);
 
-    const result = consumeGenerator(orchestratorHandler);
-
-    OrchestratorFailure.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      decoded => {
-        expect(OrchestratorActivityFailure.is(decoded)).toBe(true);
-      }
-    );
+    expect.assertions(2);
+    try {
+      orchestratorHandler.next();
+    } catch (err) {
+      expect(OrchestratorActivityFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 });

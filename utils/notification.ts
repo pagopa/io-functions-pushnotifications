@@ -5,7 +5,7 @@
 import * as t from "io-ts";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
-import { NotificationHubService } from "azure-sb";
+import { NotificationHubService, Azure } from "azure-sb";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import {
   getKeepAliveAgentOptions,
@@ -142,6 +142,35 @@ const successNH = (): NHResultSuccess =>
     kind: "SUCCESS"
   });
 
+const dictionaryIsEmpty = (
+  obj: Azure.ServiceBus.Dictionary<string | unknown>
+): boolean => Object.keys(obj).length === 0;
+
+const handleResponseOrError = (
+  resolve: (
+    value:
+      | { readonly kind: "SUCCESS" }
+      | PromiseLike<{ readonly kind: "SUCCESS" }>
+  ) => void,
+  reject: (reason?: unknown) => void
+) => (err: Error | null, response: Azure.ServiceBus.Response): void =>
+  err == null
+    ? resolve(successNH())
+    : reject(
+        `[error message: ${err.message}][response: ${response.statusCode ??
+          ""} - ${
+          dictionaryIsEmpty(response.body) ? "No response body" : response.body
+        }]`
+      );
+
+/**
+ * Call `Notify Message` to Notification Hub
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to notify
+ * @param payload The message payload
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const notify = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
@@ -161,18 +190,23 @@ export const notify = (
               ["apns-push-type"]: APNSPushType.ALERT
             }
           },
-          (error, _) =>
-            error == null
-              ? resolve(successNH())
-              : reject(
-                  `Error while sending notification to NotificationHub|${error.message}`
-                )
+          handleResponseOrError(resolve, reject)
         )
       ),
     errs =>
       new Error(`Error while sending notification to NotificationHub|${errs}`)
   );
 
+/**
+ * Call `Create or Update Installation` to Notification Hub for an Installation Id
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to create or update
+ * @param platform The user's device platform (cgm or apns)
+ * @param pushChannel The user's device notification token
+ * @param tags An array of tags
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const createOrUpdateInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
@@ -198,13 +232,7 @@ export const createOrUpdateInstallation = (
       new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.createOrUpdateInstallation(
           azureInstallationOptions,
-          (err, _) =>
-            err == null
-              ? resolve(successNH())
-              : reject(
-                  `Error while creating or updating installation on NotificationHub [
-                    ${installationId}] [${err.message}]`
-                )
+          handleResponseOrError(resolve, reject)
         )
       ),
     errs =>
@@ -214,6 +242,13 @@ export const createOrUpdateInstallation = (
   );
 };
 
+/**
+ * Call `Delete Installation` to Notification Hub
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to delete
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const deleteInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString
@@ -221,12 +256,9 @@ export const deleteInstallation = (
   tryCatch(
     () =>
       new Promise<NHResultSuccess>((resolve, reject) =>
-        notificationHubService.deleteInstallation(installationId, (e, _) =>
-          e == null
-            ? resolve(successNH())
-            : reject(
-                `Error while deleting installation on NotificationHub [${installationId}] [${e.message}]`
-              )
+        notificationHubService.deleteInstallation(
+          installationId,
+          handleResponseOrError(resolve, reject)
         )
       ),
     errs =>
