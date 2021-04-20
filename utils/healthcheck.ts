@@ -17,8 +17,10 @@ import {
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
+import { NHResultSuccess } from "./notification";
+import { buildNHService } from "./notificationhubServicePartition";
 
-type ProblemSource = "AzureCosmosDB" | "AzureStorage" | "Config" | "Url";
+type ProblemSource = "AzureStorage" | "AzureNotificationHub" | "Config" | "Url";
 export type HealthProblem<S extends ProblemSource> = string & {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   readonly __source: S;
@@ -53,6 +55,31 @@ export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
       formatProblem("Config", readableReport([e]))
     )
   );
+/**
+ * Check connections to Notification Hubs
+ *
+ * @returns either true or an array of error messages
+ */
+export const checkAzureNotificationHub = ({
+  AZURE_NH_ENDPOINT,
+  AZURE_NH_HUB_NAME
+}: IConfig): HealthCheck<"AzureNotificationHub"> =>
+  tryCatch(
+    () =>
+      new Promise<NHResultSuccess>((resolve, reject) =>
+        buildNHService({
+          AZURE_NH_ENDPOINT,
+          AZURE_NH_HUB_NAME
+        }).deleteInstallation(
+          "aFakeInstallation",
+          (err, _) =>
+            err == null
+              ? resolve({ kind: "SUCCESS" })
+              : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+        )
+      ),
+    toHealthProblems("AzureNotificationHub")
+  ).map(_ => true);
 
 /**
  * Check the application can connect to an Azure Storage
@@ -120,6 +147,10 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
         ReadonlyArray<HealthProblem<ProblemSource>>,
         // eslint-disable-next-line functional/prefer-readonly-type
         Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-      >(checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING))
+      >(
+        checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING),
+        checkAzureNotificationHub(config)
+      )
     )
+
     .map(_ => true);
