@@ -28,7 +28,7 @@ Those are all Environment variables needed by the application:
 | STORAGE_CONN_STRING              |  The connection string of the Storage Account                                                      | string | true     |
 | NOTIFICATIONS_QUEUE_NAME         |  The name of the queue that stores the Notification messages                                       | string | true     |
 | NH_PARTITION_FEATURE_FLAG        |  The type of FF enabled fot NH partition. Possible values: "none" - "all" - "beta" - "canary"      | string | true     |
-
+| CANARY_USERS_REGEX               |  The regex used to discriminate _canary users_                                                     | string | true     |
 
 
 ## Deploy
