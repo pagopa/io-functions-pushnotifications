@@ -1,4 +1,5 @@
-﻿import * as df from "durable-functions";
+﻿import { TelemetryClient } from "applicationinsights";
+import * as df from "durable-functions";
 import * as o from "../utils/durable/orchestrators";
 
 import { getConfigOrThrow } from "../utils/config";
@@ -15,10 +16,13 @@ import {
   ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
 } from "../IsUserInActiveSubsetActivity";
 
+import { initTelemetryClient } from "../utils/appinsights";
 import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+
 import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
+const telemetryClient = initTelemetryClient(config) as TelemetryClient;
 
 const createOrUpdateActivity = o.callableActivity<CreateOrUpdateActivityInput>(
   CreateOrUpdateActivityName,
@@ -41,8 +45,10 @@ const notificationHubConfig = getNHLegacyConfig(config);
 
 const handler = getHandler({
   createOrUpdateActivity,
+  featureFlag: config.NH_PARTITION_FEATURE_FLAG,
   isUserInActiveTestSubsetActivity,
-  notificationHubConfig
+  notificationHubConfig,
+  telemetryClient
 });
 
 const orchestrator = df.orchestrator(handler);

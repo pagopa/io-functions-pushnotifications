@@ -30,6 +30,9 @@ import {
 import { ActivityInput as CreateOrUpdateActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
 import { getMockIsUserATestUserActivity } from "../../__mocks__/activities-mocks";
+import { TelemetryClient } from "applicationinsights";
+
+import { defaultClient } from "../../__mocks__/applicationinsights";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -83,6 +86,8 @@ const contextMock = ({
   }
 } as unknown) as IOrchestrationFunctionContext;
 
+defaultClient.trackEvent = jest.fn().mockImplementation(_ => {});
+
 describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -93,7 +98,9 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig
+      notificationHubConfig: aNotificationHubConfig,
+      telemetryClient: defaultClient,
+      featureFlag: "none"
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -126,7 +133,9 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig
+      notificationHubConfig: aNotificationHubConfig,
+      telemetryClient: defaultClient,
+      featureFlag: "none"
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -155,7 +164,9 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig
+      notificationHubConfig: aNotificationHubConfig,
+      telemetryClient: defaultClient,
+      featureFlag: "none"
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);
@@ -178,7 +189,9 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       isUserInActiveTestSubsetActivity: mockIsUserATestUserActivity,
-      notificationHubConfig: aNotificationHubConfig
+      notificationHubConfig: aNotificationHubConfig,
+      telemetryClient: defaultClient,
+      featureFlag: "none"
     })(contextMock);
 
     const result = consumeGenerator(orchestratorHandler);

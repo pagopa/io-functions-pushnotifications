@@ -1,3 +1,5 @@
+import { TelemetryClient } from "applicationinsights";
+
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
 
@@ -34,13 +36,19 @@ interface IHandlerParams {
     IsUserInActiveSubsetResultSuccess
   >;
   readonly notificationHubConfig: NotificationHubConfig;
+
+  readonly telemetryClient: TelemetryClient;
+
+  readonly featureFlag: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   createOrUpdateActivity,
   isUserInActiveTestSubsetActivity,
-  notificationHubConfig
+  notificationHubConfig,
+  telemetryClient,
+  featureFlag
 }: IHandlerParams) =>
   o.createOrchestrator(
     OrchestratorName,
@@ -59,6 +67,15 @@ export const getHandler = ({
       logger.info(
         `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
       );
+      telemetryClient.trackEvent({
+        name: "orchestrators.createOrUpdate.isTestUser",
+        properties: {
+          featureFlag,
+          installationId,
+          isTestUser: isUserATestUser.value
+        },
+        tagOverrides: { samplingEnabled: "false" }
+      });
 
       yield* createOrUpdateActivity(context, {
         installationId,
