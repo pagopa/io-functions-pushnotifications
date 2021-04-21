@@ -14,31 +14,23 @@ export const envConfig: IConfig = {
   AZURE_NH_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
 
   AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
-    {
-      partitionRegex: "^[0-3]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
-    },
-    {
-      partitionRegex: "^[4-7]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
-    },
-    {
-      partitionRegex: "^[8-b]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
-    },
-    {
-      partitionRegex: "^[c-f]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
-    }
+    { partitionRegex: "^[0-3]", envVariablePrefix: "AZURE_NH_PARTITION_1" },
+    { partitionRegex: "^[4-7]", envVariablePrefix: "AZURE_NH_PARTITION_2" },
+    { partitionRegex: "^[8-b]", envVariablePrefix: "AZURE_NH_PARTITION_3" },
+    { partitionRegex: "^[c-f]", envVariablePrefix: "AZURE_NH_PARTITION_4" }
   ]) as any,
+
+  AZURE_NH_PARTITION_1_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  AZURE_NH_PARTITION_1_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
+
+  AZURE_NH_PARTITION_2_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  AZURE_NH_PARTITION_2_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
+
+  AZURE_NH_PARTITION_3_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  AZURE_NH_PARTITION_3_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
+
+  AZURE_NH_PARTITION_4_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  AZURE_NH_PARTITION_4_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
 

@@ -56,10 +56,8 @@ describe("IConfig", () => {
     var configDecodedWrong = IConfig.decode({
       ...aConfig,
       AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify({
-        partitionRegex: "^[c-f]" as NonEmptyString,
-        name: "io-notification-hub-mock" as NonEmptyString,
-        namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-        sharedAccessKey: "anAccessKey" as NonEmptyString
+        partitionRegex: "",
+        envVariablePrefix: ""
       })
     });
 
@@ -70,30 +68,10 @@ describe("IConfig", () => {
     var configDecodedWrong = IConfig.decode({
       ...aConfig,
       AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
-        {
-          partitionRegex: "^[0-3]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "[4-7]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[8-b]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[c-f]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        }
+        { partitionRegex: "^[0-3]", envVariablePrefix: "AZURE_NH_PARTITION_1" },
+        { partitionRegex: "[4-7]", envVariablePrefix: "AZURE_NH_PARTITION_2" },
+        { partitionRegex: "^[8-b]", envVariablePrefix: "AZURE_NH_PARTITION_3" },
+        { partitionRegex: "^[c-f]", envVariablePrefix: "AZURE_NH_PARTITION_4" }
       ])
     });
 
@@ -104,30 +82,10 @@ describe("IConfig", () => {
     var configDecodedWrong = IConfig.decode({
       ...aConfig,
       AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
-        {
-          partitionRegex: "^[0-8]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[4-7]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[8-b]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[c-f]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        }
+        { partitionRegex: "^[0-4]", envVariablePrefix: "AZURE_NH_PARTITION_1" },
+        { partitionRegex: "^[4-7]", envVariablePrefix: "AZURE_NH_PARTITION_2" },
+        { partitionRegex: "^[8-b]", envVariablePrefix: "AZURE_NH_PARTITION_3" },
+        { partitionRegex: "^[c-f]", envVariablePrefix: "AZURE_NH_PARTITION_4" }
       ])
     });
 

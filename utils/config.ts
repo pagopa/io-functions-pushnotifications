@@ -37,12 +37,39 @@ export const IConfig = t.intersection([
     isProduction: t.boolean
   }),
 
-  t.interface({
-    AZURE_NH_ENDPOINT: NonEmptyString,
-    AZURE_NH_HUB_NAME: NonEmptyString,
+  t.refinement(
+    t.interface({
+      AZURE_NH_ENDPOINT: NonEmptyString,
+      AZURE_NH_HUB_NAME: NonEmptyString,
 
-    AZURE_NOTIFICATION_HUB_PARTITIONS: nhDisjoitedFirstCharacterPartitionReadonlyArray
-  }),
+      AZURE_NOTIFICATION_HUB_PARTITIONS: nhDisjoitedFirstCharacterPartitionReadonlyArray,
+
+      // eslint-disable-next-line sort-keys
+      AZURE_NH_PARTITION_1_ENDPOINT: NonEmptyString,
+      AZURE_NH_PARTITION_1_HUB_NAME: NonEmptyString,
+
+      AZURE_NH_PARTITION_2_ENDPOINT: NonEmptyString,
+      AZURE_NH_PARTITION_2_HUB_NAME: NonEmptyString,
+
+      AZURE_NH_PARTITION_3_ENDPOINT: NonEmptyString,
+      AZURE_NH_PARTITION_3_HUB_NAME: NonEmptyString,
+
+      AZURE_NH_PARTITION_4_ENDPOINT: NonEmptyString,
+      AZURE_NH_PARTITION_4_HUB_NAME: NonEmptyString
+    }),
+    config =>
+      // Every p.envVariablePrefix should match two env variables,
+      // ending with "_ENDPOINT" and "_HUB_NAME"
+      config.AZURE_NOTIFICATION_HUB_PARTITIONS.every(
+        p =>
+          Object.keys(config).includes(p.envVariablePrefix + "_ENDPOINT") &&
+          Object.keys(config).includes(p.envVariablePrefix + "_HUB_NAME")
+      ) &&
+      // Every p.envVariablePrefix should be unique
+      config.AZURE_NOTIFICATION_HUB_PARTITIONS.map(
+        p => p.envVariablePrefix
+      ).every((e, i, a) => a.indexOf(e) === i)
+  ),
 
   t.interface({
     BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,

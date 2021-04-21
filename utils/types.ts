@@ -25,10 +25,8 @@ export type NotificationHubPartitions = t.TypeOf<
   typeof notificationHubPartitions
 >;
 const notificationHubPartitions = t.interface({
-  name: NonEmptyString,
-  namespace: NonEmptyString,
-  partitionRegex: NonEmptyString,
-  sharedAccessKey: NonEmptyString
+  envVariablePrefix: NonEmptyString,
+  partitionRegex: NonEmptyString
 });
 
 export type NHDisjoitedFirstCharacterPartitionReadonlyArray = t.TypeOf<
