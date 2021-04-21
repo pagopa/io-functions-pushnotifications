@@ -67,15 +67,18 @@ export const getHandler = ({
       logger.info(
         `INSTALLATION_ID:${installationId}|IS_TEST_USER:${isUserATestUser.value}`
       );
-      telemetryClient.trackEvent({
-        name: "orchestrators.createOrUpdate.isTestUser",
-        properties: {
-          featureFlag,
-          installationId,
-          isTestUser: isUserATestUser.value
-        },
-        tagOverrides: { samplingEnabled: "false" }
-      });
+
+      if (!context.df.isReplaying) {
+        telemetryClient.trackEvent({
+          name: "orchestrators.createOrUpdate.isTestUser",
+          properties: {
+            featureFlag,
+            installationId,
+            isTestUser: isUserATestUser.value
+          },
+          tagOverrides: { samplingEnabled: "false" }
+        });
+      }
 
       yield* createOrUpdateActivity(context, {
         installationId,
