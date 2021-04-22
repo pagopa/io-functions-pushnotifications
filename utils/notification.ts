@@ -4,6 +4,8 @@
 
 import * as t from "io-ts";
 
+import { toString } from "fp-ts/lib/function";
+
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { either, Either, left } from "fp-ts/lib/Either";
 import { fromNullable as fromNullableO } from "fp-ts/lib/Option";
@@ -156,8 +158,11 @@ const composeNHErrorMessage = (
   response: Azure.ServiceBus.Response
 ): string =>
   fromNullableO(response)
-    .map(res =>
-      !res.body || dictionaryIsEmpty(res.body) ? "No response body" : res.body
+    .map(
+      res =>
+        !res.body || dictionaryIsEmpty(res.body)
+          ? "No response body"
+          : toString(res.body).replace(/\n/gim, " ") // avoid newlines
     )
     .map(innerMessage =>
       innerMessage
