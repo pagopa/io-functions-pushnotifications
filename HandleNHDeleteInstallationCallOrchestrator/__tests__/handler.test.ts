@@ -20,6 +20,7 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 import {
   CallableActivity,
   OrchestratorFailure,
+  OrchestratorInvalidInputFailure,
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
@@ -32,6 +33,7 @@ import {
 
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { readableReport } from "italia-ts-commons/lib/reporters";
+import { consumeGenerator } from "../../utils/durable/utils";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const anInstallationId = aFiscalCodeHash;
@@ -81,7 +83,8 @@ const contextMockWithDf = ({
   ...contextMockBase,
   df: {
     callActivityWithRetry: jest.fn().mockReturnValue(activitySuccess()),
-    getInput: mockGetInput
+    getInput: mockGetInput,
+    setCustomStatus: jest.fn()
   }
 } as unknown) as IOrchestrationFunctionContext;
 
@@ -149,12 +152,12 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
-    var res = orchestratorHandler.next();
-
-    expect(res.done).toBeTruthy();
-    expect((res.value as OrchestratorFailure).kind).toEqual(
-      "FAILURE_INVALID_INPUT"
-    );
-    expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    expect.assertions(2);
+    try {
+      consumeGenerator(orchestratorHandler);
+    } catch (err) {
+      expect(OrchestratorInvalidInputFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 });

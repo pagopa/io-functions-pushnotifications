@@ -33,7 +33,7 @@ export const OrchestratorUnhandledFailure = t.interface({
 });
 
 export type OrchestratorFailure = t.TypeOf<typeof OrchestratorFailure>;
-export const OrchestratorFailure = t.union([
+export const OrchestratorFailure = t.taggedUnion("kind", [
   OrchestratorActivityFailure,
   OrchestratorInvalidInputFailure,
   OrchestratorUnhandledFailure

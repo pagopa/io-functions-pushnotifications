@@ -66,7 +66,8 @@ const contextMockWithDf = ({
   ...contextMock,
   df: {
     callActivityWithRetry: jest.fn().mockReturnValue(activitySuccess()),
-    getInput: mockGetInput
+    getInput: mockGetInput,
+    setCustomStatus: jest.fn()
   }
 } as unknown) as IOrchestrationFunctionContext;
 
@@ -122,10 +123,12 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
       legacyNotificationHubConfig: aNotificationHubConfig
     })(contextMockWithDf as any);
 
-    const res = consumeGenerator(orchestratorHandler);
-
-    expect(OrchestratorFailure.is(res)).toBe(true);
-
-    expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    expect.assertions(2);
+    try {
+      consumeGenerator(orchestratorHandler);
+    } catch (err) {
+      expect(OrchestratorFailure.is(err)).toBe(true);
+      expect(contextMockWithDf.df.callActivityWithRetry).not.toBeCalled();
+    }
   });
 });

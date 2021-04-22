@@ -3,16 +3,21 @@
  */
 
 import * as t from "io-ts";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
-import { NotificationHubService } from "azure-sb";
+import { toString } from "fp-ts/lib/function";
+
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import { either, Either, left } from "fp-ts/lib/Either";
+import { fromNullable as fromNullableO } from "fp-ts/lib/Option";
+
+import { NotificationHubService, Azure } from "azure-sb";
 import {
   getKeepAliveAgentOptions,
   newHttpsAgent
 } from "italia-ts-commons/lib/agent";
-import { Platform, PlatformEnum } from "../generated/backend/Platform";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
+import { Platform, PlatformEnum } from "../generated/backend/Platform";
 /**
  * Notification template.
  *
@@ -142,6 +147,54 @@ const successNH = (): NHResultSuccess =>
     kind: "SUCCESS"
   });
 
+/** Check if an Azure ServiceBus Dictionary is empty */
+const dictionaryIsEmpty = (
+  obj: Azure.ServiceBus.Dictionary<string | unknown>
+): boolean => Object.keys(obj).length === 0;
+
+/** Compose the error message coming from NH */
+const composeNHErrorMessage = (
+  err: Error,
+  response: Azure.ServiceBus.Response
+): string =>
+  fromNullableO(response)
+    .map(
+      res =>
+        !res.body || dictionaryIsEmpty(res.body)
+          ? "No response body"
+          : toString(res.body).replace(/\n/gim, " ") // avoid newlines
+    )
+    .map(innerMessage =>
+      innerMessage
+        ? `[error message: ${err.message}] [response: ${response.statusCode} - ${innerMessage}]`
+        : `[error message: ${err.message}] [response: ${response.statusCode}]`
+    )
+    .getOrElse(`[error message: ${err.message}]`);
+
+/**
+ * Handle the Azure Notification Hub callback and
+ * return either an Error or a `NHResultSuccess`
+ *
+ * @param err The error message from Notification Hub, if any
+ * @param response The response from Notification Hub
+ * @returns either an Error or a success result
+ */
+const handleResponseOrError = (
+  err: Error | null,
+  response: Azure.ServiceBus.Response
+): Either<Error, NHResultSuccess> =>
+  err == null
+    ? either.of(successNH())
+    : left(new Error(composeNHErrorMessage(err, response)));
+
+/**
+ * Call `Notify Message` to Notification Hub
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to notify
+ * @param payload The message payload
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const notify = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
@@ -161,18 +214,26 @@ export const notify = (
               ["apns-push-type"]: APNSPushType.ALERT
             }
           },
-          (error, _) =>
-            error == null
-              ? resolve(successNH())
-              : reject(
-                  `Error while sending notification to NotificationHub|${error.message}`
-                )
+          (err, response) =>
+            handleResponseOrError(err, response)
+              .mapLeft(reject)
+              .map(resolve)
         )
       ),
     errs =>
       new Error(`Error while sending notification to NotificationHub|${errs}`)
   );
 
+/**
+ * Call `Create or Update Installation` to Notification Hub for an Installation Id
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to create or update
+ * @param platform The user's device platform (cgm or apns)
+ * @param pushChannel The user's device notification token
+ * @param tags An array of tags
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const createOrUpdateInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString,
@@ -198,13 +259,11 @@ export const createOrUpdateInstallation = (
       new Promise<NHResultSuccess>((resolve, reject) =>
         notificationHubService.createOrUpdateInstallation(
           azureInstallationOptions,
-          (err, _) =>
-            err == null
-              ? resolve(successNH())
-              : reject(
-                  `Error while creating or updating installation on NotificationHub [
-                    ${installationId}] [${err.message}]`
-                )
+          // eslint-disable-next-line sonarjs/no-identical-functions
+          (err, response) =>
+            handleResponseOrError(err, response)
+              .mapLeft(reject)
+              .map(resolve)
         )
       ),
     errs =>
@@ -214,6 +273,13 @@ export const createOrUpdateInstallation = (
   );
 };
 
+/**
+ * Call `Delete Installation` to Notification Hub
+ *
+ * @param notificationHubService The Notification Hub to call
+ * @param installationId The `Installation Id` to delete
+ * @returns An `NHResultSuccess` or an `Error`
+ */
 export const deleteInstallation = (
   notificationHubService: NotificationHubService,
   installationId: NonEmptyString
@@ -221,12 +287,13 @@ export const deleteInstallation = (
   tryCatch(
     () =>
       new Promise<NHResultSuccess>((resolve, reject) =>
-        notificationHubService.deleteInstallation(installationId, (e, _) =>
-          e == null
-            ? resolve(successNH())
-            : reject(
-                `Error while deleting installation on NotificationHub [${installationId}] [${e.message}]`
-              )
+        notificationHubService.deleteInstallation(
+          installationId,
+          // eslint-disable-next-line sonarjs/no-identical-functions
+          (err, response) =>
+            handleResponseOrError(err, response)
+              .mapLeft(reject)
+              .map(resolve)
         )
       ),
     errs =>
