@@ -6,7 +6,7 @@ import * as t from "io-ts";
 
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { either, Either, left } from "fp-ts/lib/Either";
-import { fromNullable, some } from "fp-ts/lib/Option";
+import { fromNullable as fromNullableO } from "fp-ts/lib/Option";
 
 import { NotificationHubService, Azure } from "azure-sb";
 import {
@@ -155,7 +155,7 @@ const composeNHErrorMessage = (
   err: Error,
   response: Azure.ServiceBus.Response
 ): string =>
-  fromNullable(response)
+  fromNullableO(response)
     .map(res =>
       !res.body || dictionaryIsEmpty(res.body) ? "No response body" : res.body
     )
