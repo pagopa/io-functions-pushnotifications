@@ -156,10 +156,8 @@ const composeNHErrorMessage = (
   response: Azure.ServiceBus.Response
 ): string =>
   fromNullable(response)
-    .chain(res =>
-      some(
-        !res.body || dictionaryIsEmpty(res.body) ? "No response body" : res.body
-      )
+    .map(res =>
+      !res.body || dictionaryIsEmpty(res.body) ? "No response body" : res.body
     )
     .map(innerMessage =>
       innerMessage
