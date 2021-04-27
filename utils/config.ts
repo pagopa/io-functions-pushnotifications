@@ -5,7 +5,6 @@
  * The configuration is evaluate eagerly at the first access to the module. The module exposes convenient methods to access such value.
  */
 
-import { None } from "fp-ts/lib/Option";
 import * as t from "io-ts";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
@@ -13,8 +12,6 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { withDefault } from "italia-ts-commons/lib/types";
 import {
   DisjoitedNotificationHubPartitionArray,
-  jsonFromString,
-  NotificationHubPartition,
   RegExpFromString
 } from "./types";
 
@@ -26,8 +23,33 @@ export const NHPartitionFeatureFlag = t.keyof({
   none: null
 });
 
-// global app configuration
-//const UnknownToEnvWithScalarValues = {} as t.Mixed; // {...process.env, NH1_NAME.....}
+// Fixed Notification Hub partition configurations
+// Partitions are meant to be fixed and not to be extendable at wish
+// The following variables will be needed from the app configuration, but will then be computed into an array of struct for convenience
+export type NotificationHubPartitionsConfig = t.TypeOf<
+  typeof NotificationHubPartitionsConfig
+>;
+const NotificationHubPartitionsConfig = t.interface({
+  NH1_ENDPOINT: NonEmptyString,
+  NH1_NAME: NonEmptyString,
+  NH1_PARTITION_REGEX: RegExpFromString,
+
+  NH2_ENDPOINT: NonEmptyString,
+  NH2_NAME: NonEmptyString,
+  NH2_PARTITION_REGEX: RegExpFromString,
+
+  NH3_ENDPOINT: NonEmptyString,
+  NH3_NAME: NonEmptyString,
+  NH3_PARTITION_REGEX: RegExpFromString,
+
+  NH4_ENDPOINT: NonEmptyString,
+  NH4_NAME: NonEmptyString,
+  NH4_PARTITION_REGEX: RegExpFromString
+});
+
+/**
+ * Global app configuration
+ */
 export type BaseConfig = t.TypeOf<typeof BaseConfig>;
 const BaseConfig = t.intersection([
   t.interface({
@@ -44,25 +66,10 @@ const BaseConfig = t.intersection([
     isProduction: t.boolean
   }),
 
+  // Legacy Notification Hub configuration
   t.interface({
     AZURE_NH_ENDPOINT: NonEmptyString,
-    AZURE_NH_HUB_NAME: NonEmptyString,
-
-    NH1_ENDPOINT: NonEmptyString,
-    NH1_NAME: NonEmptyString,
-    NH1_PARTITION_REGEX: RegExpFromString,
-
-    NH2_ENDPOINT: NonEmptyString,
-    NH2_NAME: NonEmptyString,
-    NH2_PARTITION_REGEX: RegExpFromString,
-
-    NH3_ENDPOINT: NonEmptyString,
-    NH3_NAME: NonEmptyString,
-    NH3_PARTITION_REGEX: RegExpFromString,
-
-    NH4_ENDPOINT: NonEmptyString,
-    NH4_NAME: NonEmptyString,
-    NH4_PARTITION_REGEX: RegExpFromString
+    AZURE_NH_HUB_NAME: NonEmptyString
   }),
 
   t.interface({
@@ -74,46 +81,39 @@ const BaseConfig = t.intersection([
   t.partial({ APPINSIGHTS_DISABLE: t.string })
 ]);
 
-type A = Exclude<
-  BaseConfig,
-  | "NH1_ENDPOINT"
-  | "NH1_NAME"
-  | "NH1_PARTITION_REGEX"
-  | "NH2_ENDPOINT"
-  | "NH2_NAME"
-  | "NH2_PARTITION_REGEX"
-  | "NH3_ENDPOINT"
-  | "NH3_NAME"
-  | "NH3_PARTITION_REGEX"
-  | "NH4_ENDPOINT"
-  | "NH4_NAME"
-  | "NH4_PARTITION_REGEX"
-> & {
+/**
+ * Extends the app base configuration
+ * by computing fixed Notification Hub partition configurations
+ * into a single array of struct named AZURE_NOTIFICATION_HUB_PARTITIONS.
+ */
+type WithComputedNHPartitions = BaseConfig & {
   readonly AZURE_NOTIFICATION_HUB_PARTITIONS: DisjoitedNotificationHubPartitionArray;
 };
-
-const NhConfigToBase = new t.Type<A, BaseConfig, BaseConfig>(
-  "NhConfigToBase",
-  (v: unknown): v is A =>
+const WithComputedNHPartitions = new t.Type<
+  WithComputedNHPartitions,
+  BaseConfig & NotificationHubPartitionsConfig,
+  BaseConfig & NotificationHubPartitionsConfig
+>(
+  "WithComputedNHPartitions",
+  (v: unknown): v is WithComputedNHPartitions =>
     BaseConfig.is(v) && "AZURE_NOTIFICATION_HUB_PARTITIONS" in v,
-  (v, _c): t.Validation<A> => {
-    const {
-      NH1_ENDPOINT,
-      NH1_NAME,
-      NH1_PARTITION_REGEX,
-      NH2_ENDPOINT,
-      NH2_NAME,
-      NH2_PARTITION_REGEX,
-      NH3_ENDPOINT,
-      NH3_NAME,
-      NH3_PARTITION_REGEX,
-      NH4_ENDPOINT,
-      NH4_NAME,
-      NH4_PARTITION_REGEX,
-      ...rest
-    } = v;
-    const baseConfig = rest as BaseConfig;
-    const nhPartitions = [
+  ({
+    NH1_ENDPOINT,
+    NH1_NAME,
+    NH1_PARTITION_REGEX,
+    NH2_ENDPOINT,
+    NH2_NAME,
+    NH2_PARTITION_REGEX,
+    NH3_ENDPOINT,
+    NH3_NAME,
+    NH3_PARTITION_REGEX,
+    NH4_ENDPOINT,
+    NH4_NAME,
+    NH4_PARTITION_REGEX,
+    ...baseConfig
+  }): t.Validation<WithComputedNHPartitions> =>
+    // decode the fixed array of NH partitions...
+    DisjoitedNotificationHubPartitionArray.decode([
       {
         endpoint: NH1_ENDPOINT,
         name: NH1_NAME,
@@ -134,33 +134,36 @@ const NhConfigToBase = new t.Type<A, BaseConfig, BaseConfig>(
         name: NH4_NAME,
         partitionRegex: NH4_PARTITION_REGEX
       }
-    ];
-    return DisjoitedNotificationHubPartitionArray.decode(nhPartitions).map(
-      partitions => ({
+    ])
+      // ...then add the key to the base config
+      .map(partitions => ({
         ...baseConfig,
         AZURE_NOTIFICATION_HUB_PARTITIONS: partitions
-      })
-    );
-  },
-  (v: A): BaseConfig => {
+      })),
+  (
+    v: WithComputedNHPartitions
+  ): BaseConfig & NotificationHubPartitionsConfig => {
     const { AZURE_NOTIFICATION_HUB_PARTITIONS, ...rest } = v;
     return {
       ...rest,
       ...AZURE_NOTIFICATION_HUB_PARTITIONS.reduce(
         (p, e, i) => ({
           ...p,
+          // reconstruct the key set from the array
           [`NH${i}_ENDPOINT`]: e.endpoint,
           [`NH${i}_NAME`]: e.name,
           [`NH${i}_PARTITION_REGEX`]: e.partitionRegex
         }),
         {}
       )
-    };
+    } as BaseConfig & NotificationHubPartitionsConfig; // cast needed because TS cannot understand types when we compose keys with strings
   }
 );
 
 export type IConfig = t.TypeOf<typeof IConfig>;
-export const IConfig = BaseConfig.pipe(NhConfigToBase);
+export const IConfig = t
+  .intersection([BaseConfig, NotificationHubPartitionsConfig])
+  .pipe(WithComputedNHPartitions);
 
 // No need to re-evaluate this object for each call
 const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
