@@ -1,9 +1,10 @@
 import { isRight } from "fp-ts/lib/Either";
 import { IConfig } from "../config";
-import { envConfig } from "../../__mocks__/env-config.mock";
+import { envConfig } from "../../__mocks__/env.mock";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { readableReport } from "italia-ts-commons/lib/reporters";
 
-const aConfig = envConfig;
+const aConfig = { ...envConfig, isProduction: false };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -20,8 +21,9 @@ describe("IConfig", () => {
     var decoded = IConfig.decode({
       ...aConfig,
       NH_PARTITION_FEATURE_FLAG: ff
-    });
-    expect(isRight(decoded)).toBe(true);
+    }).getOrElseL(e => fail(`Cannot decode config, ${readableReport(e)}`));
+
+    expect(typeof decoded).toBe("object");
   });
 
   it("should throw error with wrong FF inputs", () => {
@@ -33,95 +35,13 @@ describe("IConfig", () => {
     expect(isRight(decoded)).toBe(false);
   });
 
-  it("should throw error with wrong array of NH partitions - wrong object", () => {
-    var configDecodedWrong = IConfig.decode({
+  it("should not override computed value for AZURE_NOTIFICATION_HUB_PARTITIONS", () => {
+    var config = IConfig.decode({
       ...aConfig,
-      AZURE_NOTIFICATION_HUB_PARTITIONS:
-        '[{ "partitionRegex": "^[0-3]", "name": "name", }]'
-    });
+      AZURE_NOTIFICATION_HUB_PARTITIONS: "any value"
+    }).getOrElseL(e => fail(`Cannot decode config, ${readableReport(e)}`));
 
-    expect(isRight(configDecodedWrong)).toBe(false);
-  });
-
-  it("should throw error with wrong array of NH partitions - not an array", () => {
-    var configDecodedWrong = IConfig.decode({
-      ...aConfig,
-      AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify({
-        partitionRegex: "^[c-f]" as NonEmptyString,
-        name: "io-notification-hub-mock" as NonEmptyString,
-        namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-        sharedAccessKey: "anAccessKey" as NonEmptyString
-      })
-    });
-
-    expect(isRight(configDecodedWrong)).toBe(false);
-  });
-
-  it("should throw error with wrong array of NH partitions - at least one regex not starting from first character", () => {
-    var configDecodedWrong = IConfig.decode({
-      ...aConfig,
-      AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
-        {
-          partitionRegex: "^[0-3]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "[4-7]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[8-b]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[c-f]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        }
-      ])
-    });
-
-    expect(isRight(configDecodedWrong)).toBe(false);
-  });
-
-  it("should throw error with wrong array of NH partitions - overlapping regex", () => {
-    var configDecodedWrong = IConfig.decode({
-      ...aConfig,
-      AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
-        {
-          partitionRegex: "^[0-8]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[4-7]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[8-b]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        },
-        {
-          partitionRegex: "^[c-f]" as NonEmptyString,
-          name: "io-notification-hub-mock" as NonEmptyString,
-          namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-          sharedAccessKey: "anAccessKey" as NonEmptyString
-        }
-      ])
-    });
-
-    expect(isRight(configDecodedWrong)).toBe(false);
+    expect(config.AZURE_NOTIFICATION_HUB_PARTITIONS).toEqual(expect.any(Array));
+    expect(config.AZURE_NOTIFICATION_HUB_PARTITIONS).not.toBe("any value");
   });
 });
