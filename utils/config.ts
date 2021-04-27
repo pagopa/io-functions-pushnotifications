@@ -10,7 +10,10 @@ import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { withDefault } from "italia-ts-commons/lib/types";
-import { nhDisjoitedFirstCharacterPartitionReadonlyArray } from "./types";
+import {
+  DisjoitedNotificationHubPartitionArray,
+  jsonFromString
+} from "./types";
 
 export type NHPartitionFeatureFlag = t.TypeOf<typeof NHPartitionFeatureFlag>;
 export const NHPartitionFeatureFlag = t.keyof({
@@ -41,7 +44,9 @@ export const IConfig = t.intersection([
     AZURE_NH_ENDPOINT: NonEmptyString,
     AZURE_NH_HUB_NAME: NonEmptyString,
 
-    AZURE_NOTIFICATION_HUB_PARTITIONS: nhDisjoitedFirstCharacterPartitionReadonlyArray
+    AZURE_NOTIFICATION_HUB_PARTITIONS: jsonFromString.pipe(
+      DisjoitedNotificationHubPartitionArray
+    )
   }),
 
   t.interface({

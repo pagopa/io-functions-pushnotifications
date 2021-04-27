@@ -5,41 +5,32 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
 const aConfig = envConfig;
 
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe("IConfig", () => {
-  it("should deserialize right FF input", () => {
-    var configDecoded_All = IConfig.decode(aConfig);
-
-    expect(isRight(configDecoded_All)).toBeTruthy();
-
-    var configDecoded_None = IConfig.decode({
+  it.each`
+    ff
+    ${"all"}
+    ${"none"}
+    ${"beta"}
+    ${"canary"}
+  `("should deserialize config with $ff user subset", ({ ff }) => {
+    var decoded = IConfig.decode({
       ...aConfig,
-      NH_PARTITION_FEATURE_FLAG: "none"
+      NH_PARTITION_FEATURE_FLAG: ff
     });
-
-    expect(isRight(configDecoded_None)).toBeTruthy();
-
-    var configDecoded_Beta = IConfig.decode({
-      ...aConfig,
-      NH_PARTITION_FEATURE_FLAG: "beta"
-    });
-
-    expect(isRight(configDecoded_Beta)).toBeTruthy();
-
-    var configDecoded_Canary = IConfig.decode({
-      ...aConfig,
-      NH_PARTITION_FEATURE_FLAG: "canary"
-    });
-
-    expect(isRight(configDecoded_Canary)).toBeTruthy();
+    expect(isRight(decoded)).toBe(true);
   });
 
   it("should throw error with wrong FF inputs", () => {
-    var configDecoded_Wrong = IConfig.decode({
+    var decoded = IConfig.decode({
       ...aConfig,
       NH_PARTITION_FEATURE_FLAG: "wrong"
     });
 
-    expect(isRight(configDecoded_Wrong)).toBeFalsy();
+    expect(isRight(decoded)).toBe(false);
   });
 
   it("should throw error with wrong array of NH partitions - wrong object", () => {
@@ -49,7 +40,7 @@ describe("IConfig", () => {
         '[{ "partitionRegex": "^[0-3]", "name": "name", }]'
     });
 
-    expect(isRight(configDecodedWrong)).toBeFalsy();
+    expect(isRight(configDecodedWrong)).toBe(false);
   });
 
   it("should throw error with wrong array of NH partitions - not an array", () => {
@@ -63,7 +54,7 @@ describe("IConfig", () => {
       })
     });
 
-    expect(isRight(configDecodedWrong)).toBeFalsy();
+    expect(isRight(configDecodedWrong)).toBe(false);
   });
 
   it("should throw error with wrong array of NH partitions - at least one regex not starting from first character", () => {
@@ -97,7 +88,7 @@ describe("IConfig", () => {
       ])
     });
 
-    expect(isRight(configDecodedWrong)).toBeFalsy();
+    expect(isRight(configDecodedWrong)).toBe(false);
   });
 
   it("should throw error with wrong array of NH partitions - overlapping regex", () => {
@@ -131,6 +122,6 @@ describe("IConfig", () => {
       ])
     });
 
-    expect(isRight(configDecodedWrong)).toBeFalsy();
+    expect(isRight(configDecodedWrong)).toBe(false);
   });
 });

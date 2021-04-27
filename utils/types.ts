@@ -3,14 +3,13 @@ import { identity } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
-export type JSONFromString = t.TypeOf<typeof jsonFromString>;
 /**
  * Parses a string into a deserialized json
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export const jsonFromString = new t.Type<object, string>(
+export type JSONFromString = t.TypeOf<typeof jsonFromString>;
+export const jsonFromString = new t.Type<object, string>( // eslint-disable-line @typescript-eslint/ban-types
   "JSONFromString",
-  t.object.is,
+  t.UnknownRecord.is,
   (m, c) =>
     t.string.validate(m, c).chain(s =>
       tryCatch2v(
@@ -21,36 +20,60 @@ export const jsonFromString = new t.Type<object, string>(
   String
 );
 
-export type NotificationHubPartitions = t.TypeOf<
-  typeof notificationHubPartitions
+/**
+ * A coded which creates RegExp from strings
+ */
+export type RegExpFromString = t.TypeOf<typeof RegExpFromString>;
+export const RegExpFromString = new t.Type<RegExp, string>(
+  "RegExpFromString",
+  (v: unknown): v is RegExp => v instanceof RegExp,
+  (v, c): t.Validation<RegExp> =>
+    v instanceof RegExp
+      ? t.success(v)
+      : typeof v === "string"
+      ? t.success(new RegExp(v))
+      : t.failure(v, c),
+  (v: RegExp | string): string => (typeof v === "string" ? v : v.source)
+);
+
+/**
+ * Define the structure of a partition definition
+ */
+export type NotificationHubPartition = t.TypeOf<
+  typeof NotificationHubPartition
 >;
-const notificationHubPartitions = t.interface({
+export const NotificationHubPartition = t.interface({
   name: NonEmptyString,
   namespace: NonEmptyString,
-  partitionRegex: NonEmptyString,
+  partitionRegex: RegExpFromString, // TODO: enforce it must include first caracter
   sharedAccessKey: NonEmptyString
 });
 
-export type NHDisjoitedFirstCharacterPartitionReadonlyArray = t.TypeOf<
-  typeof nhDisjoitedFirstCharacterPartitionReadonlyArray
+/**
+ * A codec that ensures that, given an array of partition definitions,
+ * they cover the entire space pf HEX characters without overlap or leaving gapes
+ */
+export type DisjoitedNotificationHubPartitionArray = t.TypeOf<
+  typeof DisjoitedNotificationHubPartitionArray
 >;
-export const nhDisjoitedFirstCharacterPartitionReadonlyArray = t.refinement(
-  jsonFromString.pipe(t.readonlyArray(notificationHubPartitions)),
+export const DisjoitedNotificationHubPartitionArray = t.refinement(
+  t.readonlyArray(NotificationHubPartition),
   array => {
     const partitionsRegex = array.map(a => a.partitionRegex);
     const initialHexCharacter = Array.from({ length: 16 }, (_, i) =>
       i.toString(16)
     );
     // Regex must all check fist character
-    const useFirstLetter = !partitionsRegex.some(r => !r.includes("^"));
+    const useFirstLetter = !partitionsRegex.some(
+      r => !r.toString().includes("^")
+    );
 
     // Partitions needs to be complete and disjoint
     const oneAndOnlyPartition = !initialHexCharacter.some(
-      hex =>
-        partitionsRegex.filter(regex => new RegExp(regex).test(hex)).length !==
-        1
+      hex => partitionsRegex.filter(regex => regex.test(hex)).length !== 1
     );
+
     return useFirstLetter && oneAndOnlyPartition;
   },
-  "nhDisjoitedFirstCharacterPartitionReadonlyArray"
+  "DisjoitedNotificationHubPartitionArray"
 );

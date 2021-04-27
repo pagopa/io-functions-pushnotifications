@@ -15,7 +15,6 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import { readableReport } from "italia-ts-commons/lib/reporters";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
@@ -23,8 +22,6 @@ import {
   buildNHConnectionString,
   buildNHService
 } from "./notificationhubServicePartition";
-
-import { NotificationHubPartitions } from "./types";
 
 type ProblemSource = "AzureStorage" | "AzureNotificationHub" | "Config" | "Url";
 export type HealthProblem<S extends ProblemSource> = string & {
@@ -76,10 +73,7 @@ export const checkAzureNotificationHub = ({
       [
         { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
         ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
-          AZURE_NH_ENDPOINT: buildNHConnectionString({
-            namespace: p.namespace,
-            sharedAccessKey: p.sharedAccessKey
-          } as NotificationHubPartitions) as NonEmptyString,
+          AZURE_NH_ENDPOINT: buildNHConnectionString(p),
           AZURE_NH_HUB_NAME: p.name
         }))
       ].map(connString =>
