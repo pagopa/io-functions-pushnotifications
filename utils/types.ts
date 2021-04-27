@@ -43,10 +43,9 @@ export type NotificationHubPartition = t.TypeOf<
   typeof NotificationHubPartition
 >;
 export const NotificationHubPartition = t.interface({
+  endpoint: NonEmptyString,
   name: NonEmptyString,
-  namespace: NonEmptyString,
-  partitionRegex: RegExpFromString,
-  sharedAccessKey: NonEmptyString
+  partitionRegex: RegExpFromString
 });
 
 /**

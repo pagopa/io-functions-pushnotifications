@@ -18,10 +18,7 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
-import {
-  buildNHConnectionString,
-  buildNHService
-} from "./notificationhubServicePartition";
+import { buildNHService } from "./notificationhubServicePartition";
 
 type ProblemSource = "AzureStorage" | "AzureNotificationHub" | "Config" | "Url";
 export type HealthProblem<S extends ProblemSource> = string & {
@@ -73,7 +70,7 @@ export const checkAzureNotificationHub = ({
       [
         { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
         ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
-          AZURE_NH_ENDPOINT: buildNHConnectionString(p),
+          AZURE_NH_ENDPOINT: p.endpoint,
           AZURE_NH_HUB_NAME: p.name
         }))
       ].map(connString =>

@@ -5,7 +5,6 @@ import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";
-import { NotificationHubPartition } from "./types";
 
 export const NotificationHubConfig = t.interface({
   AZURE_NH_ENDPOINT: NonEmptyString,
@@ -37,15 +36,6 @@ export const testShaForPartitionRegex = (
 ): boolean => (typeof regex === "string" ? new RegExp(regex) : regex).test(sha);
 
 /**
- * @returns A connection string based on NH namespace and sharedAccessKey provided
- */
-export const buildNHConnectionString = ({
-  namespace,
-  sharedAccessKey
-}: NotificationHubPartition): NonEmptyString =>
-  `Endpoint=sb://${namespace}.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=${sharedAccessKey}` as NonEmptyString;
-
-/**
  * It returns the configuration related to one of the new Notification Hub instances
  * based on the partion mechanism defined
  *
@@ -60,7 +50,7 @@ export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
   );
 
   if (partition) {
-    const connectionString = buildNHConnectionString(partition);
+    const connectionString = partition.endpoint;
 
     return {
       AZURE_NH_ENDPOINT: connectionString,

@@ -28,9 +28,8 @@ describe("nhDisjoitedFirstCharacterPartitionReadonlyArray", () => {
     (partitionRegex, i) =>
       NotificationHubPartition.decode({
         name: `partition${i}`,
-        namespace: `ns${i}`,
         partitionRegex,
-        sharedAccessKey: "shared"
+        endpoint: "an endpoint"
       }).getOrElseL(e =>
         fail(
           `Cannot decode NotificationHubPartitions, i: ${i} error: ${readableReport(
