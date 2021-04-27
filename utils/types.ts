@@ -45,7 +45,7 @@ export type NotificationHubPartition = t.TypeOf<
 export const NotificationHubPartition = t.interface({
   name: NonEmptyString,
   namespace: NonEmptyString,
-  partitionRegex: RegExpFromString, // TODO: enforce it must include first caracter
+  partitionRegex: RegExpFromString,
   sharedAccessKey: NonEmptyString
 });
 
