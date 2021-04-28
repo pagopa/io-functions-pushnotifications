@@ -221,7 +221,9 @@ export const notify = (
         )
       ),
     errs =>
-      new Error(`Error while sending notification to NotificationHub|${errs}`)
+      new Error(
+        `Error while sending notification to NotificationHub [${installationId}] [${errs}]`
+      )
   );
 
 /**

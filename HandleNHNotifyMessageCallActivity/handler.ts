@@ -42,7 +42,7 @@ export const getActivityBody = (
   const nhService = buildNHService(input.notificationHubConfig);
   return notify(nhService, input.message.installationId, input.message.payload)
     .bimap(
-      e => retryActivity(logger, `ERROR=${toString(e)}`),
+      e => retryActivity(logger, toString(e)),
       ActivityResultSuccess.encode
     )
     .chainFirst(

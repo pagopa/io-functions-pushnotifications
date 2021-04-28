@@ -109,9 +109,18 @@ export const callableActivity = <
     context: IOrchestrationFunctionContext,
     input: I
   ): Generator<Task, S> {
-    const result = yield typeof retryOptions === "undefined"
-      ? context.df.callActivity(activityName, input)
-      : context.df.callActivityWithRetry(activityName, retryOptions, input);
+    // eslint-disable-next-line functional/no-let
+    let result: unknown;
+    try {
+      result = yield typeof retryOptions === "undefined"
+        ? context.df.callActivity(activityName, input)
+        : context.df.callActivityWithRetry(activityName, retryOptions, input);
+    } catch (e) {
+      throw failureActivity(
+        activityName,
+        e instanceof Error ? e.message : e.reason
+      );
+    }
 
     return either
       .of<ActivityResultFailure | Error, unknown>(result)
