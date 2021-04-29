@@ -49,7 +49,7 @@ export const createLogger = (
             failure,
             `unknown failure kind, failure: ${toString(failure)}`
           );
-    context.log.error(log);
+    context.log.error(`${log}|${verbose}`);
     context.log.verbose(`${log}|${verbose}`);
   },
   info: (s: string): void => {

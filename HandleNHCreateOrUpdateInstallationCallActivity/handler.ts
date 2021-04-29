@@ -43,7 +43,7 @@ export const getActivityBody = (
     input.pushChannel,
     input.tags
   ).bimap(
-    e => retryActivity(logger, `ERROR=${toString(e)}`),
+    e => retryActivity(logger, toString(e)),
     ActivityResultSuccess.encode
   );
 };

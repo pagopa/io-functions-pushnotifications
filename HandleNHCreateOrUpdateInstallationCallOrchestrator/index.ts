@@ -1,48 +1,48 @@
 ﻿import * as df from "durable-functions";
-import * as o from "../utils/durable/orchestrators";
 
 import { getConfigOrThrow } from "../utils/config";
 
-import {
-  ActivityInput as CreateOrUpdateActivityInput,
-  activityName as CreateOrUpdateActivityName,
-  ActivityResultSuccess as CreateOrUpdateActivityResultSuccess
-} from "../HandleNHCreateOrUpdateInstallationCallActivity";
-import {
-  ActivityInput as IsUserInActiveSubsetActivityInput,
-  activityName as IsUserInActiveSubsetActivityName,
-  activityResultSuccessWithValue as isUserInActiveSubsetActivitySuccess,
-  ActivityResultSuccessWithValue as IsUserInActiveSubsetResultSuccess
-} from "../IsUserInActiveSubsetActivity";
+import { getCallableActivity as getCreateOrUpdateCallableActivity } from "../HandleNHCreateOrUpdateInstallationCallActivity";
+import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
+import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
-import { getNHLegacyConfig } from "../utils/notificationhubServicePartition";
+import {
+  getNHLegacyConfig,
+  getNotificationHubPartitionConfig
+} from "../utils/notificationhubServicePartition";
+
 import { getHandler } from "./handler";
 
 const config = getConfigOrThrow();
 
-const createOrUpdateActivity = o.callableActivity<CreateOrUpdateActivityInput>(
-  CreateOrUpdateActivityName,
-  CreateOrUpdateActivityResultSuccess,
+const createOrUpdateActivity = getCreateOrUpdateCallableActivity({
+  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+  backoffCoefficient: 1.5
+});
+
+const deleteInstallationActivity = getDeleteInstallationCallableActivity({
+  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
+  backoffCoefficient: 1.5
+});
+
+const isUserInActiveTestSubsetActivity = getIsUserInActiveSubsetActivityCallableActivity(
   {
     ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
     backoffCoefficient: 1.5
   }
 );
 
-const isUserInActiveTestSubsetActivity = o.callableActivity<
-  IsUserInActiveSubsetActivityInput,
-  IsUserInActiveSubsetResultSuccess
->(IsUserInActiveSubsetActivityName, isUserInActiveSubsetActivitySuccess, {
-  ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-  backoffCoefficient: 1.5
-});
-
-const notificationHubConfig = getNHLegacyConfig(config);
+const legacyNotificationHubConfig = getNHLegacyConfig(config);
+const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
+  config
+);
 
 const handler = getHandler({
   createOrUpdateActivity,
+  deleteInstallationActivity,
   isUserInActiveTestSubsetActivity,
-  notificationHubConfig
+  legacyNotificationHubConfig,
+  notificationHubConfigPartitionChooser
 });
 
 const orchestrator = df.orchestrator(handler);

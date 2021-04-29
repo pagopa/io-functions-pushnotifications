@@ -1,4 +1,4 @@
-import { IConfig, NHPartitionFeatureFlag } from "../utils/config";
+import { IConfig } from "../utils/config";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 
@@ -12,6 +12,33 @@ export const envConfig: IConfig = {
   AzureWebJobsStorage: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
+
+  AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
+    {
+      partitionRegex: "^[0-3]" as NonEmptyString,
+      name: "io-notification-hub-mock" as NonEmptyString,
+      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
+      sharedAccessKey: "anAccessKey" as NonEmptyString
+    },
+    {
+      partitionRegex: "^[4-7]" as NonEmptyString,
+      name: "io-notification-hub-mock" as NonEmptyString,
+      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
+      sharedAccessKey: "anAccessKey" as NonEmptyString
+    },
+    {
+      partitionRegex: "^[8-b]" as NonEmptyString,
+      name: "io-notification-hub-mock" as NonEmptyString,
+      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
+      sharedAccessKey: "anAccessKey" as NonEmptyString
+    },
+    {
+      partitionRegex: "^[c-f]" as NonEmptyString,
+      name: "io-notification-hub-mock" as NonEmptyString,
+      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
+      sharedAccessKey: "anAccessKey" as NonEmptyString
+    }
+  ]) as any,
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
 
