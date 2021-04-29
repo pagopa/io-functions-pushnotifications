@@ -67,10 +67,12 @@ export const getHandler = ({
       });
 
       if (isUserATestUser.value) {
-        logger.info(`TEST_USER:${installationId}`);
-
         const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
           installationId
+        );
+
+        logger.info(
+          `Pushing the message to user ${installationId} on Notification Hub ${notificationHubConfigPartition.AZURE_NH_HUB_NAME}`
         );
 
         yield* notifyMessageActivity(context, {
