@@ -50,8 +50,10 @@ export const getActivityBody = (
         telemetryClient.trackEvent({
           name: "api.messages.notification.push.sent",
           properties: {
+            installationId: input.message.installationId,
             isSuccess: "true",
-            messageId: input.message.payload.message_id
+            messageId: input.message.payload.message_id,
+            notificationHub: input.notificationHubConfig.AZURE_NH_HUB_NAME
           },
           tagOverrides: { samplingEnabled: "false" }
         })
