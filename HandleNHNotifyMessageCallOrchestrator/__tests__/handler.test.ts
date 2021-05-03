@@ -58,8 +58,6 @@ const retryOptions = {
   backoffCoefficient: 1.5
 };
 
-const mockIsUserATestUserActivityTrue = getMockIsUserATestUserActivity(true);
-const mockIsUserATestUserActivityFalse = getMockIsUserATestUserActivity(false);
 const mockNotifyMessageActivitySuccess = getMockNotifyMessageInstallationActivity(
   success()
 );
@@ -82,7 +80,6 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity: mockNotifyMessageActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -101,7 +98,6 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
   it("should end the activity with SUCCESS", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity: mockNotifyMessageActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -111,30 +107,9 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
     expect(res).toEqual(orchestratorSuccess());
   });
 
-  it("should call Notify Message one time with legacy parameters, if user is NOT a test user", async () => {
+  it("should always call Notify Message twice with both legacy and new parameters", async () => {
     const orchestratorHandler = getHandler({
       notifyMessageActivity: mockNotifyMessageActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
-      legacyNotificationHubConfig: legacyNotificationHubConfig,
-      notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
-    })(contextMockWithDf as any);
-
-    consumeGenerator(orchestratorHandler);
-
-    expect(mockNotifyMessageActivitySuccess).toHaveBeenCalledTimes(1);
-    expect(mockNotifyMessageActivitySuccess).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({
-        message: aNotifyMessage,
-        notificationHubConfig: legacyNotificationHubConfig
-      })
-    );
-  });
-
-  it("should call Notify Message twice with both legacy and new parameters, if user is a test user", async () => {
-    const orchestratorHandler = getHandler({
-      notifyMessageActivity: mockNotifyMessageActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -167,7 +142,6 @@ describe("HandleNHNotifyMessageCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler({
       notifyMessageActivity: mockNotifyMessageActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);

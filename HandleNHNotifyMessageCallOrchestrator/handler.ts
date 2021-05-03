@@ -3,7 +3,6 @@ import * as t from "io-ts";
 import { Task } from "durable-functions/lib/src/classes";
 
 import { getCallableActivity as getNotifyCallableActivity } from "../HandleNHNotifyMessageCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
@@ -31,9 +30,6 @@ export type NhNotifyMessageOrchestratorCallInput = t.TypeOf<
 
 interface IHandlerParams {
   readonly notifyMessageActivity: ReturnType<typeof getNotifyCallableActivity>;
-  readonly isUserInActiveTestSubsetActivity: ReturnType<
-    typeof getIsUserInActiveSubsetActivityCallableActivity
-  >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
   readonly notificationHubConfigPartitionChooser: ReturnType<
     typeof getNotificationHubPartitionConfig
@@ -43,7 +39,6 @@ interface IHandlerParams {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   notifyMessageActivity,
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
@@ -62,23 +57,17 @@ export const getHandler = ({
         notificationHubConfig: legacyNotificationHubConfig
       });
 
-      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+      const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
         installationId
+      );
+
+      logger.info(
+        `Pushing the message to user ${installationId} on Notification Hub ${notificationHubConfigPartition.AZURE_NH_HUB_NAME}`
+      );
+
+      yield* notifyMessageActivity(context, {
+        message,
+        notificationHubConfig: notificationHubConfigPartition
       });
-
-      if (isUserATestUser.value) {
-        const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
-          installationId
-        );
-
-        logger.info(
-          `Pushing the message to user ${installationId} on Notification Hub ${notificationHubConfigPartition.AZURE_NH_HUB_NAME}`
-        );
-
-        yield* notifyMessageActivity(context, {
-          message,
-          notificationHubConfig: notificationHubConfigPartition
-        });
-      }
     }
   );
