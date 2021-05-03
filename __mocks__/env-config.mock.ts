@@ -13,32 +13,28 @@ export const envConfig: IConfig = {
   AZURE_NH_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
 
-  AZURE_NOTIFICATION_HUB_PARTITIONS: JSON.stringify([
+  AZURE_NOTIFICATION_HUB_PARTITIONS: [
     {
       partitionRegex: "^[0-3]" as NonEmptyString,
       name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
+      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
     },
     {
       partitionRegex: "^[4-7]" as NonEmptyString,
       name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
+      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
     },
     {
       partitionRegex: "^[8-b]" as NonEmptyString,
       name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
+      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
     },
     {
       partitionRegex: "^[c-f]" as NonEmptyString,
       name: "io-notification-hub-mock" as NonEmptyString,
-      namespace: "io-p-ntfns-sandbox" as NonEmptyString,
-      sharedAccessKey: "anAccessKey" as NonEmptyString
+      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
     }
-  ]) as any,
+  ] as any,
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
 
