@@ -1,7 +1,6 @@
 import * as df from "durable-functions";
 
 import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 import { getConfigOrThrow } from "../utils/config";
 import {
@@ -17,13 +16,6 @@ const deleteInstallationActivity = getDeleteInstallationCallableActivity({
   backoffCoefficient: 1.5
 });
 
-const isUserInActiveTestSubsetActivity = getIsUserInActiveSubsetActivityCallableActivity(
-  {
-    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  }
-);
-
 const legacyNotificationHubConfig = getNHLegacyConfig(config);
 const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
   config
@@ -31,7 +23,6 @@ const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
 
 const handler = getHandler({
   deleteInstallationActivity,
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser
 });
