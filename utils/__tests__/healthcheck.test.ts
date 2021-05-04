@@ -7,9 +7,6 @@ import {
   checkAzureStorageHealth
 } from "../healthcheck";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { IConfig } from "../config";
-
 import * as azure from "azure-sb";
 
 const azure_storage = require("azure-storage");
@@ -41,10 +38,10 @@ const getBlobServiceKO = (name: string) =>
   } as unknown) as BlobService);
 
 function mockAzureStorageFunctions() {
-  azure_storage["createBlobService"] = jest.fn(connString => blobServiceOk);
-  azure_storage["createFileService"] = jest.fn(connString => blobServiceOk);
-  azure_storage["createQueueService"] = jest.fn(connString => blobServiceOk);
-  azure_storage["createTableService"] = jest.fn(connString => blobServiceOk);
+  azure_storage["createBlobService"] = jest.fn(_ => blobServiceOk);
+  azure_storage["createFileService"] = jest.fn(_ => blobServiceOk);
+  azure_storage["createQueueService"] = jest.fn(_ => blobServiceOk);
+  azure_storage["createTableService"] = jest.fn(_ => blobServiceOk);
 }
 
 describe("healthcheck - storage account", () => {
@@ -58,13 +55,11 @@ describe("healthcheck - storage account", () => {
   it("should not throw exception", async done => {
     expect.assertions(1);
     checkAzureStorageHealth("")
-      .run()
-      .then(p =>
-        p.map(_ => {
-          expect(true).toBe(true);
-          done();
-        })
-      );
+      .map(_ => {
+        expect(true).toBe(true);
+        done();
+      })
+      .run();
   });
 
   const testcases: {
@@ -83,7 +78,6 @@ describe("healthcheck - storage account", () => {
       name: "createTableService"
     }
   ];
-
   test.each(testcases)(
     "should throw exception %s",
     async ({ name }, done: any) => {
@@ -93,80 +87,48 @@ describe("healthcheck - storage account", () => {
 
       expect.assertions(1);
       checkAzureStorageHealth("")
-        .run()
-        .then(p =>
-          p
-            .map(_ => {
-              expect(true).toBe(false);
-              done();
-            })
-            .mapLeft(err => {
-              expect(err[0]).toBe(`AzureStorage|error - ${name}`);
-              done();
-            })
-        );
+        .mapLeft(err => {
+          expect(err[0]).toBe(`AzureStorage|error - ${name}`);
+          done();
+        })
+        .run();
     }
   );
 });
 
 describe("healthcheck - notification hub", () => {
-  const mockNotificationHubServiceOK = {
-    deleteInstallation: jest.fn((name, callback) => callback(null, null))
-  };
+  const mockNotificationHubServiceOK = ({
+    deleteInstallation: jest.fn((_, callback) => callback(null, null))
+  } as unknown) as azure.NotificationHubService;
+  const mockNotificationHubServiceKO = ({
+    deleteInstallation: jest.fn((_, callback) => callback(Error(""), null))
+  } as unknown) as azure.NotificationHubService;
+
   notificationhubServicePartition["buildNHService"] = jest
     .fn()
-    .mockReturnValue(
-      (mockNotificationHubServiceOK as unknown) as azure.NotificationHubService
-    );
+    .mockReturnValue(mockNotificationHubServiceOK);
 
   it("should not throw exception", async done => {
     expect.assertions(1);
-    checkAzureNotificationHub(({
-      AZURE_NH_ENDPOINT: "endpoint" as NonEmptyString,
-      AZURE_NH_HUB_NAME: "name" as NonEmptyString,
-      AZURE_NOTIFICATION_HUB_PARTITIONS:
-        envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS
-    } as unknown) as IConfig)
-      .run()
-      .then(p =>
-        p.map(_ => {
-          expect(true).toBe(true);
-          done();
-        })
-      );
+    checkAzureNotificationHub(envConfig)
+      .map(_ => {
+        expect(true).toBe(true);
+        done();
+      })
+      .run();
   });
 
   it("should throw exception", async done => {
-    const mockNotificationHubServiceKO = {
-      deleteInstallation: jest.fn((name, callback) => callback(Error(""), null))
-    };
     notificationhubServicePartition[
       "buildNHService"
-    ] = jest
-      .fn()
-      .mockReturnValueOnce(
-        (mockNotificationHubServiceKO as unknown) as azure.NotificationHubService
-      );
+    ] = jest.fn().mockReturnValueOnce(mockNotificationHubServiceKO);
 
     expect.assertions(1);
-    checkAzureNotificationHub(({
-      AZURE_NH_ENDPOINT: "endpoint" as NonEmptyString,
-      AZURE_NH_HUB_NAME: "name" as NonEmptyString,
-      AZURE_NOTIFICATION_HUB_PARTITIONS:
-        envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS
-    } as unknown) as IConfig)
-      .run()
-      .then(p =>
-        p.fold(
-          _ => {
-            expect(true).toBe(true);
-            done();
-          },
-          _ => {
-            expect(true).toBe(false);
-            done();
-          }
-        )
-      );
+    checkAzureNotificationHub(envConfig)
+      .mapLeft(_ => {
+        expect(true).toBe(true);
+        done();
+      })
+      .run();
   });
 });
