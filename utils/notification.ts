@@ -17,7 +17,7 @@ import {
 } from "italia-ts-commons/lib/agent";
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 
-import { Platform, PlatformEnum } from "../generated/backend/Platform";
+import { Platform, PlatformEnum } from "../generated/notifications/Platform";
 /**
  * Notification template.
  *
