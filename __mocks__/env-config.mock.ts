@@ -11,28 +11,28 @@ export const envConfig: IConfig = {
 
   AzureWebJobsStorage: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
-  AZURE_NH_HUB_NAME: "io-notification-hub-mock" as NonEmptyString,
+  AZURE_NH_HUB_NAME: "partition-legacy" as NonEmptyString,
 
   AZURE_NOTIFICATION_HUB_PARTITIONS: [
     {
       partitionRegex: "^[0-3]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
+      name: "partition-1" as NonEmptyString,
+      endpoint: "endpoint-partition-1" as NonEmptyString
     },
     {
       partitionRegex: "^[4-7]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
+      name: "partition-2" as NonEmptyString,
+      endpoint: "endpoint-partition-2" as NonEmptyString
     },
     {
       partitionRegex: "^[8-b]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
+      name: "partition-3" as NonEmptyString,
+      endpoint: "endpoint-partition-3" as NonEmptyString
     },
     {
       partitionRegex: "^[c-f]" as NonEmptyString,
-      name: "io-notification-hub-mock" as NonEmptyString,
-      endpoint: "io-p-ntfns-sandbox" as NonEmptyString
+      name: "partition-4" as NonEmptyString,
+      endpoint: "endpoint-partition-4" as NonEmptyString
     }
   ] as any,
 
