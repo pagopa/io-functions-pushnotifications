@@ -8,7 +8,7 @@ import {
 } from "../handler";
 
 import * as azure from "azure-sb";
-import { PlatformEnum } from "../../generated/backend/Platform";
+import { PlatformEnum } from "../../generated/notifications/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";

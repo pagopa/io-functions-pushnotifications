@@ -2,7 +2,7 @@
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMockBase } from "../../__mocks__/durable-functions";
-import { PlatformEnum } from "../../generated/backend/Platform";
+import { PlatformEnum } from "../../generated/notifications/Platform";
 import {
   CreateOrUpdateInstallationMessage,
   KindEnum as CreateOrUpdateKind
