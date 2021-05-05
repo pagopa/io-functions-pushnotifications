@@ -5,7 +5,6 @@ import {
   getNotificationHubPartitionConfig
 } from "../utils/notificationhubServicePartition";
 import { getCallableActivity as getNotfyMessageActivityCallableActivity } from "../HandleNHNotifyMessageCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 import { getHandler } from "./handler";
 
@@ -19,15 +18,7 @@ const notifyMessageActivity = getNotfyMessageActivityCallableActivity({
   backoffCoefficient: 1.5
 });
 
-const isUserInActiveTestSubsetActivity = getIsUserInActiveSubsetActivityCallableActivity(
-  {
-    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  }
-);
-
 const handler = getHandler({
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser,
   notifyMessageActivity

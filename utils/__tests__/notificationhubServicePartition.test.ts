@@ -1,6 +1,7 @@
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import {
   getNHLegacyConfig,
+  getNotificationHubPartitionConfig,
   testShaForPartitionRegex
 } from "../notificationhubServicePartition";
 
@@ -23,8 +24,17 @@ describe("Partition Regex", () => {
     const aValidInstallationId = "03b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as InstallationId;
     const invalidInstallationId = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b891" as InstallationId;
 
-    const partition1Regex = "^[0-3]";
+    const partition1RegexString = "^[0-3]";
 
+    expect(
+      testShaForPartitionRegex(partition1RegexString, aValidInstallationId)
+    ).toBe(true);
+
+    expect(
+      testShaForPartitionRegex(partition1RegexString, invalidInstallationId)
+    ).toBe(false);
+
+    const partition1Regex = RegExp("^[0-3]");
     expect(
       testShaForPartitionRegex(partition1Regex, aValidInstallationId)
     ).toBe(true);
@@ -77,5 +87,25 @@ describe("Partition Regex", () => {
     expect(
       testShaForPartitionRegex(partition1Regex, invalidInstallationId)
     ).toBe(false);
+  });
+
+  it("should return right Notification Hub partition", () => {
+    const NH = getNotificationHubPartitionConfig(envConfig)(aFiscalCodeHash);
+
+    expect(NH.AZURE_NH_HUB_NAME).toBe(
+      envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS[3].name
+    );
+  });
+
+  it("should throw exception if no Notification Hub partition has been found", () => {
+    const fakeInstallationId = "hhhhhh" as InstallationId;
+
+    expect(() => {
+      const NH = getNotificationHubPartitionConfig(envConfig)(
+        fakeInstallationId
+      );
+    }).toThrowError(
+      `Unable to find Notification Hub partition for ${fakeInstallationId}`
+    );
   });
 });

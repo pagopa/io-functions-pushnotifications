@@ -1,6 +1,5 @@
 // tslint:disable:no-any
 import * as df from "durable-functions";
-import * as o from "../../utils/durable/orchestrators";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { context as contextMockBase } from "../../__mocks__/durable-functions";
@@ -13,18 +12,13 @@ import {
   success
 } from "../../utils/durable/activities";
 import { getHandler, OrchestratorCallInput } from "../handler";
-import { envConfig } from "../../__mocks__/env-config.mock";
 import {
-  OrchestratorFailure,
   OrchestratorInvalidInputFailure,
   success as orchestratorSuccess
 } from "../../utils/durable/orchestrators";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 
-import {
-  getMockDeleteInstallationActivity,
-  getMockIsUserATestUserActivity
-} from "../../__mocks__/activities-mocks";
+import { getMockDeleteInstallationActivity } from "../../__mocks__/activities-mocks";
 
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import { consumeGenerator } from "../../utils/durable/utils";
@@ -41,11 +35,6 @@ const nhCallOrchestratorInput = OrchestratorCallInput.encode({
   message: aDeleteNotificationHubMessage
 });
 
-const retryOptions = {
-  ...new df.RetryOptions(5000, envConfig.RETRY_ATTEMPT_NUMBER),
-  backoffCoefficient: 1.5
-};
-
 const legacyNotificationHubConfig: NotificationHubConfig = {
   AZURE_NH_ENDPOINT: "foo" as NonEmptyString,
   AZURE_NH_HUB_NAME: "bar" as NonEmptyString
@@ -55,8 +44,6 @@ const newNotificationHubConfig: NotificationHubConfig = {
   AZURE_NH_HUB_NAME: "bar2" as NonEmptyString
 };
 
-const mockIsUserATestUserActivityTrue = getMockIsUserATestUserActivity(true);
-const mockIsUserATestUserActivityFalse = getMockIsUserATestUserActivity(false);
 const mockDeleteInstallationActivitySuccess = getMockDeleteInstallationActivity(
   success()
 );
@@ -78,7 +65,6 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
   it("should start the activities with the right inputs", async () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -97,7 +83,6 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
   it("should end the activity with SUCCESS", async () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -107,30 +92,9 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
     expect(result).toEqual(orchestratorSuccess());
   });
 
-  it("should call DeleteInstallation activity one time with legacy parameters, if user is NOT a test user", async () => {
+  it("should always call DeleteInstallation activity twice with both legacy and new parameters", async () => {
     const orchestratorHandler = getHandler({
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
-      legacyNotificationHubConfig: legacyNotificationHubConfig,
-      notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
-    })(contextMockWithDf as any);
-
-    consumeGenerator(orchestratorHandler);
-
-    expect(mockDeleteInstallationActivitySuccess).toHaveBeenCalledTimes(1);
-    expect(mockDeleteInstallationActivitySuccess).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({
-        installationId: aDeleteNotificationHubMessage.installationId,
-        notificationHubConfig: legacyNotificationHubConfig
-      })
-    );
-  });
-
-  it("should call DeleteInstallation activity twice with both legacy and new parameters, if user is a test user", async () => {
-    const orchestratorHandler = getHandler({
-      deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);
@@ -163,7 +127,6 @@ describe("HandleNHDeleteInstallationCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler({
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf as any);

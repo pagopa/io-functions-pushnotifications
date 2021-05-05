@@ -15,7 +15,6 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import { readableReport } from "italia-ts-commons/lib/reporters";
-import fetch from "node-fetch";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
 import { buildNHService } from "./notificationhubServicePartition";
@@ -132,18 +131,6 @@ export const checkAzureStorageHealth = (
         )
     )
     .map(_ => true);
-
-/**
- * Check a url is reachable
- *
- * @param url url to connect with
- *
- * @returns either true or an array of error messages
- */
-export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
-  tryCatch(() => fetch(url, { method: "HEAD" }), toHealthProblems("Url")).map(
-    _ => true
-  );
 
 /**
  * Execute all the health checks for the application

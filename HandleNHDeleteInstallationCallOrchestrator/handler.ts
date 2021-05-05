@@ -10,7 +10,6 @@ import {
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";
 
 import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 /**
  * Orchestrator Name
@@ -29,9 +28,6 @@ interface IHandlerParams {
   readonly deleteInstallationActivity: ReturnType<
     typeof getDeleteInstallationCallableActivity
   >;
-  readonly isUserInActiveTestSubsetActivity: ReturnType<
-    typeof getIsUserInActiveSubsetActivityCallableActivity
-  >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
   readonly notificationHubConfigPartitionChooser: ReturnType<
     typeof getNotificationHubPartitionConfig
@@ -41,7 +37,6 @@ interface IHandlerParams {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getHandler = ({
   deleteInstallationActivity,
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
@@ -57,22 +52,16 @@ export const getHandler = ({
       notificationHubConfig: legacyNotificationHubConfig
     });
 
-    const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+    const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
       installationId
+    );
+
+    logger.info(
+      `Deleting user ${installationId} from Notification Hub ${notificationHubConfigPartition.AZURE_NH_HUB_NAME}`
+    );
+
+    yield* deleteInstallationActivity(context, {
+      installationId,
+      notificationHubConfig: notificationHubConfigPartition
     });
-
-    if (isUserATestUser.value) {
-      const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
-        installationId
-      );
-
-      logger.info(
-        `Deleting user ${installationId} from Notification Hub ${notificationHubConfigPartition.AZURE_NH_HUB_NAME}`
-      );
-
-      yield* deleteInstallationActivity(context, {
-        installationId,
-        notificationHubConfig: notificationHubConfigPartition
-      });
-    }
   });

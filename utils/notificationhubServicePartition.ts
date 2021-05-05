@@ -1,4 +1,5 @@
 import { NotificationHubService } from "azure-sb";
+import { fromNullable } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "italia-ts-commons/lib/strings";
@@ -44,22 +45,19 @@ export const testShaForPartitionRegex = (
  */
 export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
   sha: InstallationId
-): NotificationHubConfig => {
-  const partition = envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS.find(p =>
-    testShaForPartitionRegex(p.partitionRegex, sha)
-  );
-
-  if (partition) {
-    const connectionString = partition.endpoint;
-
-    return {
-      AZURE_NH_ENDPOINT: connectionString,
+): NotificationHubConfig =>
+  fromNullable(Error(`Unable to find Notification Hub partition for ${sha}`))(
+    envConfig.AZURE_NOTIFICATION_HUB_PARTITIONS.find(p =>
+      testShaForPartitionRegex(p.partitionRegex, sha)
+    )
+  )
+    .map(partition => ({
+      AZURE_NH_ENDPOINT: partition.endpoint,
       AZURE_NH_HUB_NAME: partition.name
-    };
-  }
-
-  throw new Error(`Unable to find Notification Hub partition for ${sha}`);
-};
+    }))
+    .getOrElseL(e => {
+      throw e;
+    });
 
 /**
  * @param config The NotificationHubConfig
