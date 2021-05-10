@@ -85,15 +85,8 @@ export const getHandler = ({
             pushChannel,
             tags
           });
-
-          // Always delete installation from legacy Notification Hub
-          yield* deleteInstallationActivity(context, {
-            installationId,
-            notificationHubConfig: legacyNotificationHubConfig
-          });
         } catch (err) {
           // ^In case of exception, delete from partition and restore into legacy NH
-
           logger.error(
             failureUnhandled(
               `ERROR|TEST_USER ${installationId}: ${toString(err)}`
@@ -108,13 +101,14 @@ export const getHandler = ({
             tags
           });
 
-          yield* deleteInstallationActivity(context, {
-            installationId,
-            notificationHubConfig: notificationHubConfigPartition
-          });
-
           throw err;
         }
+
+        // Always delete installation from legacy Notification Hub
+        yield* deleteInstallationActivity(context, {
+          installationId,
+          notificationHubConfig: legacyNotificationHubConfig
+        });
       } else {
         // Call legacy Notification Hub otherwise
         yield* createOrUpdateActivity(context, {
