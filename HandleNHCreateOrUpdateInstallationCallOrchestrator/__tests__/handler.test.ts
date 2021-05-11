@@ -22,17 +22,13 @@ import {
   CallableActivity,
   failureActivity,
   OrchestratorActivityFailure,
-  OrchestratorFailure,
   OrchestratorInvalidInputFailure,
   OrchestratorSuccess,
   OrchestratorUnhandledFailure
 } from "../../utils/durable/orchestrators";
 import { ActivityInput as CreateOrUpdateActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
-import {
-  getMockDeleteInstallationActivity,
-  getMockIsUserATestUserActivity
-} from "../../__mocks__/activities-mocks";
+import { getMockDeleteInstallationActivity } from "../../__mocks__/activities-mocks";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
@@ -87,8 +83,6 @@ const contextMockWithDf = ({
   }
 } as unknown) as IOrchestrationFunctionContext;
 
-const mockIsUserATestUserActivityTrue = getMockIsUserATestUserActivity(true);
-const mockIsUserATestUserActivityFalse = getMockIsUserATestUserActivity(false);
 const mockDeleteInstallationActivitySuccess = getMockDeleteInstallationActivity(
   success()
 );
@@ -101,7 +95,6 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig
     })(contextMockWithDf);
@@ -125,10 +118,9 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     );
   });
 
-  it("should call CreateOrUpdate activity with new NH parameters if user is a test user", async () => {
+  it("should always call CreateOrUpdate activity with new NH parameters", async () => {
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess
@@ -161,36 +153,6 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     );
   });
 
-  it("should call CreateOrUpdate activity with legacy NH parameters if user is NOT a test user", async () => {
-    const orchestratorHandler = getHandler({
-      createOrUpdateActivity: mockCreateOrUpdateActivity,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
-      legacyNotificationHubConfig: legacyNotificationHubConfig,
-      notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
-      deleteInstallationActivity: mockDeleteInstallationActivitySuccess
-    })(contextMockWithDf);
-
-    const result = consumeGenerator(orchestratorHandler);
-
-    OrchestratorSuccess.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      _ => {
-        expect(mockCreateOrUpdateActivity).toBeCalledWith(
-          expect.any(Object),
-          expect.objectContaining({
-            installationId: aCreateOrUpdateInstallationMessage.installationId,
-            platform: aCreateOrUpdateInstallationMessage.platform,
-            tags: aCreateOrUpdateInstallationMessage.tags,
-            pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
-            notificationHubConfig: legacyNotificationHubConfig
-          })
-        );
-
-        expect(mockDeleteInstallationActivitySuccess).not.toBeCalled();
-      }
-    );
-  });
-
   // -------
   // Failure
   // -------
@@ -204,7 +166,6 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     try {
       const orchestratorHandler = getHandler({
         createOrUpdateActivity: mockCreateOrUpdateActivity,
-        isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityFalse,
         legacyNotificationHubConfig: legacyNotificationHubConfig,
         notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
         deleteInstallationActivity: mockDeleteInstallationActivitySuccess
@@ -225,7 +186,6 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess
@@ -247,7 +207,6 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
 
     const orchestratorHandler = getHandler({
       createOrUpdateActivity: mockCreateOrUpdateActivity,
-      isUserInActiveTestSubsetActivity: mockIsUserATestUserActivityTrue,
       legacyNotificationHubConfig: legacyNotificationHubConfig,
       notificationHubConfigPartitionChooser: _ => newNotificationHubConfig,
       deleteInstallationActivity: mockDeleteInstallationActivitySuccess

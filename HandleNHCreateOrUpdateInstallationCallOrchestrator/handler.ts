@@ -15,7 +15,6 @@ import { CreateOrUpdateInstallationMessage } from "../generated/notifications/Cr
 
 import { getCallableActivity as getCreateOrUpdateCallableActivity } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 export const OrchestratorName =
   "HandleNHCreateOrUpdateInstallationCallOrchestrator";
@@ -38,9 +37,6 @@ interface IHandlerParams {
   readonly deleteInstallationActivity: ReturnType<
     typeof getDeleteInstallationCallableActivity
   >;
-  readonly isUserInActiveTestSubsetActivity: ReturnType<
-    typeof getIsUserInActiveSubsetActivityCallableActivity
-  >;
   readonly legacyNotificationHubConfig: NotificationHubConfig;
   readonly notificationHubConfigPartitionChooser: ReturnType<
     typeof getNotificationHubPartitionConfig
@@ -51,7 +47,6 @@ interface IHandlerParams {
 export const getHandler = ({
   createOrUpdateActivity,
   deleteInstallationActivity,
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser
 }: IHandlerParams) =>
@@ -65,52 +60,26 @@ export const getHandler = ({
       },
       logger
     }): Generator<Task, void, Task> {
-      // just for logging for now
-      const isUserATestUser = yield* isUserInActiveTestSubsetActivity(context, {
+      const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
         installationId
-      });
+      );
 
-      if (isUserATestUser.value) {
-        logger.info(`TEST_USER:${installationId}`);
-
-        const notificationHubConfigPartition = notificationHubConfigPartitionChooser(
-          installationId
+      try {
+        yield* createOrUpdateActivity(context, {
+          installationId,
+          notificationHubConfig: notificationHubConfigPartition,
+          platform,
+          pushChannel,
+          tags
+        });
+      } catch (err) {
+        // ^In case of exception, restore into legacy NH
+        logger.error(
+          failureUnhandled(
+            `ERROR|TEST_USER ${installationId}: ${toString(err)}`
+          )
         );
 
-        try {
-          yield* createOrUpdateActivity(context, {
-            installationId,
-            notificationHubConfig: notificationHubConfigPartition,
-            platform,
-            pushChannel,
-            tags
-          });
-        } catch (err) {
-          // ^In case of exception, delete from partition and restore into legacy NH
-          logger.error(
-            failureUnhandled(
-              `ERROR|TEST_USER ${installationId}: ${toString(err)}`
-            )
-          );
-
-          yield* createOrUpdateActivity(context, {
-            installationId,
-            notificationHubConfig: legacyNotificationHubConfig,
-            platform,
-            pushChannel,
-            tags
-          });
-
-          throw err;
-        }
-
-        // Always delete installation from legacy Notification Hub
-        yield* deleteInstallationActivity(context, {
-          installationId,
-          notificationHubConfig: legacyNotificationHubConfig
-        });
-      } else {
-        // Call legacy Notification Hub otherwise
         yield* createOrUpdateActivity(context, {
           installationId,
           notificationHubConfig: legacyNotificationHubConfig,
@@ -118,6 +87,14 @@ export const getHandler = ({
           pushChannel,
           tags
         });
+
+        throw err;
       }
+
+      // Always delete installation from legacy Notification Hub
+      yield* deleteInstallationActivity(context, {
+        installationId,
+        notificationHubConfig: legacyNotificationHubConfig
+      });
     }
   );
