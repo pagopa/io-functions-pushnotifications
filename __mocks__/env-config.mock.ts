@@ -1,6 +1,8 @@
 import { IConfig } from "../utils/config";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
+
+const aBlacklistedFiscalCode = "AAAAAA00A00H501I" as FiscalCode;
 
 export const envConfig: IConfig = {
   isProduction: false,
@@ -8,6 +10,8 @@ export const envConfig: IConfig = {
   APPINSIGHTS_SAMPLING_PERCENTAGE: ("20" as unknown) as IntegerFromString,
 
   RETRY_ATTEMPT_NUMBER: ("1" as unknown) as IntegerFromString,
+
+  FISCAL_CODE_NOTIFICATION_BLACKLIST: [aBlacklistedFiscalCode],
 
   AzureWebJobsStorage: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   AZURE_NH_ENDPOINT: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,

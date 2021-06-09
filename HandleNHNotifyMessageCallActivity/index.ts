@@ -39,7 +39,11 @@ const activityFunctionHandler = createActivity(
   activityName,
   ActivityInput,
   ActivityResultSuccess,
-  getActivityBody(telemetryClient, buildNHService)
+  getActivityBody(
+    telemetryClient,
+    buildNHService,
+    config.FISCAL_CODE_NOTIFICATION_BLACKLIST
+  )
 );
 
 export default activityFunctionHandler;

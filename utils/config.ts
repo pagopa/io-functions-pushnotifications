@@ -8,7 +8,7 @@
 import * as t from "io-ts";
 import { IntegerFromString } from "italia-ts-commons/lib/numbers";
 import { readableReport } from "italia-ts-commons/lib/reporters";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
 import { withDefault } from "italia-ts-commons/lib/types";
 import {
   DisjoitedNotificationHubPartitionArray,
@@ -64,6 +64,12 @@ const BaseConfig = t.intersection([
     RETRY_ATTEMPT_NUMBER: IntegerFromString,
 
     isProduction: t.boolean
+  }),
+
+  t.interface({
+    // a list of fiscal codes not to send notifications to
+    //   use case: when doing internal tests
+    FISCAL_CODE_NOTIFICATION_BLACKLIST: t.array(FiscalCode)
   }),
 
   // Legacy Notification Hub configuration
