@@ -2,7 +2,7 @@ import { Context } from "@azure/functions";
 import { identity } from "fp-ts/lib/function";
 import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { ActivityLogger, createLogger } from "./log";
 import {
   ActivityResultFailure,

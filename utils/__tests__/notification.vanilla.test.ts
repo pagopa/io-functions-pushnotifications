@@ -8,7 +8,7 @@ const env = {
 // tslint:disable-next-line: no-object-mutation
 process.env = env;
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as nock from "nock";
 import { ExtendedNotificationHubService, notify } from "../notification";
 

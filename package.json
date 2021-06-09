@@ -26,6 +26,7 @@
     "version": "auto-changelog -p --config .auto-changelog.json --unreleased && git add CHANGELOG.md"
   },
   "dependencies": {
+    "@pagopa/ts-commons": "^9.5.0",
     "applicationinsights": "^1.8.10",
     "azure-sb": "^0.11.1",
     "azure-storage": "^2.10.3",
@@ -35,7 +36,6 @@
     "io-functions-commons": "^17.0.0",
     "io-functions-express": "^1.1.0",
     "io-ts": "1.8.5",
-    "italia-ts-commons": "^8.5.0",
     "node-fetch": "^2.6.1",
     "winston": "^3.2.1"
   },

@@ -1,8 +1,8 @@
 import { isRight } from "fp-ts/lib/Either";
 import { IConfig } from "../config";
 import { envConfig } from "../../__mocks__/env.mock";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 
 const aConfig = { ...envConfig, isProduction: false };
 

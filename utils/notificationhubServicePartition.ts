@@ -2,7 +2,7 @@ import { NotificationHubService } from "azure-sb";
 import { fromNullable } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { IConfig } from "./config";
 import { ExtendedNotificationHubService } from "./notification";

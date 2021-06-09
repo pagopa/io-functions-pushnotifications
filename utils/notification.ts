@@ -14,8 +14,8 @@ import { NotificationHubService, Azure } from "azure-sb";
 import {
   getKeepAliveAgentOptions,
   newHttpsAgent
-} from "italia-ts-commons/lib/agent";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+} from "@pagopa/ts-commons/lib/agent";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Platform, PlatformEnum } from "../generated/notifications/Platform";
 /**

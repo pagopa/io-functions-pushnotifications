@@ -1,6 +1,6 @@
 import { IConfig } from "../utils/config";
-import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
-import { IntegerFromString } from "italia-ts-commons/lib/numbers";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { IntegerFromString } from "@pagopa/ts-commons/lib/numbers";
 
 const aBlacklistedFiscalCode = "AAAAAA00A00H501I" as FiscalCode;
 

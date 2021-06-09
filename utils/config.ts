@@ -6,10 +6,10 @@
  */
 
 import * as t from "io-ts";
-import { IntegerFromString } from "italia-ts-commons/lib/numbers";
-import { readableReport } from "italia-ts-commons/lib/reporters";
-import { FiscalCode, NonEmptyString } from "italia-ts-commons/lib/strings";
-import { withDefault } from "italia-ts-commons/lib/types";
+import { IntegerFromString } from "@pagopa/ts-commons/lib/numbers";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
 import {
   DisjoitedNotificationHubPartitionArray,
   RegExpFromString

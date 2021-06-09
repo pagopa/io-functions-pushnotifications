@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { FiscalCode } from "italia-ts-commons/lib/strings";
+import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Convert a string into SHA256

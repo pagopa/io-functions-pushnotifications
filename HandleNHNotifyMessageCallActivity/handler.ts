@@ -5,7 +5,7 @@ import * as t from "io-ts";
 import { TelemetryClient } from "applicationinsights";
 import { NotificationHubService } from "azure-sb";
 
-import { FiscalCode } from "italia-ts-commons/lib/strings";
+import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import {
   ActivityBody,
   ActivityResultSuccess as ActivityResultSuccessBase,

@@ -14,7 +14,7 @@ import {
   TaskEither,
   tryCatch
 } from "fp-ts/lib/TaskEither";
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
 import { buildNHService } from "./notificationhubServicePartition";

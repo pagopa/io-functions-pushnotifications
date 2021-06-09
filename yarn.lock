@@ -647,6 +647,20 @@
     eslint-plugin-sonarjs "^0.5.0"
     prettier "^2.1.2"
 
+"@pagopa/ts-commons@^9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@pagopa/ts-commons/-/ts-commons-9.5.0.tgz#a86cc57e3ba1107d7cced3bf659fbabcf33983ff"
+  integrity sha512-zqW1qTqRYVlfDXncoEdywL6Wh61aBncflPhm8o1JLhMPIc+pHJru+iTaDEmVwDrDhcHmG4yf7CPpq3VF4i9fuA==
+  dependencies:
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.1.2"
+    applicationinsights "^1.7.4"
+    fp-ts "1.17.4"
+    io-ts "1.8.5"
+    json-set-map "^1.0.2"
+    node-fetch "^2.6.0"
+    validator "^10.1.0"
+
 "@sendgrid/client@^6.5.5":
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-6.5.5.tgz#66cf569445d98a795998a894bb432a9939ead7c3"
@@ -1105,9 +1119,9 @@ agent-base@4, agent-base@^4.3.0:
     es6-promisify "^5.0.0"
 
 agentkeepalive@^4.1.2:
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/agentkeepalive/-/agentkeepalive-4.1.3.tgz#360a09d743a1f4fde749f9ba07caa6575d08259a"
-  integrity sha512-wn8fw19xKZwdGPO47jivonaHRTd+nGOMP1z11sgGeQzDy2xd5FG0R67dIMcKHDE2cJ5y+YXV30XVGUBPRSY7Hg==
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/agentkeepalive/-/agentkeepalive-4.1.4.tgz#d928028a4862cb11718e55227872e842a44c945b"
+  integrity sha512-+V/rGa3EuU74H6wR04plBb7Ks10FbtUQgRj/FQOG7uUIEuaINI+AiqJR1k6t3SVNs7o7ZjIdus6706qqzVq8jQ==
   dependencies:
     debug "^4.1.0"
     depd "^1.1.2"
@@ -4919,20 +4933,6 @@ italia-ts-commons@^7.0.1:
   integrity sha512-IIZYim8LydSA3nbeCxbR23marXhx3Z/FLUh7cV6XxNrB5OpKeVMmQhXV42oErP+g/vsrCQ/LRSrLX8cpi1Nghg==
   dependencies:
     agentkeepalive "https://github.com/pagopa/agentkeepalive#v4.1.1"
-    applicationinsights "^1.7.4"
-    fp-ts "1.17.4"
-    io-ts "1.8.5"
-    json-set-map "^1.0.2"
-    node-fetch "^2.6.0"
-    validator "^10.1.0"
-
-italia-ts-commons@^8.5.0:
-  version "8.5.0"
-  resolved "https://registry.yarnpkg.com/italia-ts-commons/-/italia-ts-commons-8.5.0.tgz#9967ec1b94745f482d5cc942a1bacf7de6f6461b"
-  integrity sha512-pTX90/WW987t7pdcbQngCFm35c3gQlDFIUCnDZ6VCo5vNMl8VwdZztGIcYyEaJw6xMjb1WjSRlltnDdSe0B9Eg==
-  dependencies:
-    abort-controller "^3.0.0"
-    agentkeepalive "^4.1.2"
     applicationinsights "^1.7.4"
     fp-ts "1.17.4"
     io-ts "1.8.5"

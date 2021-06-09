@@ -14,7 +14,7 @@ const env = {
 // keepalive settings are red straight from the environment :(
 process.env = env; // tslint:disable-line: no-object-mutation
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as nock from "nock";
 import { ExtendedNotificationHubService, notify } from "../notification";
 
