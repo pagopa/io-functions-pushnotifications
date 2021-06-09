@@ -10,6 +10,7 @@ import { IntegerFromString } from "@pagopa/ts-commons/lib/numbers";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { CommaSeparatedListOf } from "@pagopa/ts-commons/lib/comma-separated-list";
 import {
   DisjoitedNotificationHubPartitionArray,
   RegExpFromString
@@ -69,7 +70,10 @@ const BaseConfig = t.intersection([
   t.interface({
     // a list of fiscal codes not to send notifications to
     //   use case: when doing internal tests
-    FISCAL_CODE_NOTIFICATION_BLACKLIST: t.array(FiscalCode)
+    FISCAL_CODE_NOTIFICATION_BLACKLIST: withDefault(
+      CommaSeparatedListOf(FiscalCode),
+      []
+    )
   }),
 
   // Legacy Notification Hub configuration
