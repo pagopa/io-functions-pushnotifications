@@ -1,7 +1,7 @@
 import { tryCatch2v } from "fp-ts/lib/Either";
 import { identity } from "fp-ts/lib/function";
 import * as t from "io-ts";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 /**
  * Parses a string into a deserialized json

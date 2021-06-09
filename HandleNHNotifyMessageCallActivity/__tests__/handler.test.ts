@@ -1,20 +1,22 @@
 // tslint:disable:no-any
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
-import { ActivityInput, getActivityBody } from "../handler";
+import {
+  ActivityInput,
+  getActivityBody,
+  ActivityResultSuccess
+} from "../handler";
 import { ActivityInput as NHServiceActivityInput } from "../handler";
 
 import * as azure from "azure-sb";
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
-import {
-  ActivityResultSuccess,
-  createActivity
-} from "../../utils/durable/activities";
+import { createActivity } from "../../utils/durable/activities";
 import { TelemetryClient } from "applicationinsights";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
+import { toSHA256 } from "../../utils/conversions";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -48,11 +50,22 @@ const mockBuildNHService = jest
 
 const activityName = "any";
 
+const aNotifyMessageToBlacklistedUser: NotifyMessage = {
+  ...aNotifyMessage,
+  installationId: toSHA256(
+    envConfig.FISCAL_CODE_NOTIFICATION_BLACKLIST[0]
+  ) as NonEmptyString
+};
+
 const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockTelemetryClient, mockBuildNHService)
+  getActivityBody(
+    mockTelemetryClient,
+    mockBuildNHService,
+    envConfig.FISCAL_CODE_NOTIFICATION_BLACKLIST
+  )
 );
 
 describe("HandleNHNotifyMessageCallActivity", () => {
@@ -98,5 +111,24 @@ describe("HandleNHNotifyMessageCallActivity", () => {
       expect(mockNotificationHubService.send).toHaveBeenCalledTimes(1);
       expect(e).toBeInstanceOf(Error);
     }
+  });
+
+  it("should not call notificationhubServicePartion.buildNHService when using a blacklisted user", async () => {
+    mockNotificationHubService.send = jest
+      .fn()
+      .mockImplementation((_1, _2, _3, cb) => cb());
+
+    const input = ActivityInput.encode({
+      message: aNotifyMessageToBlacklistedUser,
+      notificationHubConfig: aNHConfig
+    });
+
+    expect.assertions(3);
+
+    const res = await handler(contextMock as any, input);
+    expect(res.kind).toEqual("SUCCESS");
+    expect(res).toHaveProperty("skipped", true);
+
+    expect(mockNotificationHubService.send).not.toBeCalled();
   });
 });

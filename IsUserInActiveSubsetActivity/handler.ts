@@ -1,7 +1,7 @@
 import { taskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
-import { errorsToReadableMessages } from "italia-ts-commons/lib/reporters";
+import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
 import { NHPartitionFeatureFlag } from "../utils/config";

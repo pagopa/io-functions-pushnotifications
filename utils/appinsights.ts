@@ -1,5 +1,5 @@
 import * as ai from "applicationinsights";
-import { initAppInsights } from "italia-ts-commons/lib/appinsights";
+import { initAppInsights } from "@pagopa/ts-commons/lib/appinsights";
 import { IConfig } from "./config";
 
 // Avoid to initialize Application Insights more than once

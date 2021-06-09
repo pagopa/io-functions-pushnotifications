@@ -1,6 +1,6 @@
 // tslint:disable:no-any
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { context as contextMockBase } from "../../__mocks__/durable-functions";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../handler";
 
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
-import { readableReport } from "italia-ts-commons/lib/reporters";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
 import {
   CallableActivity,

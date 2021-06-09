@@ -3,7 +3,7 @@ import { getIsInActiveSubset } from "../../utils/featureFlags";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 
 import { activityResultSuccessWithValue, getActivityBody } from "../handler";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { ActivityResult } from "../../utils/durable/activities";
 import {
   ActivityLogger,

@@ -6,10 +6,11 @@
  */
 
 import * as t from "io-ts";
-import { IntegerFromString } from "italia-ts-commons/lib/numbers";
-import { readableReport } from "italia-ts-commons/lib/reporters";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { withDefault } from "italia-ts-commons/lib/types";
+import { IntegerFromString } from "@pagopa/ts-commons/lib/numbers";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { withDefault } from "@pagopa/ts-commons/lib/types";
+import { CommaSeparatedListOf } from "@pagopa/ts-commons/lib/comma-separated-list";
 import {
   DisjoitedNotificationHubPartitionArray,
   RegExpFromString
@@ -64,6 +65,15 @@ const BaseConfig = t.intersection([
     RETRY_ATTEMPT_NUMBER: IntegerFromString,
 
     isProduction: t.boolean
+  }),
+
+  t.interface({
+    // a list of fiscal codes not to send notifications to
+    //   use case: when doing internal tests
+    FISCAL_CODE_NOTIFICATION_BLACKLIST: withDefault(
+      CommaSeparatedListOf(FiscalCode),
+      []
+    )
   }),
 
   // Legacy Notification Hub configuration

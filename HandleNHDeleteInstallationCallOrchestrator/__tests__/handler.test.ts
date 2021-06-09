@@ -1,7 +1,7 @@
 // tslint:disable:no-any
 import * as df from "durable-functions";
 
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { context as contextMockBase } from "../../__mocks__/durable-functions";
 import { KindEnum as DeleteKind } from "../../generated/notifications/DeleteInstallationMessage";
 
