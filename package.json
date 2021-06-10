@@ -26,6 +26,7 @@
     "version": "auto-changelog -p --config .auto-changelog.json --unreleased && git add CHANGELOG.md"
   },
   "dependencies": {
+    "@pagopa/express-azure-functions": "^2.0.0",
     "@pagopa/io-functions-commons": "^20.5.2",
     "@pagopa/openapi-codegen-ts": "^9.2.0",
     "@pagopa/ts-commons": "^9.5.0",
@@ -35,7 +36,6 @@
     "durable-functions": "^1.4.4",
     "express": "^4.15.3",
     "fp-ts": "1.17.4",
-    "io-functions-express": "^1.1.0",
     "io-ts": "1.8.5",
     "node-fetch": "^2.6.1",
     "winston": "^3.2.1"
