@@ -4,7 +4,6 @@ import { getConfigOrThrow } from "../utils/config";
 
 import { getCallableActivity as getCreateOrUpdateCallableActivity } from "../HandleNHCreateOrUpdateInstallationCallActivity";
 import { getCallableActivity as getDeleteInstallationCallableActivity } from "../HandleNHDeleteInstallationCallActivity";
-import { getCallableActivity as getIsUserInActiveSubsetActivityCallableActivity } from "../IsUserInActiveSubsetActivity";
 
 import {
   getNHLegacyConfig,
@@ -25,13 +24,6 @@ const deleteInstallationActivity = getDeleteInstallationCallableActivity({
   backoffCoefficient: 1.5
 });
 
-const isUserInActiveTestSubsetActivity = getIsUserInActiveSubsetActivityCallableActivity(
-  {
-    ...new df.RetryOptions(5000, config.RETRY_ATTEMPT_NUMBER),
-    backoffCoefficient: 1.5
-  }
-);
-
 const legacyNotificationHubConfig = getNHLegacyConfig(config);
 const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
   config
@@ -40,7 +32,6 @@ const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
 const handler = getHandler({
   createOrUpdateActivity,
   deleteInstallationActivity,
-  isUserInActiveTestSubsetActivity,
   legacyNotificationHubConfig,
   notificationHubConfigPartitionChooser
 });
