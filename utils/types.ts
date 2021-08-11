@@ -1,5 +1,5 @@
-import { tryCatch2v } from "fp-ts/lib/Either";
-import { identity } from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
+import { identity, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
@@ -11,11 +11,17 @@ export const jsonFromString = new t.Type<object, string>( // eslint-disable-line
   "JSONFromString",
   t.UnknownRecord.is,
   (m, c) =>
-    t.string.validate(m, c).chain(s =>
-      tryCatch2v(
-        () => t.success(JSON.parse(s)),
-        _ => t.failure(s, c)
-      ).fold(identity, identity)
+    pipe(
+      t.string.validate(m, c),
+      E.chain(s =>
+        pipe(
+          E.tryCatch(
+            () => t.success(JSON.parse(s)),
+            _ => t.failure(s, c)
+          ),
+          E.fold(identity, identity)
+        )
+      )
     ),
   String
 );
