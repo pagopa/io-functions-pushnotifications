@@ -15,6 +15,8 @@ import {
   tryCatch
 } from "fp-ts/lib/TaskEither";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
 import { buildNHService } from "./notificationhubServicePartition";
@@ -48,10 +50,13 @@ const toHealthProblems = <S extends ProblemSource>(source: S) => (
  * @returns either true or an array of error messages
  */
 export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
-  fromEither(getConfig()).mapLeft(errors =>
-    errors.map(e =>
-      // give each problem its own line
-      formatProblem("Config", readableReport([e]))
+  pipe(
+    fromEither(getConfig()),
+    TE.mapLeft(errors =>
+      errors.map(e =>
+        // give each problem its own line
+        formatProblem("Config", readableReport([e]))
+      )
     )
   );
 /**
@@ -64,34 +69,34 @@ export const checkAzureNotificationHub = ({
   AZURE_NH_HUB_NAME,
   AZURE_NOTIFICATION_HUB_PARTITIONS
 }: IConfig): HealthCheck<"AzureNotificationHub"> =>
-  array
-    .sequence(taskEither)(
-      [
-        { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
-        ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
-          AZURE_NH_ENDPOINT: p.endpoint,
-          AZURE_NH_HUB_NAME: p.name
-        }))
-      ].map(connString =>
-        tryCatch(
-          () =>
-            new Promise<NHResultSuccess>((resolve, reject) =>
-              buildNHService({
-                AZURE_NH_ENDPOINT: connString.AZURE_NH_ENDPOINT,
-                AZURE_NH_HUB_NAME: connString.AZURE_NH_HUB_NAME
-              }).deleteInstallation(
-                "aFakeInstallation",
-                (err, _) =>
-                  err == null
-                    ? resolve({ kind: "SUCCESS" })
-                    : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
-              )
-            ),
-          toHealthProblems("AzureNotificationHub")
-        )
+  pipe(
+    [
+      { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
+      ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
+        AZURE_NH_ENDPOINT: p.endpoint,
+        AZURE_NH_HUB_NAME: p.name
+      }))
+    ].map(connString =>
+      tryCatch(
+        () =>
+          new Promise<NHResultSuccess>((resolve, reject) =>
+            buildNHService({
+              AZURE_NH_ENDPOINT: connString.AZURE_NH_ENDPOINT,
+              AZURE_NH_HUB_NAME: connString.AZURE_NH_HUB_NAME
+            }).deleteInstallation(
+              "aFakeInstallation",
+              (err, _) =>
+                err == null
+                  ? resolve({ kind: "SUCCESS" })
+                  : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+            )
+          ),
+        toHealthProblems("AzureNotificationHub")
       )
-    )
-    .map(_ => true);
+    ),
+    array.sequence(taskEither),
+    TE.map(_ => true)
+  );
 
 /**
  * Check the application can connect to an Azure Storage
@@ -103,34 +108,34 @@ export const checkAzureNotificationHub = ({
 export const checkAzureStorageHealth = (
   connStr: string
 ): HealthCheck<"AzureStorage"> =>
-  array
-    .sequence(taskEither)(
-      // try to instantiate a client for each product of azure storage
-      [
-        createBlobService,
-        createFileService,
-        createQueueService,
-        createTableService
-      ]
-        // for each, create a task that wraps getServiceProperties
-        .map(createService =>
-          tryCatch(
-            () =>
-              new Promise<
-                azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
-              >((resolve, reject) =>
-                createService(connStr).getServiceProperties((err, result) => {
-                  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                  err
-                    ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
-                    : resolve(result);
-                })
-              ),
-            toHealthProblems("AzureStorage")
-          )
+  pipe(
+    // try to instantiate a client for each product of azure storage
+    [
+      createBlobService,
+      createFileService,
+      createQueueService,
+      createTableService
+    ]
+      // for each, create a task that wraps getServiceProperties
+      .map(createService =>
+        tryCatch(
+          () =>
+            new Promise<
+              azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
+            >((resolve, reject) =>
+              createService(connStr).getServiceProperties((err, result) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                err
+                  ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
+                  : resolve(result);
+              })
+            ),
+          toHealthProblems("AzureStorage")
         )
-    )
-    .map(_ => true);
+      ),
+    array.sequence(taskEither),
+    TE.map(_ => true)
+  );
 
 /**
  * Execute all the health checks for the application
@@ -138,19 +143,24 @@ export const checkAzureStorageHealth = (
  * @returns either true or an array of error messages
  */
 export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
-  taskEither
-    .of<ReadonlyArray<HealthProblem<ProblemSource>>, void>(void 0)
-    .chain(_ => checkConfigHealth())
-    .chain(config =>
+  pipe(
+    void 0,
+    TE.of,
+    TE.chain(_ => checkConfigHealth()),
+    TE.chain(config =>
       // TODO: once we upgrade to fp-ts >= 1.19 we can use Validation to collect all errors, not just the first to happen
-      sequenceT(taskEither)<
-        ReadonlyArray<HealthProblem<ProblemSource>>,
-        // eslint-disable-next-line functional/prefer-readonly-type
-        Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-      >(
-        checkAzureStorageHealth(config.NOTIFICATIONS_STORAGE_CONNECTION_STRING),
-        checkAzureNotificationHub(config)
+      pipe(
+        sequenceT(taskEither)<
+          ReadonlyArray<HealthProblem<ProblemSource>>,
+          // eslint-disable-next-line functional/prefer-readonly-type
+          Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
+        >(
+          checkAzureStorageHealth(
+            config.NOTIFICATIONS_STORAGE_CONNECTION_STRING
+          ),
+          checkAzureNotificationHub(config)
+        ),
+        TE.map(_ => true)
       )
     )
-
-    .map(_ => true);
+  );
