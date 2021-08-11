@@ -1,4 +1,6 @@
-import { toString } from "fp-ts/lib/function";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
+import { toString } from "../utils/conversions";
 import { taskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
@@ -58,12 +60,13 @@ export const getActivityBody = (
       )
     : notify(nhService, input.message.installationId, input.message.payload);
 
-  return doNotify
-    .bimap(
+  return pipe(
+    doNotify,
+    TE.bimap(
       e => retryActivity(logger, toString(e)),
       ActivityResultSuccess.encode
-    )
-    .map(e => {
+    ),
+    TE.map(e => {
       telemetryClient.trackEvent({
         name: "api.messages.notification.push.sent",
         properties: {
@@ -77,5 +80,6 @@ export const getActivityBody = (
       });
 
       return e;
-    });
+    })
+  );
 };
