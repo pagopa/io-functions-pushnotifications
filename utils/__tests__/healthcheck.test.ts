@@ -8,6 +8,9 @@ import {
 } from "../healthcheck";
 
 import * as azure from "azure-sb";
+import { pipe } from "fp-ts/lib/function";
+
+import * as TE from "fp-ts/lib/TaskEither";
 
 const azure_storage = require("azure-storage");
 const notificationhubServicePartition = require("../notificationhubServicePartition");
@@ -54,12 +57,15 @@ describe("healthcheck - storage account", () => {
 
   it("should not throw exception", async done => {
     expect.assertions(1);
-    checkAzureStorageHealth("")
-      .map(_ => {
+
+    pipe(
+      "",
+      checkAzureStorageHealth,
+      TE.map(_ => {
         expect(true).toBe(true);
         done();
       })
-      .run();
+    )();
   });
 
   const testcases: {
@@ -86,12 +92,15 @@ describe("healthcheck - storage account", () => {
       azure_storage[name] = jest.fn(connString => blobServiceKO);
 
       expect.assertions(1);
-      checkAzureStorageHealth("")
-        .mapLeft(err => {
+
+      pipe(
+        "",
+        checkAzureStorageHealth,
+        TE.mapLeft(err => {
           expect(err[0]).toBe(`AzureStorage|error - ${name}`);
           done();
         })
-        .run();
+      )();
     }
   );
 });
@@ -110,12 +119,15 @@ describe("healthcheck - notification hub", () => {
 
   it("should not throw exception", async done => {
     expect.assertions(1);
-    checkAzureNotificationHub(envConfig)
-      .map(_ => {
+
+    pipe(
+      envConfig,
+      checkAzureNotificationHub,
+      TE.map(_ => {
         expect(true).toBe(true);
         done();
       })
-      .run();
+    )();
   });
 
   it("should throw exception", async done => {
@@ -124,11 +136,14 @@ describe("healthcheck - notification hub", () => {
     ] = jest.fn().mockReturnValueOnce(mockNotificationHubServiceKO);
 
     expect.assertions(1);
-    checkAzureNotificationHub(envConfig)
-      .mapLeft(_ => {
+
+    pipe(
+      envConfig,
+      checkAzureNotificationHub,
+      TE.mapLeft(_ => {
         expect(true).toBe(true);
         done();
       })
-      .run();
+    )();
   });
 });
