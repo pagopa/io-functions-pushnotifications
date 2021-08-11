@@ -38,7 +38,7 @@ describe("NotificationHubService", () => {
       message: "foo",
       message_id: "bar",
       title: "beef"
-    }).run();
+    })();
     expect(responseSpy).toHaveBeenCalledWith(
       parseInt(env.FETCH_KEEPALIVE_MAX_SOCKETS, 10)
     );
