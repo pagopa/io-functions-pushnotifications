@@ -4,8 +4,8 @@ import {
   Task
 } from "durable-functions/lib/src/classes";
 import { left, right } from "fp-ts/lib/Either";
-import { either } from "fp-ts/lib/Either";
-import { identity } from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
+import { flow, identity, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import {
@@ -22,6 +22,7 @@ import {
   OrchestratorSuccess,
   success
 } from "./returnTypes";
+import { decodeOrError } from "../utils";
 
 export { createLogger, IOrchestratorLogger as OrchestratorLogger } from "./log";
 export * from "./returnTypes";
@@ -59,17 +60,23 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
     const rawInput = context.df.getInput();
 
     try {
-      const input = InputCodec.decode(rawInput).getOrElseL(err => {
-        throw failureInvalidInput(rawInput, `${readableReport(err)}`);
-      });
+      const input = pipe(
+        rawInput,
+        InputCodec.decode,
+        E.getOrElseW(err => {
+          throw failureInvalidInput(rawInput, `${readableReport(err)}`);
+        })
+      );
 
       // eslint-disable-next-line sort-keys
       yield* body({ context, logger, input });
 
       return success();
     } catch (error) {
-      const failure = OrchestratorFailure.decode(error).getOrElse(
-        failureUnhandled(error)
+      const failure = pipe(
+        error,
+        OrchestratorFailure.decode,
+        E.getOrElseW(() => failureUnhandled(error))
       );
       logger.error(failure);
 
@@ -121,31 +128,20 @@ export const callableActivity = <
         e instanceof Error ? e.message : e.reason
       );
     }
-
-    return either
-      .of<ActivityResultFailure | Error, unknown>(result)
-      .chain(r =>
-        ActivityResult.decode(r).mapLeft(
-          e =>
-            new Error(
-              `Cannot decode result from ${activityName}, err: ${readableReport(
-                e
-              )}`
-            )
+    return pipe(
+      result,
+      E.of,
+      E.chain(
+        decodeOrError(
+          ActivityResult,
+          `Cannot decode result from ${activityName}`
         )
-      )
-      .chain(r => (ActivityResultFailure.is(r) ? left(r) : right(r)))
-      .chain(r =>
-        OutputCodec.decode(r).mapLeft(
-          e =>
-            new Error(
-              `Invalid output value from ${activityName}, err: ${readableReport(
-                e
-              )}`
-            )
-        )
-      )
-      .fold(
+      ),
+      E.chainW(r => (ActivityResultFailure.is(r) ? left(r) : right(r))),
+      E.chainW(
+        decodeOrError(OutputCodec, `Invalid output value from ${activityName}`)
+      ),
+      E.fold(
         // In case of failure, trow a failure object with the activity name
         e => {
           throw failureActivity(
@@ -154,5 +150,6 @@ export const callableActivity = <
           );
         },
         identity
-      );
+      )
+    );
   };

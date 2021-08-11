@@ -1,11 +1,11 @@
 import * as ai from "applicationinsights";
 import { IOrchestrationFunctionContext } from "durable-functions/lib/src/classes";
 
-import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 
+import { toString } from "../utils";
 import { OrchestratorFailure } from "./returnTypes";
 
 const defaultNever = <T>(_: never, d: T): T => d;

@@ -1,6 +1,6 @@
 import { Context } from "@azure/functions";
-import { identity } from "fp-ts/lib/function";
-import { fromEither, TaskEither } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { ActivityLogger, createLogger } from "./log";
@@ -22,7 +22,7 @@ export type ActivityBody<
   readonly logger: ActivityLogger;
   readonly input: Input;
   // bindings?: Bindings;
-}) => TaskEither<Failure, Success>;
+}) => TE.TaskEither<Failure, Success>;
 
 // All activity will return ActivityResultFailure, ActivityResultSuccess or some derived types
 type ActivityResult<R extends ActivityResultSuccess | ActivityResultFailure> =
@@ -55,15 +55,20 @@ export const createActivity = <
 ): Promise<ActivityResult<F | S>> => {
   const logger = createLogger(context, activityName);
 
-  return fromEither(InputCodec.decode(rawInput))
-    .mapLeft(errs =>
-      failActivity(logger)(
-        "Error decoding activity input",
-        readableReport(errs)
-      )
-    )
-    .chain(input => body({ context, input, logger }))
-    .map(e => OutputCodec.encode(e))
-    .fold<ActivityResult<F | S>>(identity, identity)
-    .run();
+  return pipe(
+    rawInput,
+    InputCodec.decode,
+    TE.fromEither,
+    x => x,
+    TE.mapLeft(
+      err =>
+        failActivity(logger)(
+          "Error decoding activity input",
+          readableReport(err)
+        ) as F
+    ),
+    TE.chain(input => body({ context, input, logger })),
+    TE.map(e => OutputCodec.encode(e)),
+    TE.toUnion
+  )();
 };
