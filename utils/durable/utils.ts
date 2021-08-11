@@ -33,6 +33,7 @@ export const toString: (x: unknown) => string = JSON.stringify;
 
 /**
  * Decode or return an error
+ *
  * @param OutputCodec
  * @param error
  * @returns

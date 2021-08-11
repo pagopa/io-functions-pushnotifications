@@ -1,6 +1,5 @@
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { toString } from "../utils/conversions";
 import { taskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
@@ -8,6 +7,7 @@ import { TelemetryClient } from "applicationinsights";
 import { NotificationHubService } from "azure-sb";
 
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { toString } from "../utils/conversions";
 import {
   ActivityBody,
   ActivityResultSuccess as ActivityResultSuccessBase,

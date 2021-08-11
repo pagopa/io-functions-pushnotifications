@@ -1,8 +1,8 @@
 import NotificationHubService = require("azure-sb/lib/notificationhubservice");
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { toString } from "../utils/conversions";
 import * as t from "io-ts";
+import { toString } from "../utils/conversions";
 
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { Platform } from "../generated/notifications/Platform";

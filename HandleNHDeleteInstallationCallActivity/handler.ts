@@ -1,10 +1,10 @@
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import { NotificationHubService } from "azure-sb";
-import { toString } from "../utils/conversions";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { toString } from "../utils/conversions";
 
 import {
   ActivityBody,

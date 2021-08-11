@@ -3,9 +3,8 @@ import {
   RetryOptions,
   Task
 } from "durable-functions/lib/src/classes";
-import { left, right } from "fp-ts/lib/Either";
 import * as E from "fp-ts/lib/Either";
-import { flow, identity, pipe } from "fp-ts/lib/function";
+import { identity, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import {
@@ -13,6 +12,7 @@ import {
   ActivityResultFailure,
   ActivityResultSuccess
 } from "../activities";
+import { decodeOrError } from "../utils";
 import { createLogger, IOrchestratorLogger } from "./log";
 import {
   failureActivity,
@@ -22,7 +22,6 @@ import {
   OrchestratorSuccess,
   success
 } from "./returnTypes";
-import { decodeOrError } from "../utils";
 
 export { createLogger, IOrchestratorLogger as OrchestratorLogger } from "./log";
 export * from "./returnTypes";
@@ -137,7 +136,7 @@ export const callableActivity = <
           `Cannot decode result from ${activityName}`
         )
       ),
-      E.chainW(r => (ActivityResultFailure.is(r) ? left(r) : right(r))),
+      E.chainW(r => (ActivityResultFailure.is(r) ? E.left(r) : E.right(r))),
       E.chainW(
         decodeOrError(OutputCodec, `Invalid output value from ${activityName}`)
       ),
