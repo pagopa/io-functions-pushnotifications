@@ -59,7 +59,6 @@ export const createActivity = <
     rawInput,
     InputCodec.decode,
     TE.fromEither,
-    x => x,
     TE.mapLeft(
       err =>
         failActivity(logger)(
