@@ -20,6 +20,7 @@ import {
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import { Platform, PlatformEnum } from "../generated/notifications/Platform";
+import { toString } from "./conversions";
 /**
  * Notification template.
  *
@@ -166,7 +167,7 @@ const composeNHErrorMessage = (
       res =>
         !res.body || dictionaryIsEmpty(res.body)
           ? "No response body"
-          : JSON.stringify(res.body).replace(/\n/gim, " ") // avoid newlines
+          : toString(res.body).replace(/\n/gim, " ") // avoid newlines
     ),
     O.map(innerMessage =>
       innerMessage
