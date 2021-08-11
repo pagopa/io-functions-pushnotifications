@@ -12,3 +12,9 @@ export const toSHA256 = (source: FiscalCode): string =>
     .createHash("sha256")
     .update(source)
     .digest("hex");
+
+/**
+ * Utility function for printing a unknown object.
+ * It replaces fp-ts `toString`
+ */
+export const toString: (x: unknown) => string = JSON.stringify;
