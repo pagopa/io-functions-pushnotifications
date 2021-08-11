@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Task } from "durable-functions/lib/src/classes";
 import * as t from "io-ts";
-import { toString } from "fp-ts/lib/function";
+import { toString } from "../utils/conversions";
 
 import * as o from "../utils/durable/orchestrators";
 import { failureUnhandled } from "../utils/durable/orchestrators";

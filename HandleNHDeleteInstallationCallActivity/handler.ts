@@ -1,5 +1,7 @@
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { NotificationHubService } from "azure-sb";
-import { toString } from "fp-ts/lib/function";
+import { toString } from "../utils/conversions";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
@@ -39,8 +41,11 @@ export const getActivityBody = (
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
 
-  return deleteInstallation(nhService, input.installationId).bimap(
-    e => failActivity(logger)(`ERROR=${toString(e)}`),
-    ActivityResultSuccess.encode
+  return pipe(
+    deleteInstallation(nhService, input.installationId),
+    TE.bimap(
+      e => failActivity(logger)(`ERROR=${toString(e)}`),
+      ActivityResultSuccess.encode
+    )
   );
 };

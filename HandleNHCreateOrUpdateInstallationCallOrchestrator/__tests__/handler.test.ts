@@ -29,24 +29,29 @@ import {
 import { ActivityInput as CreateOrUpdateActivityInput } from "../../HandleNHCreateOrUpdateInstallationCallActivity";
 
 import { getMockDeleteInstallationActivity } from "../../__mocks__/activities-mocks";
+import { pipe } from "fp-ts/lib/function";
+
+import * as E from "fp-ts/lib/Either";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 const aPushChannel =
   "fLKP3EATnBI:APA91bEy4go681jeSEpLkNqhtIrdPnEKu6Dfi-STtUiEnQn8RwMfBiPGYaqdWrmzJyXIh5Yms4017MYRS9O1LGPZwA4sOLCNIoKl4Fwg7cSeOkliAAtlQ0rVg71Kr5QmQiLlDJyxcq3p";
 
-const aCreateOrUpdateInstallationMessage = CreateOrUpdateInstallationMessage.decode(
+const aCreateOrUpdateInstallationMessage = pipe(
   {
     installationId: aFiscalCodeHash,
     kind: CreateOrUpdateKind.CreateOrUpdateInstallation,
     platform: PlatformEnum.apns,
     pushChannel: aPushChannel,
     tags: [aFiscalCodeHash]
-  }
-).getOrElseL(err => {
-  throw new Error(
-    `Cannot decode aCreateOrUpdateInstallationMessage: ${readableReport(err)}`
-  );
-});
+  },
+  CreateOrUpdateInstallationMessage.decode,
+  E.getOrElseW(err => {
+    throw new Error(
+      `Cannot decode aCreateOrUpdateInstallationMessage: ${readableReport(err)}`
+    );
+  })
+);
 
 const anOrchestratorInput = NhCreateOrUpdateInstallationOrchestratorCallInput.encode(
   {
@@ -101,20 +106,24 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
 
     const result = consumeGenerator(orchestratorHandler);
 
-    OrchestratorSuccess.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      _ => {
-        expect(mockCreateOrUpdateActivity).toBeCalledWith(
-          expect.any(Object),
-          expect.objectContaining({
-            installationId: aCreateOrUpdateInstallationMessage.installationId,
-            platform: aCreateOrUpdateInstallationMessage.platform,
-            tags: aCreateOrUpdateInstallationMessage.tags,
-            pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
-            notificationHubConfig: legacyNotificationHubConfig
-          })
-        );
-      }
+    pipe(
+      result,
+      OrchestratorSuccess.decode,
+      E.fold(
+        err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+        _ => {
+          expect(mockCreateOrUpdateActivity).toBeCalledWith(
+            expect.any(Object),
+            expect.objectContaining({
+              installationId: aCreateOrUpdateInstallationMessage.installationId,
+              platform: aCreateOrUpdateInstallationMessage.platform,
+              tags: aCreateOrUpdateInstallationMessage.tags,
+              pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
+              notificationHubConfig: legacyNotificationHubConfig
+            })
+          );
+        }
+      )
     );
   });
 
@@ -128,28 +137,32 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
 
     const result = consumeGenerator(orchestratorHandler);
 
-    OrchestratorSuccess.decode(result).fold(
-      err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
-      _ => {
-        expect(mockCreateOrUpdateActivity).toBeCalledWith(
-          expect.any(Object),
-          expect.objectContaining({
-            installationId: aCreateOrUpdateInstallationMessage.installationId,
-            platform: aCreateOrUpdateInstallationMessage.platform,
-            tags: aCreateOrUpdateInstallationMessage.tags,
-            pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
-            notificationHubConfig: newNotificationHubConfig
-          })
-        );
+    pipe(
+      result,
+      OrchestratorSuccess.decode,
+      E.fold(
+        err => fail(`Cannot decode test result, err: ${readableReport(err)}`),
+        _ => {
+          expect(mockCreateOrUpdateActivity).toBeCalledWith(
+            expect.any(Object),
+            expect.objectContaining({
+              installationId: aCreateOrUpdateInstallationMessage.installationId,
+              platform: aCreateOrUpdateInstallationMessage.platform,
+              tags: aCreateOrUpdateInstallationMessage.tags,
+              pushChannel: aCreateOrUpdateInstallationMessage.pushChannel,
+              notificationHubConfig: newNotificationHubConfig
+            })
+          );
 
-        expect(mockDeleteInstallationActivitySuccess).toBeCalledWith(
-          expect.any(Object),
-          expect.objectContaining({
-            installationId: aCreateOrUpdateInstallationMessage.installationId,
-            notificationHubConfig: legacyNotificationHubConfig
-          })
-        );
-      }
+          expect(mockDeleteInstallationActivitySuccess).toBeCalledWith(
+            expect.any(Object),
+            expect.objectContaining({
+              installationId: aCreateOrUpdateInstallationMessage.installationId,
+              notificationHubConfig: legacyNotificationHubConfig
+            })
+          );
+        }
+      )
     );
   });
 

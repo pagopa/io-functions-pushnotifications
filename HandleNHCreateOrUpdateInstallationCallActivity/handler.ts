@@ -1,5 +1,7 @@
 import NotificationHubService = require("azure-sb/lib/notificationhubservice");
-import { toString } from "fp-ts/lib/function";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
+import { toString } from "../utils/conversions";
 import * as t from "io-ts";
 
 import { InstallationId } from "../generated/notifications/InstallationId";
@@ -36,14 +38,17 @@ export const getActivityBody = (
 ): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
-  return createOrUpdateInstallation(
-    nhService,
-    input.installationId,
-    input.platform,
-    input.pushChannel,
-    input.tags
-  ).bimap(
-    e => retryActivity(logger, toString(e)),
-    ActivityResultSuccess.encode
+  return pipe(
+    createOrUpdateInstallation(
+      nhService,
+      input.installationId,
+      input.platform,
+      input.pushChannel,
+      input.tags
+    ),
+    TE.bimap(
+      e => retryActivity(logger, toString(e)),
+      ActivityResultSuccess.encode
+    )
   );
 };
