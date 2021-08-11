@@ -4,11 +4,13 @@
 
 import * as t from "io-ts";
 
-import { toString } from "fp-ts/lib/function";
+import { pipe } from "fp-ts/lib/function";
+
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { either, Either, left } from "fp-ts/lib/Either";
-import { fromNullable as fromNullableO } from "fp-ts/lib/Option";
 
 import { NotificationHubService, Azure } from "azure-sb";
 import {
@@ -157,19 +159,22 @@ const composeNHErrorMessage = (
   err: Error,
   response: Azure.ServiceBus.Response
 ): string =>
-  fromNullableO(response)
-    .map(
+  pipe(
+    response,
+    O.fromNullable,
+    O.map(
       res =>
         !res.body || dictionaryIsEmpty(res.body)
           ? "No response body"
-          : toString(res.body).replace(/\n/gim, " ") // avoid newlines
-    )
-    .map(innerMessage =>
+          : JSON.stringify(res.body).replace(/\n/gim, " ") // avoid newlines
+    ),
+    O.map(innerMessage =>
       innerMessage
         ? `[error message: ${err.message}] [response: ${response.statusCode} - ${innerMessage}]`
         : `[error message: ${err.message}] [response: ${response.statusCode}]`
-    )
-    .getOrElse(`[error message: ${err.message}]`);
+    ),
+    O.getOrElse(() => `[error message: ${err.message}]`)
+  );
 
 /**
  * Handle the Azure Notification Hub callback and
@@ -215,9 +220,11 @@ export const notify = (
             }
           },
           (err, response) =>
-            handleResponseOrError(err, response)
-              .mapLeft(reject)
-              .map(resolve)
+            pipe(
+              handleResponseOrError(err, response),
+              E.mapLeft(reject),
+              E.map(resolve)
+            )
         )
       ),
     errs =>
@@ -263,9 +270,11 @@ export const createOrUpdateInstallation = (
           azureInstallationOptions,
           // eslint-disable-next-line sonarjs/no-identical-functions
           (err, response) =>
-            handleResponseOrError(err, response)
-              .mapLeft(reject)
-              .map(resolve)
+            pipe(
+              handleResponseOrError(err, response),
+              E.mapLeft(reject),
+              E.map(resolve)
+            )
         )
       ),
     errs =>
@@ -293,9 +302,11 @@ export const deleteInstallation = (
           installationId,
           // eslint-disable-next-line sonarjs/no-identical-functions
           (err, response) =>
-            handleResponseOrError(err, response)
-              .mapLeft(reject)
-              .map(resolve)
+            pipe(
+              handleResponseOrError(err, response),
+              E.mapLeft(reject),
+              E.map(resolve)
+            )
         )
       ),
     errs =>
