@@ -106,6 +106,8 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
 
     const result = consumeGenerator(orchestratorHandler);
 
+    expect.assertions(1);
+
     pipe(
       result,
       OrchestratorSuccess.decode,
@@ -136,6 +138,8 @@ describe("HandleNHCreateOrUpdateInstallationCallOrchestrator", () => {
     })(contextMockWithDf);
 
     const result = consumeGenerator(orchestratorHandler);
+
+    expect.assertions(2);
 
     pipe(
       result,
