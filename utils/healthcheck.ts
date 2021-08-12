@@ -8,7 +8,9 @@ import {
 
 import { sequenceT } from "fp-ts/lib/Apply";
 import * as A from "fp-ts/lib/Array";
+import * as RA from "fp-ts/lib/ReadonlyArray";
 import * as TE from "fp-ts/lib/TaskEither";
+import * as T from "fp-ts/lib/Task";
 import { TaskEither } from "fp-ts/lib/TaskEither";
 import { toError } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
@@ -67,8 +69,12 @@ export const checkAzureNotificationHub = ({
   AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME,
   AZURE_NOTIFICATION_HUB_PARTITIONS
-}: IConfig): HealthCheck<"AzureNotificationHub"> =>
-  pipe(
+}: IConfig): HealthCheck<"AzureNotificationHub"> => {
+  const applicativeValidation = TE.getApplicativeTaskValidation(
+    T.ApplicativePar,
+    RA.getSemigroup<HealthProblem<"AzureNotificationHub">>()
+  );
+  return pipe(
     [
       { AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME },
       ...AZURE_NOTIFICATION_HUB_PARTITIONS.map(p => ({
@@ -93,9 +99,10 @@ export const checkAzureNotificationHub = ({
         toHealthProblems("AzureNotificationHub")
       )
     ),
-    A.sequence(TE.ApplicativeSeq),
+    A.sequence(applicativeValidation),
     TE.map(_ => true)
   );
+};
 
 /**
  * Check the application can connect to an Azure Storage
@@ -106,8 +113,13 @@ export const checkAzureNotificationHub = ({
  */
 export const checkAzureStorageHealth = (
   connStr: string
-): HealthCheck<"AzureStorage"> =>
-  pipe(
+): HealthCheck<"AzureStorage"> => {
+  const applicativeValidation = TE.getApplicativeTaskValidation(
+    T.ApplicativePar,
+    RA.getSemigroup<HealthProblem<"AzureStorage">>()
+  );
+
+  return pipe(
     // try to instantiate a client for each product of azure storage
     [
       createBlobService,
@@ -132,28 +144,29 @@ export const checkAzureStorageHealth = (
           toHealthProblems("AzureStorage")
         )
       ),
-    A.sequence(TE.ApplicativeSeq),
+    A.sequence(applicativeValidation),
     TE.map(_ => true)
   );
+};
 
 /**
  * Execute all the health checks for the application
  *
  * @returns either true or an array of error messages
  */
-export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
-  pipe(
+export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> => {
+  const applicativeValidation = TE.getApplicativeTaskValidation(
+    T.ApplicativePar,
+    RA.getSemigroup<HealthProblem<ProblemSource>>()
+  );
+
+  return pipe(
     void 0,
     TE.of,
     TE.chain(_ => checkConfigHealth()),
     TE.chain(config =>
-      // TODO: once we upgrade to fp-ts >= 1.19 we can use Validation to collect all errors, not just the first to happen
       pipe(
-        sequenceT(TE.ApplicativeSeq)<
-          ReadonlyArray<HealthProblem<ProblemSource>>,
-          // eslint-disable-next-line functional/prefer-readonly-type
-          Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>
-        >(
+        sequenceT(applicativeValidation)(
           checkAzureStorageHealth(
             config.NOTIFICATIONS_STORAGE_CONNECTION_STRING
           ),
@@ -163,3 +176,4 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
       )
     )
   );
+};
