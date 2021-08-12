@@ -75,7 +75,7 @@ export const createOrchestrator = <I, TNext = TNextDefault>(
       const failure = pipe(
         error,
         OrchestratorFailure.decode,
-        E.getOrElseW(() => failureUnhandled(error))
+        E.getOrElse(() => failureUnhandled(error) as OrchestratorFailure)
       );
       logger.error(failure);
 

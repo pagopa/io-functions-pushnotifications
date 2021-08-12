@@ -1,6 +1,5 @@
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { taskEither } from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
 import { TelemetryClient } from "applicationinsights";
@@ -55,7 +54,7 @@ export const getActivityBody = (
   const doNotify = fiscalCodeNotificationBlacklist
     .map(toSHA256)
     .includes(input.message.installationId) // by convention, installationId equals sha256 of user's fiscal code
-    ? taskEither.of<Error, ActivityResultSuccess>(
+    ? TE.of<Error, ActivityResultSuccess>(
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
     : notify(nhService, input.message.installationId, input.message.payload);

@@ -1,4 +1,5 @@
-import { taskEither } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
@@ -52,13 +53,13 @@ export const getActivityBody = (param: {
     `ENABLED_FF=${param.enabledFeatureFlag}|INSTALLATION_ID=${input.installationId}`
   );
 
-  return taskEither.of(
-    successWithValue(
-      param.isInActiveSubset(
-        param.enabledFeatureFlag,
-        input.installationId,
-        context.bindings.betaTestUser
-      )
-    )
+  return pipe(
+    param.isInActiveSubset(
+      param.enabledFeatureFlag,
+      input.installationId,
+      context.bindings.betaTestUser
+    ),
+    successWithValue,
+    TE.of
   );
 };

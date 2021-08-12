@@ -5,18 +5,16 @@ import {
   createQueueService,
   createTableService
 } from "azure-storage";
+
 import { sequenceT } from "fp-ts/lib/Apply";
-import { array } from "fp-ts/lib/Array";
-import { toError } from "fp-ts/lib/Either";
-import {
-  fromEither,
-  taskEither,
-  TaskEither,
-  tryCatch
-} from "fp-ts/lib/TaskEither";
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import * as A from "fp-ts/lib/Array";
 import * as TE from "fp-ts/lib/TaskEither";
+import { TaskEither } from "fp-ts/lib/TaskEither";
+import { toError } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
+
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+
 import { getConfig, IConfig } from "./config";
 import { NHResultSuccess } from "./notification";
 import { buildNHService } from "./notificationhubServicePartition";
@@ -51,7 +49,8 @@ const toHealthProblems = <S extends ProblemSource>(source: S) => (
  */
 export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
   pipe(
-    fromEither(getConfig()),
+    getConfig(),
+    TE.fromEither,
     TE.mapLeft(errors =>
       errors.map(e =>
         // give each problem its own line
@@ -77,7 +76,7 @@ export const checkAzureNotificationHub = ({
         AZURE_NH_HUB_NAME: p.name
       }))
     ].map(connString =>
-      tryCatch(
+      TE.tryCatch(
         () =>
           new Promise<NHResultSuccess>((resolve, reject) =>
             buildNHService({
@@ -94,7 +93,7 @@ export const checkAzureNotificationHub = ({
         toHealthProblems("AzureNotificationHub")
       )
     ),
-    array.sequence(taskEither),
+    A.sequence(TE.ApplicativeSeq),
     TE.map(_ => true)
   );
 
@@ -118,7 +117,7 @@ export const checkAzureStorageHealth = (
     ]
       // for each, create a task that wraps getServiceProperties
       .map(createService =>
-        tryCatch(
+        TE.tryCatch(
           () =>
             new Promise<
               azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
@@ -133,7 +132,7 @@ export const checkAzureStorageHealth = (
           toHealthProblems("AzureStorage")
         )
       ),
-    array.sequence(taskEither),
+    A.sequence(TE.ApplicativeSeq),
     TE.map(_ => true)
   );
 
@@ -150,7 +149,7 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
     TE.chain(config =>
       // TODO: once we upgrade to fp-ts >= 1.19 we can use Validation to collect all errors, not just the first to happen
       pipe(
-        sequenceT(taskEither)<
+        sequenceT(TE.ApplicativeSeq)<
           ReadonlyArray<HealthProblem<ProblemSource>>,
           // eslint-disable-next-line functional/prefer-readonly-type
           Array<TaskEither<ReadonlyArray<HealthProblem<ProblemSource>>, true>>

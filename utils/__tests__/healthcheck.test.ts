@@ -99,6 +99,10 @@ describe("healthcheck - storage account", () => {
         TE.mapLeft(err => {
           expect(err[0]).toBe(`AzureStorage|error - ${name}`);
           done();
+        }),
+        TE.map(_ => {
+          expect(true).toBeFalsy();
+          done();
         })
       )();
     }
@@ -142,6 +146,10 @@ describe("healthcheck - notification hub", () => {
       checkAzureNotificationHub,
       TE.mapLeft(_ => {
         expect(true).toBe(true);
+        done();
+      }),
+      TE.map(_ => {
+        expect(true).toBeFalsy();
         done();
       })
     )();
