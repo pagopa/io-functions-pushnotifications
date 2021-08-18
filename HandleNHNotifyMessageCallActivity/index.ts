@@ -1,5 +1,4 @@
-﻿import { TelemetryClient } from "applicationinsights";
-import { RetryOptions } from "durable-functions";
+﻿import { RetryOptions } from "durable-functions";
 
 import * as o from "../utils/durable/orchestrators";
 
@@ -33,7 +32,7 @@ export const getCallableActivity = (
   );
 
 const config = getConfigOrThrow();
-const telemetryClient = initTelemetryClient(config) as TelemetryClient;
+const telemetryClient = initTelemetryClient(config);
 
 const activityFunctionHandler = createActivity(
   activityName,
