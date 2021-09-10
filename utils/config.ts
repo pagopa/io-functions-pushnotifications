@@ -181,11 +181,13 @@ export const IConfig = t
   .intersection([BaseConfig, NotificationHubPartitionsConfig])
   .pipe(WithComputedNHPartitions);
 
-// No need to re-evaluate this object for each call
-const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
+export const envConfig = {
   ...process.env,
   isProduction: process.env.NODE_ENV === "production"
-});
+};
+
+// No need to re-evaluate this object for each call
+const errorOrConfig: t.Validation<IConfig> = IConfig.decode(envConfig);
 
 /**
  * Read the application configuration and check for invalid values.
