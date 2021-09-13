@@ -1,5 +1,8 @@
+import {
+  HealthCheck,
+  HealthProblem
+} from "@pagopa/io-functions-commons/dist/src/utils/healthcheck";
 import * as TE from "fp-ts/lib/TaskEither";
-import { HealthCheck, HealthProblem } from "../../utils/healthcheck";
 import { InfoHandler } from "../handler";
 
 afterEach(() => {
@@ -12,7 +15,7 @@ describe("InfoHandler", () => {
       "failure 1" as HealthProblem<"Config">,
       "failure 2" as HealthProblem<"Config">
     ]);
-    const handler = InfoHandler(healthCheck);
+    const handler = InfoHandler(() => healthCheck);
 
     const response = await handler();
 
@@ -21,7 +24,7 @@ describe("InfoHandler", () => {
 
   it("should return a success if the application is healthy", async () => {
     const healthCheck: HealthCheck = TE.of(true);
-    const handler = InfoHandler(healthCheck);
+    const handler = InfoHandler(() => healthCheck);
 
     const response = await handler();
 
