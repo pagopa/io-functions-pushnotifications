@@ -3,7 +3,7 @@ import * as df from "durable-functions";
 import { DurableOrchestrationClient } from "durable-functions/lib/src/durableorchestrationclient";
 
 import * as t from "io-ts";
-import { toString } from "fp-ts/lib/function";
+import { toString } from "../utils/conversions";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
 import { DeleteInstallationMessage } from "../generated/notifications/DeleteInstallationMessage";

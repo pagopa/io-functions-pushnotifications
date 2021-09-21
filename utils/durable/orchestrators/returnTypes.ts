@@ -1,5 +1,5 @@
-import { toString } from "fp-ts/lib/function";
 import * as t from "io-ts";
+import { toString } from "../utils";
 
 export type OrchestratorSuccess = t.TypeOf<typeof OrchestratorSuccess>;
 export const OrchestratorSuccess = t.interface({

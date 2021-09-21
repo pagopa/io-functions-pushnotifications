@@ -9,7 +9,10 @@ import {
   ActivityLogger,
   createLogger
 } from "../../utils/durable/activities/log";
-import { identity } from "fp-ts/lib/function";
+import { identity, pipe } from "fp-ts/lib/function";
+
+import * as TE from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -29,22 +32,28 @@ describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
     const input = {
       installationId: aFiscalCodeHash
     };
-    const result = await handler({
-      context: {
-        ...contextMock,
-        bindings: {
-          betaTestUser: []
-        }
+    const result = await pipe(
+      {
+        context: {
+          ...contextMock,
+          bindings: {
+            betaTestUser: []
+          }
+        },
+        input,
+        logger: mockLogger
       },
-      input,
-      logger: mockLogger
-    })
-      .fold<ActivityResult>(identity, identity)
-      .run();
+      handler,
+      TE.toUnion
+    )();
 
-    activityResultSuccessWithValue.decode(result).fold(
-      _ => fail(),
-      r => expect(r.value).toBe(true)
+    pipe(
+      result,
+      activityResultSuccessWithValue.decode,
+      E.fold(
+        _ => fail(),
+        r => expect(r.value).toBe(true)
+      )
     );
   });
 
@@ -56,22 +65,28 @@ describe("IsUserInActiveSubsetActivity - Beta Test Users", () => {
     const input = {
       installationId: aFiscalCodeHash
     };
-    const result = await handler({
-      context: {
-        ...contextMock,
-        bindings: {
-          betaTestUser: []
-        }
+    const result = await pipe(
+      {
+        context: {
+          ...contextMock,
+          bindings: {
+            betaTestUser: []
+          }
+        },
+        input,
+        logger: mockLogger
       },
-      input,
-      logger: mockLogger
-    })
-      .fold<ActivityResult>(identity, identity)
-      .run();
+      handler,
+      TE.toUnion
+    )();
 
-    activityResultSuccessWithValue.decode(result).fold(
-      _ => fail(),
-      r => expect(r.value).toBe(false)
+    pipe(
+      result,
+      activityResultSuccessWithValue.decode,
+      E.fold(
+        _ => fail(),
+        r => expect(r.value).toBe(false)
+      )
     );
   });
 });

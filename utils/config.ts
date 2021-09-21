@@ -11,6 +11,9 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { CommaSeparatedListOf } from "@pagopa/ts-commons/lib/comma-separated-list";
+
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 import {
   DisjoitedNotificationHubPartitionArray,
   RegExpFromString
@@ -123,33 +126,36 @@ const WithComputedNHPartitions = new t.Type<
     ...baseConfig
   }): t.Validation<WithComputedNHPartitions> =>
     // decode the fixed array of NH partitions...
-    DisjoitedNotificationHubPartitionArray.decode([
-      {
-        endpoint: NH1_ENDPOINT,
-        name: NH1_NAME,
-        partitionRegex: NH1_PARTITION_REGEX
-      },
-      {
-        endpoint: NH2_ENDPOINT,
-        name: NH2_NAME,
-        partitionRegex: NH2_PARTITION_REGEX
-      },
-      {
-        endpoint: NH3_ENDPOINT,
-        name: NH3_NAME,
-        partitionRegex: NH3_PARTITION_REGEX
-      },
-      {
-        endpoint: NH4_ENDPOINT,
-        name: NH4_NAME,
-        partitionRegex: NH4_PARTITION_REGEX
-      }
-    ])
+    pipe(
+      [
+        {
+          endpoint: NH1_ENDPOINT,
+          name: NH1_NAME,
+          partitionRegex: NH1_PARTITION_REGEX
+        },
+        {
+          endpoint: NH2_ENDPOINT,
+          name: NH2_NAME,
+          partitionRegex: NH2_PARTITION_REGEX
+        },
+        {
+          endpoint: NH3_ENDPOINT,
+          name: NH3_NAME,
+          partitionRegex: NH3_PARTITION_REGEX
+        },
+        {
+          endpoint: NH4_ENDPOINT,
+          name: NH4_NAME,
+          partitionRegex: NH4_PARTITION_REGEX
+        }
+      ],
+      DisjoitedNotificationHubPartitionArray.decode,
       // ...then add the key to the base config
-      .map(partitions => ({
+      E.map(partitions => ({
         ...baseConfig,
         AZURE_NOTIFICATION_HUB_PARTITIONS: partitions
-      })),
+      }))
+    ),
   (
     v: WithComputedNHPartitions
   ): BaseConfig & NotificationHubPartitionsConfig => {
@@ -175,12 +181,13 @@ export const IConfig = t
   .intersection([BaseConfig, NotificationHubPartitionsConfig])
   .pipe(WithComputedNHPartitions);
 
-// No need to re-evaluate this object for each call
-const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
+export const envConfig = {
   ...process.env,
-
   isProduction: process.env.NODE_ENV === "production"
-});
+};
+
+// No need to re-evaluate this object for each call
+const errorOrConfig: t.Validation<IConfig> = IConfig.decode(envConfig);
 
 /**
  * Read the application configuration and check for invalid values.
@@ -198,6 +205,9 @@ export const getConfig = (): t.Validation<IConfig> => errorOrConfig;
  * @throws validation errors found while parsing the application configuration
  */
 export const getConfigOrThrow = (): IConfig =>
-  errorOrConfig.getOrElseL(errors => {
-    throw new Error(`Invalid configuration: ${readableReport(errors)}`);
-  });
+  pipe(
+    errorOrConfig,
+    E.getOrElseW(errors => {
+      throw new Error(`Invalid configuration: ${readableReport(errors)}`);
+    })
+  );

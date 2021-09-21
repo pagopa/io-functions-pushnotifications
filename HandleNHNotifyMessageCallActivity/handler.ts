@@ -1,11 +1,12 @@
-import { toString } from "fp-ts/lib/function";
-import { taskEither } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
 import { TelemetryClient } from "applicationinsights";
 import { NotificationHubService } from "azure-sb";
 
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { toString } from "../utils/conversions";
 import {
   ActivityBody,
   ActivityResultSuccess as ActivityResultSuccessBase,
@@ -53,17 +54,18 @@ export const getActivityBody = (
   const doNotify = fiscalCodeNotificationBlacklist
     .map(toSHA256)
     .includes(input.message.installationId) // by convention, installationId equals sha256 of user's fiscal code
-    ? taskEither.of<Error, ActivityResultSuccess>(
+    ? TE.of<Error, ActivityResultSuccess>(
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
     : notify(nhService, input.message.installationId, input.message.payload);
 
-  return doNotify
-    .bimap(
+  return pipe(
+    doNotify,
+    TE.bimap(
       e => retryActivity(logger, toString(e)),
       ActivityResultSuccess.encode
-    )
-    .map(e => {
+    ),
+    TE.map(e => {
       telemetryClient.trackEvent({
         name: "api.messages.notification.push.sent",
         properties: {
@@ -77,5 +79,6 @@ export const getActivityBody = (
       });
 
       return e;
-    });
+    })
+  );
 };

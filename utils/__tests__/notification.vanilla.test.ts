@@ -31,7 +31,7 @@ describe("NotificationHubService", () => {
       message: "foo",
       message_id: "bar",
       title: "beef"
-    }).run();
+    })();
     expect(responseSpy).toHaveBeenCalledWith(undefined);
   });
 });
