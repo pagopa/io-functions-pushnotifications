@@ -17,4 +17,9 @@ export const toSHA256 = (source: FiscalCode): string =>
  * Utility function for printing a unknown object.
  * It replaces fp-ts `toString`
  */
-export const toString: (x: unknown) => string = JSON.stringify;
+export const toString = (err: unknown): string =>
+  typeof err === "string"
+    ? err
+    : err instanceof Error
+    ? err.message
+    : JSON.stringify(err);
