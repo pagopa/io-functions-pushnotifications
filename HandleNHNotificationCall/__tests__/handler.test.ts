@@ -11,6 +11,7 @@ import { PlatformEnum } from "../../generated/notifications/Platform";
 
 import { success } from "../../utils/durable/activities";
 import { getHandler } from "../handler";
+import { NhNotifyMessageRequest } from "../../HandleNHNotifyMessageCallActivityQueue/handle";
 
 const dfClient = ({
   startNew: jest.fn().mockImplementation((_, __, ___) => success())
@@ -71,15 +72,31 @@ describe("HandleNHNotificationCall", () => {
   });
 
   it("should call Notify Orchestrator when message is NotifyMessage", async () => {
-    await getHandler()(context as any, aNotifyMessage);
-
-    expect(dfClient.startNew).toHaveBeenCalledWith(
-      "HandleNHNotifyMessageCallOrchestrator",
-      undefined,
-      {
-        message: aNotifyMessage
+    const bindedContext = {
+      bindings: {
+        notifyMessages: null
       }
-    );
+    };
+    await getHandler()(bindedContext as any, aNotifyMessage);
+
+    expect(bindedContext.bindings.notifyMessages).toEqual([
+      Buffer.from(
+        JSON.stringify(
+          NhNotifyMessageRequest.encode({
+            message: aNotifyMessage,
+            target: "current"
+          })
+        )
+      ).toString("base64"),
+      Buffer.from(
+        JSON.stringify(
+          NhNotifyMessageRequest.encode({
+            message: aNotifyMessage,
+            target: "legacy"
+          })
+        )
+      ).toString("base64")
+    ]);
   });
 
   it("should not call any Orchestrator when message kind is not correct", async () => {

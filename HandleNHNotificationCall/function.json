@@ -11,6 +11,13 @@
       "name": "starter",
       "type": "orchestrationClient",
       "direction": "in"
+    },
+    {
+      "queueName": "%NOTIFY_MESSAGE_QUEUE_NAME%",
+      "connection": "INTERNAL_STORAGE_CONNECTION_STRING",
+      "name": "notifyMessages",
+      "type": "queue",
+      "direction": "out"
     }
   ],
   "disabled": false,

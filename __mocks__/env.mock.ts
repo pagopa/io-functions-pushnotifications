@@ -32,7 +32,10 @@ export const envConfig = {
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING:
     "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",
-
+  NOTIFICATIONS_QUEUE_NAME: "notification-queue-name",
+  INTERNAL_STORAGE_CONNECTION_STRING:
+    "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",
+  NOTIFY_MESSAGE_QUEUE_NAME: "notify-queue-name",
   NH_PARTITION_FEATURE_FLAG: "all",
   BETA_USERS_STORAGE_CONNECTION_STRING:
     "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar",

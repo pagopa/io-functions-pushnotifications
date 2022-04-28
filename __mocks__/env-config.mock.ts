@@ -41,7 +41,9 @@ export const envConfig: IConfig = {
   ] as any,
 
   NOTIFICATIONS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
-
+  NOTIFICATIONS_QUEUE_NAME: "notification-queue-name" as NonEmptyString,
+  INTERNAL_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
+  NOTIFY_MESSAGE_QUEUE_NAME: "notify-queue-name" as NonEmptyString,
   NH_PARTITION_FEATURE_FLAG: "all",
   BETA_USERS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   BETA_USERS_TABLE_NAME: "nhpartitiontestusers" as NonEmptyString,

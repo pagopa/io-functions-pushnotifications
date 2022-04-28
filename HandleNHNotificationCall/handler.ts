@@ -2,7 +2,10 @@ import { Context } from "@azure/functions";
 import * as df from "durable-functions";
 import { DurableOrchestrationClient } from "durable-functions/lib/src/durableorchestrationclient";
 
+import * as T from "fp-ts/Task";
+import * as AR from "fp-ts/Array";
 import * as t from "io-ts";
+import { flow, pipe } from "fp-ts/lib/function";
 import { toString } from "../utils/conversions";
 
 import { CreateOrUpdateInstallationMessage } from "../generated/notifications/CreateOrUpdateInstallationMessage";
@@ -15,7 +18,10 @@ import { KindEnum as NotifyKind } from "../generated/notifications/NotifyMessage
 
 import { OrchestratorName as CreateOrUpdateInstallationOrchestrator } from "../HandleNHCreateOrUpdateInstallationCallOrchestrator/handler";
 import { OrchestratorName as DeleteInstallationOrchestratorName } from "../HandleNHDeleteInstallationCallOrchestrator/handler";
-import { OrchestratorName as NotifyMessageOrchestratorName } from "../HandleNHNotifyMessageCallOrchestrator/handler";
+import {
+  NhNotifyMessageRequest,
+  NhTarget
+} from "../HandleNHNotifyMessageCallActivityQueue/handle";
 
 export const NotificationMessage = t.union([
   NotifyMessage,
@@ -24,6 +30,26 @@ export const NotificationMessage = t.union([
 ]);
 
 export type NotificationHubMessage = t.TypeOf<typeof NotificationMessage>;
+
+const notifyMessage = (
+  context: Context,
+  message: NotifyMessage
+): Promise<string> =>
+  pipe(
+    ["current", "legacy"],
+    t.array(NhTarget).encode,
+    AR.map(T.of),
+    AR.map(
+      flow(
+        T.map(target => NhNotifyMessageRequest.encode({ message, target })),
+        T.map(m => Buffer.from(JSON.stringify(m)).toString("base64"))
+      )
+    ),
+    T.sequenceArray,
+    // eslint-disable-next-line functional/immutable-data
+    T.map(notifyMessages => (context.bindings.notifyMessages = notifyMessages)),
+    T.map(() => "-1") // There is no orchestrator_id to return
+  )();
 
 const startOrchestrator = async (
   notificationHubMessage: NotificationHubMessage,
@@ -48,9 +74,7 @@ const startOrchestrator = async (
         }
       );
     case NotifyKind.Notify:
-      return await client.startNew(NotifyMessageOrchestratorName, undefined, {
-        message: notificationHubMessage
-      });
+      return notifyMessage(context, notificationHubMessage);
     default:
       context.log.error(
         `HandleNHNotificationCall|ERROR=Unknown message kind, message: ${toString(
