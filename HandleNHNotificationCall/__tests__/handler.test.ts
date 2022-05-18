@@ -11,7 +11,7 @@ import { PlatformEnum } from "../../generated/notifications/Platform";
 
 import { success } from "../../utils/durable/activities";
 import { getHandler } from "../handler";
-import { NhNotifyMessageRequest } from "../../HandleNHNotifyMessageCallActivityQueue/handle";
+import { NhNotifyMessageRequest } from "../../utils/types";
 
 const dfClient = ({
   startNew: jest.fn().mockImplementation((_, __, ___) => success())
