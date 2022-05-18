@@ -3,7 +3,7 @@
     {
       "type": "queueTrigger",
       "direction": "in",
-      "name": "messageviewfailure",
+      "name": "notifymessagerequest",
       "queueName": "%NOTIFY_MESSAGE_QUEUE_NAME%",
       "connection":"INTERNAL_STORAGE_CONNECTION_STRING"
     }
