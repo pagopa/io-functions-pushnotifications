@@ -2,6 +2,7 @@ import * as E from "fp-ts/lib/Either";
 import { identity, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 
 /**
  * Parses a string into a deserialized json
@@ -82,3 +83,12 @@ export const DisjoitedNotificationHubPartitionArray = t.refinement(
   },
   "DisjoitedNotificationHubPartitionArray"
 );
+
+export const NhTarget = t.union([t.literal("current"), t.literal("legacy")]);
+export type NhTarget = t.TypeOf<typeof NhTarget>;
+
+export const NhNotifyMessageRequest = t.interface({
+  message: NotifyMessage,
+  target: NhTarget
+});
+export type NhNotifyMessageRequest = t.TypeOf<typeof NhNotifyMessageRequest>;

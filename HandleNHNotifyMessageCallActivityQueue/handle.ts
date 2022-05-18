@@ -1,10 +1,8 @@
 import { flow, pipe } from "fp-ts/lib/function";
-import * as t from "io-ts";
 import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/TaskEither";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { TelemetryClient } from "applicationinsights";
-import { NotifyMessage } from "../generated/notifications/NotifyMessage";
 import { errorsToError } from "../IsUserInActiveSubsetActivity/handler";
 import {
   buildNHService,
@@ -13,21 +11,13 @@ import {
 } from "../utils/notificationhubServicePartition";
 import { toSHA256 } from "../utils/conversions";
 import { notify } from "../utils/notification";
+import { NhNotifyMessageRequest } from "../utils/types";
 import {
   Failure,
   throwTransientFailure,
   toPermanentFailure,
   toTransientFailure
 } from "../utils/errors";
-
-export const NhTarget = t.union([t.literal("current"), t.literal("legacy")]);
-export type NhTarget = t.TypeOf<typeof NhTarget>;
-
-export const NhNotifyMessageRequest = t.interface({
-  message: NotifyMessage,
-  target: NhTarget
-});
-export type NhNotifyMessageRequest = t.TypeOf<typeof NhNotifyMessageRequest>;
 
 export const handle = (
   inputRequest: unknown,
