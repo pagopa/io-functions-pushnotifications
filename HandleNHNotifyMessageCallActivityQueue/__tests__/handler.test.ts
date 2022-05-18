@@ -7,7 +7,7 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 import { TelemetryClient } from "applicationinsights";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { toSHA256 } from "../../utils/conversions";
-import { handle } from "../handle";
+import { handle } from "../handler";
 import * as NSP from "../../utils/notificationhubServicePartition";
 import { NhNotifyMessageRequest } from "../../utils/types";
 

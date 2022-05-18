@@ -5,7 +5,7 @@ import {
   getNHLegacyConfig,
   getNotificationHubPartitionConfig
 } from "../utils/notificationhubServicePartition";
-import { handle, NhNotifyMessageResponse } from "./handle";
+import { handle, NhNotifyMessageResponse } from "./handler";
 
 const config = getConfigOrThrow();
 
