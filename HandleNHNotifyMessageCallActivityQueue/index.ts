@@ -5,7 +5,7 @@ import {
   getNHLegacyConfig,
   getNotificationHubPartitionConfig
 } from "../utils/notificationhubServicePartition";
-import { handle } from "./handle";
+import { handle, NhNotifyMessageResponse } from "./handle";
 
 const config = getConfigOrThrow();
 
@@ -19,7 +19,7 @@ const notificationHubConfigPartitionChooser = getNotificationHubPartitionConfig(
 export const index: AzureFunction = (
   context: Context,
   notifyRequest: unknown
-): ReturnType<typeof handle> =>
+): NhNotifyMessageResponse =>
   handle(
     notifyRequest,
     legacyNotificationHubConfig,

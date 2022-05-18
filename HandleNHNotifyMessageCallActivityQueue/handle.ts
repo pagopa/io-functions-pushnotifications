@@ -19,6 +19,10 @@ import {
   toTransientFailure
 } from "../utils/errors";
 
+export type NhNotifyMessageResponse = Promise<
+  Failure | { readonly kind: string }
+>;
+
 export const handle = (
   inputRequest: unknown,
   legacyNotificationHubConfig: NotificationHubConfig,
@@ -27,7 +31,7 @@ export const handle = (
   >,
   fiscalCodeNotificationBlacklist: ReadonlyArray<FiscalCode>,
   telemetryClient: TelemetryClient
-): Promise<Failure | { readonly kind: string }> =>
+): NhNotifyMessageResponse =>
   pipe(
     inputRequest,
     NhNotifyMessageRequest.decode,
