@@ -54,7 +54,7 @@ const aNotifyMessageToBlacklistedUser: NotifyMessage = {
   ) as NonEmptyString
 };
 
-describe("HandleNHNotifyMessageCallActivity", () => {
+describe("HandleNHNotifyMessageCallActivityQueue", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
