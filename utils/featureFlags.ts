@@ -1,5 +1,6 @@
+import { pipe } from "fp-ts/lib/function";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { InstallationId } from "../generated/notifications/InstallationId";
-
 import { NHPartitionFeatureFlag } from "./config";
 
 /**
@@ -52,3 +53,18 @@ export const getIsUserACanaryTestUser = (
 
   return (sha: InstallationId): boolean => regExp.test(sha);
 };
+
+export const getDefaultFFEvaluator = (
+  CANARY_USERS_REGEX: NonEmptyString,
+  betaUsersTable: ReadonlyArray<{ readonly RowKey: string }>,
+  enabledFeatureFlag: NHPartitionFeatureFlag
+) => (sha: InstallationId): boolean =>
+  pipe(
+    getIsInActiveSubset(
+      getIsUserABetaTestUser(),
+      getIsUserACanaryTestUser(CANARY_USERS_REGEX)
+    ),
+    isInActiveSubset =>
+      isInActiveSubset(enabledFeatureFlag, sha, betaUsersTable)
+  );
+export type DefaultFFEvaluator = ReturnType<typeof getDefaultFFEvaluator>;

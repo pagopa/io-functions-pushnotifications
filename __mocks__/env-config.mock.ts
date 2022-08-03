@@ -47,5 +47,6 @@ export const envConfig: IConfig = {
   NH_PARTITION_FEATURE_FLAG: "all",
   BETA_USERS_STORAGE_CONNECTION_STRING: "Endpoint=sb://host.docker.internal:30000;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=foobar" as NonEmptyString,
   BETA_USERS_TABLE_NAME: "nhpartitiontestusers" as NonEmptyString,
-  CANARY_USERS_REGEX: "^([(0-9)|(a-f)|(A-F)]{63}0)|([(0-9)|(a-f)|(A-F)]{62}[(0-7)]{1}1)$" as NonEmptyString
+  CANARY_USERS_REGEX: "^([(0-9)|(a-f)|(A-F)]{63}0)|([(0-9)|(a-f)|(A-F)]{62}[(0-7)]{1}1)$" as NonEmptyString,
+  NOTIFY_VIA_QUEUE_FEATURE_FLAG: "none"
 };

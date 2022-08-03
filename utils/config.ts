@@ -98,7 +98,8 @@ const BaseConfig = t.intersection([
       BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
       BETA_USERS_TABLE_NAME: NonEmptyString,
       CANARY_USERS_REGEX: NonEmptyString,
-      NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag
+      NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag,
+      NOTIFY_VIA_QUEUE_FEATURE_FLAG: NHPartitionFeatureFlag
     }),
     t.partial({ APPINSIGHTS_DISABLE: t.string })
   ])

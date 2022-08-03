@@ -8,6 +8,15 @@
       "direction": "in"
     },
     {
+      "direction": "in",
+      "name": "betaTestUser",
+      "type": "table",
+      "tableName": "%BETA_USERS_TABLE_NAME%",
+      "connection": "BETA_USERS_STORAGE_CONNECTION_STRING",
+      "filter": "RowKey eq '{installationId}'",
+      "take": "1"
+    },
+    {
       "name": "starter",
       "type": "orchestrationClient",
       "direction": "in"
