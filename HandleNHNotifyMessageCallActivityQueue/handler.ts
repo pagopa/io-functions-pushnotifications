@@ -73,6 +73,21 @@ export const handle = (
           )
         ),
         TE.mapLeft(toTransientFailure),
+        TE.mapLeft(error => {
+          telemetryClient.trackEvent({
+            name: "api.messages.notification.push.sent.failure",
+            properties: {
+              installationId: message.installationId,
+              isSuccess: "false",
+              messageId: message.payload.message_id,
+              notificationHub: nhConfig.AZURE_NH_HUB_NAME,
+              reason: error.reason
+            },
+            tagOverrides: { samplingEnabled: "false" }
+          });
+
+          return error;
+        }),
         TE.map(result => {
           telemetryClient.trackEvent({
             name: "api.messages.notification.push.sent",

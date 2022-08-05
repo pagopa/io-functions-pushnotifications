@@ -34,7 +34,7 @@ const legacyNotificationHubConfig: NotificationHubConfig = {
 };
 
 const mockTelemetryClient = ({
-  trackEvent: () => {}
+  trackEvent: jest.fn(() => {})
 } as unknown) as TelemetryClient;
 
 const mockNotificationHubService = {
@@ -129,6 +129,11 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
       )
     ).rejects.toEqual(expect.objectContaining({ kind: "TRANSIENT" }));
     expect(mockNotificationHubService.send).toHaveBeenCalledTimes(1);
+    expect(mockTelemetryClient.trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        properties: expect.objectContaining({ isSuccess: "false" })
+      })
+    );
   });
 
   it("should not call notificationhubServicePartion.buildNHService when using a blacklisted user", async () => {
