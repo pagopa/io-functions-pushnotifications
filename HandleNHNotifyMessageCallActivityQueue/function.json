@@ -8,5 +8,5 @@
       "connection":"INTERNAL_STORAGE_CONNECTION_STRING"
     }
   ],
-  "scriptFile": "../dist/HandleNHNotifyMessageCallQueue/index.js"
+  "scriptFile": "../dist/HandleNHNotifyMessageCallActivityQueue/index.js"
 }
