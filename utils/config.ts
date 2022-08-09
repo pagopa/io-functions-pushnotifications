@@ -73,7 +73,6 @@ const BaseConfig = t.intersection([
 
       AzureWebJobsStorage: NonEmptyString,
 
-      NOTIFICATIONS_STORAGE_CONNECTION_STRING: NonEmptyString,
       RETRY_ATTEMPT_NUMBER: IntegerFromString,
 
       isProduction: t.boolean
