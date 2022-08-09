@@ -1,6 +1,7 @@
 import { flow, pipe } from "fp-ts/lib/function";
 import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/TaskEither";
+import * as t from "io-ts";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { TelemetryClient } from "applicationinsights";
 import { errorsToError } from "../IsUserInActiveSubsetActivity/handler";
@@ -34,7 +35,12 @@ export const handle = (
 ): NhNotifyMessageResponse =>
   pipe(
     inputRequest,
-    NhNotifyMessageRequest.decode,
+    t.string.decode,
+    E.map(inputRequestAsBase64 =>
+      Buffer.from(inputRequestAsBase64, "base64").toString()
+    ),
+    E.map(JSON.parse),
+    E.chain(NhNotifyMessageRequest.decode),
     E.mapLeft(flow(errorsToError, toPermanentFailure)),
     TE.fromEither,
     TE.bindTo("request"),

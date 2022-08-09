@@ -9,7 +9,6 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 import { toSHA256 } from "../../utils/conversions";
 import { handle } from "../handler";
 import * as NSP from "../../utils/notificationhubServicePartition";
-import { NhNotifyMessageRequest } from "../../utils/types";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -64,10 +63,12 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
       .fn()
       .mockImplementation((_1, _2, _3, cb) => cb());
 
-    const input = NhNotifyMessageRequest.encode({
-      message: aNotifyMessage,
-      target: "current"
-    });
+    const input = Buffer.from(
+      JSON.stringify({
+        message: aNotifyMessage,
+        target: "current"
+      })
+    ).toString("base64");
 
     expect.assertions(3);
 
@@ -89,10 +90,12 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
       .fn()
       .mockImplementation((_1, _2, _3, cb) => cb());
 
-    const input = NhNotifyMessageRequest.encode({
-      message: aNotifyMessage,
-      target: "legacy"
-    });
+    const input = Buffer.from(
+      JSON.stringify({
+        message: aNotifyMessage,
+        target: "legacy"
+      })
+    ).toString("base64");
 
     expect.assertions(3);
 
@@ -114,10 +117,12 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
       .fn()
       .mockImplementation((_, __, ___, cb) => cb(new Error("send error")));
 
-    const input = NhNotifyMessageRequest.encode({
-      message: aNotifyMessage,
-      target: "current"
-    });
+    const input = Buffer.from(
+      JSON.stringify({
+        message: aNotifyMessage,
+        target: "legacy"
+      })
+    ).toString("base64");
 
     await expect(
       handle(
@@ -141,10 +146,12 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
       .fn()
       .mockImplementation((_1, _2, _3, cb) => cb());
 
-    const input = NhNotifyMessageRequest.encode({
-      message: aNotifyMessageToBlacklistedUser,
-      target: "current"
-    });
+    const input = Buffer.from(
+      JSON.stringify({
+        message: aNotifyMessageToBlacklistedUser,
+        target: "current"
+      })
+    ).toString("base64");
 
     expect.assertions(3);
 
