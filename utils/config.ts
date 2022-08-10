@@ -57,41 +57,51 @@ const NotificationHubPartitionsConfig = t.interface({
 export type BaseConfig = t.TypeOf<typeof BaseConfig>;
 const BaseConfig = t.intersection([
   t.interface({
-    APPINSIGHTS_INSTRUMENTATIONKEY: NonEmptyString,
-    // the internal function runtime has MaxTelemetryItem per second set to 20 by default
-    // @see https://github.com/Azure/azure-functions-host/blob/master/src/WebJobs.Script/Config/ApplicationInsightsLoggerOptionsSetup.cs#L29
-    APPINSIGHTS_SAMPLING_PERCENTAGE: withDefault(IntegerFromString, 5),
-
-    AzureWebJobsStorage: NonEmptyString,
-
-    NOTIFICATIONS_STORAGE_CONNECTION_STRING: NonEmptyString,
-    RETRY_ATTEMPT_NUMBER: IntegerFromString,
-
-    isProduction: t.boolean
+    NOTIFICATIONS_QUEUE_NAME: NonEmptyString,
+    NOTIFICATIONS_STORAGE_CONNECTION_STRING: NonEmptyString
   }),
-
   t.interface({
-    // a list of fiscal codes not to send notifications to
-    //   use case: when doing internal tests
-    FISCAL_CODE_NOTIFICATION_BLACKLIST: withDefault(
-      CommaSeparatedListOf(FiscalCode),
-      []
-    )
+    INTERNAL_STORAGE_CONNECTION_STRING: NonEmptyString,
+    NOTIFY_MESSAGE_QUEUE_NAME: NonEmptyString
   }),
+  t.intersection([
+    t.interface({
+      APPINSIGHTS_INSTRUMENTATIONKEY: NonEmptyString,
+      // the internal function runtime has MaxTelemetryItem per second set to 20 by default
+      // @see https://github.com/Azure/azure-functions-host/blob/master/src/WebJobs.Script/Config/ApplicationInsightsLoggerOptionsSetup.cs#L29
+      APPINSIGHTS_SAMPLING_PERCENTAGE: withDefault(IntegerFromString, 5),
 
-  // Legacy Notification Hub configuration
-  t.interface({
-    AZURE_NH_ENDPOINT: NonEmptyString,
-    AZURE_NH_HUB_NAME: NonEmptyString
-  }),
+      AzureWebJobsStorage: NonEmptyString,
 
-  t.interface({
-    BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
-    BETA_USERS_TABLE_NAME: NonEmptyString,
-    CANARY_USERS_REGEX: NonEmptyString,
-    NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag
-  }),
-  t.partial({ APPINSIGHTS_DISABLE: t.string })
+      RETRY_ATTEMPT_NUMBER: IntegerFromString,
+
+      isProduction: t.boolean
+    }),
+
+    t.interface({
+      // a list of fiscal codes not to send notifications to
+      //   use case: when doing internal tests
+      FISCAL_CODE_NOTIFICATION_BLACKLIST: withDefault(
+        CommaSeparatedListOf(FiscalCode),
+        []
+      )
+    }),
+
+    // Legacy Notification Hub configuration
+    t.interface({
+      AZURE_NH_ENDPOINT: NonEmptyString,
+      AZURE_NH_HUB_NAME: NonEmptyString
+    }),
+
+    t.interface({
+      BETA_USERS_STORAGE_CONNECTION_STRING: NonEmptyString,
+      BETA_USERS_TABLE_NAME: NonEmptyString,
+      CANARY_USERS_REGEX: NonEmptyString,
+      NH_PARTITION_FEATURE_FLAG: NHPartitionFeatureFlag,
+      NOTIFY_VIA_QUEUE_FEATURE_FLAG: NHPartitionFeatureFlag
+    }),
+    t.partial({ APPINSIGHTS_DISABLE: t.string })
+  ])
 ]);
 
 /**

@@ -12,3 +12,5 @@ export const initTelemetryClient = (
         disableAppInsights: env.APPINSIGHTS_DISABLE === "true",
         samplingPercentage: env.APPINSIGHTS_SAMPLING_PERCENTAGE
       });
+
+export type TelemetryClient = ReturnType<typeof initTelemetryClient>;

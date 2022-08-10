@@ -1,0 +1,12 @@
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "notifymessagerequest",
+      "queueName": "%NOTIFY_MESSAGE_QUEUE_NAME%",
+      "connection":"INTERNAL_STORAGE_CONNECTION_STRING"
+    }
+  ],
+  "scriptFile": "../dist/HandleNHNotifyMessageCallActivityQueue/index.js"
+}
