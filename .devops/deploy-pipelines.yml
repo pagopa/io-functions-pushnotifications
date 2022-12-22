@@ -1,7 +1,7 @@
 # Azure DevOps pipeline to release a new version and deploy to production.
 
 variables:
-  HEALTHCHECK_PATH: 'api/info' 
+  HEALTHCHECK_PATH: 'api/v1/info' 
 
 parameters:
   - name: 'RELEASE_SEMVER'
