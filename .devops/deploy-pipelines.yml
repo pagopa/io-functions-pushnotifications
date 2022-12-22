@@ -24,7 +24,7 @@ parameters:
     default:
       pushnotiffn:
         appname: io-p-push-notif-fn
-        rg: io-p-push-notif-rg
+        rg: io-p-messages-weu-prod01-push-notif-rg
 
 # Only manual activations are intended
 trigger: none
