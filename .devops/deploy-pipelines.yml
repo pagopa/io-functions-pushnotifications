@@ -177,7 +177,7 @@ stages:
             - checkout: none
             - script: |
                 # fails if response status is not 2xx
-                curl --fail-with-body 'https://${{ app.Value.appname }}-staging.azurewebsites.net/$(HEALTHCHECK_PATH)'
+                curlf() {   OUTPUT_FILE=$(mktemp);   HTTP_CODE=$(curl --silent --output $OUTPUT_FILE --write-out "%{http_code}" "$@");   if [[ ${HTTP_CODE} -lt 200 || ${HTTP_CODE} -gt 299 ]] ; then     >&2 cat $OUTPUT_FILE;     return 22;   fi;   cat $OUTPUT_FILE;   rm $OUTPUT_FILE; } && curlf 'https://${{ app.Value.appname }}-staging.azurewebsites.net/$(HEALTHCHECK_PATH)'
               displayName: 'Healthcheck'
 
   # Promote the staging instance to production
