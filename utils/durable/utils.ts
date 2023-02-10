@@ -19,7 +19,7 @@ export const consumeGenerator = <TReturn = unknown>(
   while (true) {
     const { done, value } = gen.next(prevValue);
     if (done) {
-      return value;
+      return value as TReturn;
     }
     prevValue = value;
   }
