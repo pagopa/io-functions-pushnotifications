@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@pagopa/express-azure-functions": "^2.0.0",
-    "@pagopa/io-functions-commons": "^21.5.3",
-    "@pagopa/ts-commons": "^10.0.0",
+    "@pagopa/io-functions-commons": "^28.0.0",
+    "@pagopa/ts-commons": "^11.0.0",
     "applicationinsights": "^1.8.10",
     "azure-sb": "^0.11.1",
     "azure-storage": "^2.10.3",
