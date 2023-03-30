@@ -11,5 +11,4 @@ README.md
 yarn.lock
 jest.config.js
 __*
-Dangerfile.js
 CODEOWNERS

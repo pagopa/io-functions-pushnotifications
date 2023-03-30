@@ -124,11 +124,7 @@ export const callableActivity = <
     } catch (e) {
       throw failureActivity(
         activityName,
-        e instanceof Error
-          ? e.message
-          : ActivityResultFailure.is(e)
-          ? e.reason
-          : "Undefined error"
+        e instanceof Error ? e.message : (e as ActivityResultFailure).reason
       );
     }
     return pipe(
