@@ -27,7 +27,10 @@ type InfoHandler = () => Promise<
 
 type HealthChecker = (
   config: unknown
-) => healthcheck.HealthCheck<healthcheck.ProblemSource, true>;
+) => healthcheck.HealthCheck<
+  "AzureStorage" | "Config" | "AzureNotificationHub",
+  true
+>;
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function InfoHandler(healthCheck: HealthChecker): InfoHandler {
@@ -47,7 +50,8 @@ export function InfoHandler(healthCheck: HealthChecker): InfoHandler {
     )();
 }
 
-export const Info = (): express.RequestHandler => {
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+export function Info(): express.RequestHandler {
   const handler = InfoHandler(
     healthcheck.checkApplicationHealth(IConfig, [
       c =>
@@ -55,7 +59,6 @@ export const Info = (): express.RequestHandler => {
           c.NOTIFICATIONS_STORAGE_CONNECTION_STRING
         ),
       c => checkAzureNotificationHub(c.AZURE_NH_ENDPOINT, c.AZURE_NH_HUB_NAME),
-
       ...[0, 1, 2, 3].map(i => (c: t.TypeOf<typeof IConfig>) =>
         checkAzureNotificationHub(
           c.AZURE_NOTIFICATION_HUB_PARTITIONS[i].endpoint,
@@ -66,4 +69,4 @@ export const Info = (): express.RequestHandler => {
   );
 
   return wrapRequestHandler(handler);
-};
+}

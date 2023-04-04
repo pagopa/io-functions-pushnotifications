@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe("InfoHandler", () => {
   it("should return an internal error if the application is not healthy", async () => {
-    const healthCheck: HealthCheck = TE.left([
+    const healthCheck = TE.left([
       "failure 1" as HealthProblem<"Config">,
       "failure 2" as HealthProblem<"Config">
     ]);
@@ -23,7 +23,10 @@ describe("InfoHandler", () => {
   });
 
   it("should return a success if the application is healthy", async () => {
-    const healthCheck: HealthCheck = TE.of(true);
+    const healthCheck: HealthCheck<
+      "AzureStorage" | "Config" | "AzureNotificationHub",
+      true
+    > = TE.of(true);
     const handler = InfoHandler(() => healthCheck);
 
     const response = await handler();
