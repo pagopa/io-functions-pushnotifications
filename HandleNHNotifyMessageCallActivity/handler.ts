@@ -3,9 +3,12 @@ import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 
 import { TelemetryClient } from "applicationinsights";
-import { NotificationHubService } from "azure-sb";
 
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import {
+  createAppleNotification,
+  NotificationHubsClient
+} from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
 import {
   ActivityBody,
@@ -39,7 +42,7 @@ export const ActivityResultSuccess = t.intersection([
 
 export const getActivityBody = (
   telemetryClient: TelemetryClient,
-  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService,
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubsClient,
   fiscalCodeNotificationBlacklist: ReadonlyArray<FiscalCode>
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
@@ -57,7 +60,19 @@ export const getActivityBody = (
     ? TE.of<Error, ActivityResultSuccess>(
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
-    : notify(nhService, input.message.installationId, input.message.payload);
+    : // FIX: use the right platform
+      pipe(
+        notify(
+          nhService,
+          createAppleNotification({ body: input.message.payload })
+        ),
+        TE.map(notificationMessage =>
+          ActivityResultSuccess.encode({
+            kind: "SUCCESS",
+            ...notificationMessage
+          })
+        )
+      );
 
   return pipe(
     doNotify,

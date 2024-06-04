@@ -1,9 +1,9 @@
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { NotificationHubService } from "azure-sb";
 import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
 
 import {
@@ -32,7 +32,7 @@ export { ActivityResultSuccess } from "../utils/durable/activities";
  */
 
 export const getActivityBody = (
-  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubsClient
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
   input,
@@ -45,7 +45,7 @@ export const getActivityBody = (
     deleteInstallation(nhService, input.installationId),
     TE.bimap(
       e => failActivity(logger)(`ERROR=${toString(e)}`),
-      ActivityResultSuccess.encode
+      response => ActivityResultSuccess.encode({ kind: "SUCCESS", ...response })
     )
   );
 };

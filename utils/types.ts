@@ -50,6 +50,7 @@ export type NotificationHubPartition = t.TypeOf<
   typeof NotificationHubPartition
 >;
 export const NotificationHubPartition = t.interface({
+  connectionString: NonEmptyString,
   endpoint: NonEmptyString,
   name: NonEmptyString,
   partitionRegex: RegExpFromString

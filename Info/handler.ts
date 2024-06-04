@@ -58,7 +58,11 @@ export function Info(): express.RequestHandler {
         healthcheck.checkAzureStorageHealth(
           c.NOTIFICATIONS_STORAGE_CONNECTION_STRING
         ),
-      c => checkAzureNotificationHub(c.AZURE_NH_ENDPOINT, c.AZURE_NH_HUB_NAME),
+      c =>
+        checkAzureNotificationHub(
+          c.AZURE_NH_CONNECTION_STRING,
+          c.AZURE_NH_HUB_NAME
+        ),
       ...[0, 1, 2, 3].map(i => (c: t.TypeOf<typeof IConfig>) =>
         checkAzureNotificationHub(
           c.AZURE_NOTIFICATION_HUB_PARTITIONS[i].endpoint,

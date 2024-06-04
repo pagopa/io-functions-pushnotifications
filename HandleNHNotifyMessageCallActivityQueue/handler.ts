@@ -4,6 +4,7 @@ import * as TE from "fp-ts/TaskEither";
 import * as t from "io-ts";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { TelemetryClient } from "applicationinsights";
+import { createAppleNotification } from "@azure/notification-hubs";
 import { errorsToError } from "../IsUserInActiveSubsetActivity/handler";
 import {
   buildNHService,
@@ -72,8 +73,8 @@ export const handle = (
           pipe(
             notify(
               buildNHService(nhConfig),
-              message.installationId,
-              message.payload
+              // FIX: use the right platform
+              createAppleNotification({ body: message.payload })
             ),
             TE.map(() => ({ kind: "SUCCESS", skipped: false }))
           )

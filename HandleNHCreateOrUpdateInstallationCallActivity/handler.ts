@@ -1,7 +1,10 @@
-import NotificationHubService = require("azure-sb/lib/notificationhubservice");
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
+import {
+  createAppleInstallation,
+  NotificationHubsClient
+} from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
 
 import { InstallationId } from "../generated/notifications/InstallationId";
@@ -33,7 +36,7 @@ export type ActivityBodyImpl = ActivityBody<
 >;
 
 export const getActivityBody = (
-  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubService
+  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubsClient
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBodyImpl => ({ input, logger }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
@@ -41,14 +44,18 @@ export const getActivityBody = (
   return pipe(
     createOrUpdateInstallation(
       nhService,
-      input.installationId,
-      input.platform,
-      input.pushChannel,
-      input.tags
+      createAppleInstallation({
+        installationId: input.installationId,
+        pushChannel: input.pushChannel,
+        // FIX: this map is here as a workaround to the typescript error due to
+        // the readonly property
+        tags: input.tags.map(x => x)
+      })
     ),
     TE.bimap(
       e => retryActivity(logger, toString(e)),
-      ActivityResultSuccess.encode
+      installation =>
+        ActivityResultSuccess.encode({ kind: "SUCCESS", ...installation })
     )
   );
 };
