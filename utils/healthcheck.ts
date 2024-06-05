@@ -11,14 +11,14 @@ import { buildNHService } from "./notificationhubServicePartition";
  * @returns either true or an array of error messages
  */
 export const checkAzureNotificationHub = (
-  AZURE_NH_CONNECTION_STRING: NonEmptyString,
+  AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString
 ): healthcheck.HealthCheck<"AzureNotificationHub"> =>
   pipe(
     TE.tryCatch(
       () =>
         buildNHService({
-          AZURE_NH_CONNECTION_STRING,
+          AZURE_NH_ENDPOINT,
           AZURE_NH_HUB_NAME
         }).deleteInstallation("aFakeInstallation"),
       healthcheck.toHealthProblems("AzureNotificationHub")

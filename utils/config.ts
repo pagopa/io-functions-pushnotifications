@@ -89,7 +89,7 @@ const BaseConfig = t.intersection([
 
     // Legacy Notification Hub configuration
     t.interface({
-      AZURE_NH_CONNECTION_STRING: NonEmptyString,
+      AZURE_NH_ENDPOINT: NonEmptyString,
       AZURE_NH_HUB_NAME: NonEmptyString
     }),
 

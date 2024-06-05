@@ -9,7 +9,7 @@ import { InstallationId } from "../generated/notifications/InstallationId";
 import { IConfig } from "./config";
 
 export const NotificationHubConfig = t.interface({
-  AZURE_NH_CONNECTION_STRING: NonEmptyString,
+  AZURE_NH_ENDPOINT: NonEmptyString,
   AZURE_NH_HUB_NAME: NonEmptyString
 });
 
@@ -24,7 +24,7 @@ export type NotificationHubConfig = t.TypeOf<typeof NotificationHubConfig>;
 export const getNHLegacyConfig = (
   envConfig: IConfig
 ): NotificationHubConfig => ({
-  AZURE_NH_CONNECTION_STRING: envConfig.AZURE_NH_CONNECTION_STRING,
+  AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 });
 
@@ -55,7 +55,7 @@ export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
       Error(`Unable to find Notification Hub partition for ${sha}`)
     ),
     E.map(partition => ({
-      AZURE_NH_CONNECTION_STRING: partition.connectionString,
+      AZURE_NH_ENDPOINT: partition.endpoint,
       AZURE_NH_HUB_NAME: partition.name
     })),
     E.getOrElseW(e => {
@@ -65,6 +65,6 @@ export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
 
 export const buildNHService = ({
   AZURE_NH_HUB_NAME,
-  AZURE_NH_CONNECTION_STRING
+  AZURE_NH_ENDPOINT
 }: NotificationHubConfig): NotificationHubsClient =>
-  new NotificationHubsClient(AZURE_NH_CONNECTION_STRING, AZURE_NH_HUB_NAME);
+  new NotificationHubsClient(AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME);
