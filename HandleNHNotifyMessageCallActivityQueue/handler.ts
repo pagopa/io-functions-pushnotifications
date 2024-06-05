@@ -73,8 +73,8 @@ export const handle = (
           pipe(
             notify(
               buildNHService(nhConfig),
-              // FIX: use the right platform
-              createAppleNotification({ body: message.payload })
+              message.payload,
+              message.installationId
             ),
             TE.map(() => ({ kind: "SUCCESS", skipped: false }))
           )

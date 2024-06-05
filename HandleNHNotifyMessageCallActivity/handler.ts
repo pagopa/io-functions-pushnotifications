@@ -5,10 +5,7 @@ import * as t from "io-ts";
 import { TelemetryClient } from "applicationinsights";
 
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
-import {
-  createAppleNotification,
-  NotificationHubsClient
-} from "@azure/notification-hubs";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
 import {
   ActivityBody,
@@ -62,10 +59,7 @@ export const getActivityBody = (
       )
     : // FIX: use the right platform
       pipe(
-        notify(
-          nhService,
-          createAppleNotification({ body: input.message.payload })
-        ),
+        notify(nhService, input.message.payload, input.message.installationId),
         TE.map(notificationMessage =>
           ActivityResultSuccess.encode({
             kind: "SUCCESS",
