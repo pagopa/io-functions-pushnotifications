@@ -1,16 +1,72 @@
 import * as t from "io-ts";
+import * as TE from "fp-ts/lib/TaskEither";
 
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import {
+  createAppleNotification,
+  AppleNotification,
+  createXiaomiNotification,
   Installation,
-  Notification,
   NotificationHubsClient,
   NotificationHubsMessageResponse,
-  NotificationHubsResponse
+  NotificationHubsResponse,
+  XiaomiNotification,
+  FcmV1Notification,
+  createFcmV1Notification
 } from "@azure/notification-hubs";
+import { pipe } from "fp-ts/lib/function";
+import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
+import { InstallationId } from "../generated/notifications/InstallationId";
+
+type Platform =
+  | "apns"
+  | "adm"
+  | "baidu"
+  | "browser"
+  | "gcm"
+  | "fcmv1"
+  | "xiaomi"
+  | "wns";
+
+const getInstallationFromInstallationId = (
+  nhService: NotificationHubsClient
+) => (installationId: InstallationId): TE.TaskEither<Error, Installation> =>
+  TE.tryCatch(
+    () => nhService.getInstallation(installationId),
+    // TODO: make this error more specific
+    () => new Error("error while retrieving the installation")
+  );
+
+const getPlatformFromInstallation = (installation: Installation): Platform =>
+  installation.platform;
+
+// TODO: check if we need to use other platforms
+const createNotification = (body: NotifyMessagePayload) => (
+  platform: Platform
+): TE.TaskEither<
+  Error,
+  AppleNotification | XiaomiNotification | FcmV1Notification
+> => {
+  const notificationParams = { body };
+  switch (platform) {
+    case "apns":
+      return TE.of(createAppleNotification(notificationParams));
+    case "xiaomi":
+      return TE.of(createXiaomiNotification(notificationParams));
+    case "gcm":
+      return TE.of(
+        createFcmV1Notification({
+          body: { android: { data: { message: body.message } } }
+        })
+      );
+    default:
+      // TODO: make this more explicit
+      return TE.left(new Error("Error invalid platform"));
+  }
+};
 
 /**
  * Notification template.
@@ -45,12 +101,23 @@ export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 
 export const notify = (
   notificationHubService: NotificationHubsClient,
-  message: Notification
+  payload: NotifyMessagePayload,
+  installationId: InstallationId
 ): TaskEither<Error, NotificationHubsMessageResponse> =>
-  tryCatch(
-    () => notificationHubService.sendNotification(message),
-    errs =>
-      new Error(`Error while sending notification to NotificationHub | ${errs}`)
+  pipe(
+    installationId,
+    getInstallationFromInstallationId(notificationHubService),
+    TE.map(getPlatformFromInstallation),
+    TE.chain(createNotification(payload)),
+    TE.chain(notification =>
+      TE.tryCatch(
+        () => notificationHubService.sendNotification(notification),
+        errs =>
+          new Error(
+            `Error while sending notification to NotificationHub | ${errs}`
+          )
+      )
+    )
   );
 
 export const createOrUpdateInstallation = (
