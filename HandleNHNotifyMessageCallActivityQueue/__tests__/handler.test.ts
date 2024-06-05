@@ -1,6 +1,5 @@
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
-import * as azure from "azure-sb";
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
@@ -9,6 +8,7 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 import { toSHA256 } from "../../utils/conversions";
 import { handle } from "../handler";
 import * as NSP from "../../utils/notificationhubServicePartition";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -42,8 +42,7 @@ const mockNotificationHubService = {
 const buildNHService = jest
   .spyOn(NSP, "buildNHService")
   .mockImplementation(
-    () =>
-      (mockNotificationHubService as unknown) as azure.NotificationHubService
+    () => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
 const aNotifyMessageToBlacklistedUser: NotifyMessage = {

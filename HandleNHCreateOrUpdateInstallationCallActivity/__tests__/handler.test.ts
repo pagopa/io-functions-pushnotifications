@@ -7,7 +7,6 @@ import {
   ActivityResultSuccess
 } from "../handler";
 
-import * as azure from "azure-sb";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
@@ -15,6 +14,7 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { createActivity } from "../../utils/durable/activities";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 
 const activityName = "any";
 
@@ -41,7 +41,7 @@ const mockNotificationHubService = {
 const mockBuildNHService = jest
   .fn()
   .mockImplementation(
-    _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
+    _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
 const handler = createActivity(

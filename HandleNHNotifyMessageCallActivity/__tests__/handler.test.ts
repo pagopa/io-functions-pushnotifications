@@ -1,6 +1,6 @@
 // tslint:disable:no-any
 
-import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import {
   ActivityInput,
@@ -9,7 +9,6 @@ import {
 } from "../handler";
 import { ActivityInput as NHServiceActivityInput } from "../handler";
 
-import * as azure from "azure-sb";
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
@@ -17,6 +16,7 @@ import { createActivity } from "../../utils/durable/activities";
 import { TelemetryClient } from "applicationinsights";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import { toSHA256 } from "../../utils/conversions";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -45,7 +45,7 @@ const mockNotificationHubService = {
 const mockBuildNHService = jest
   .fn()
   .mockImplementation(
-    _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
+    _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
 const activityName = "any";

@@ -2,10 +2,10 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 
 import { checkAzureNotificationHub } from "../healthcheck";
 
-import * as azure from "azure-sb";
 import { pipe } from "fp-ts/lib/function";
 
 import * as TE from "fp-ts/lib/TaskEither";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 
 const notificationhubServicePartition = require("../notificationhubServicePartition");
 
@@ -13,11 +13,11 @@ const mockNotificationHubServiceKO = ({
   deleteInstallation: jest.fn((_, callback) =>
     callback(Error("An error occurred"), null)
   )
-} as unknown) as azure.NotificationHubService;
+} as unknown) as NotificationHubsClient;
 
 const mockNotificationHubServiceOK = ({
   deleteInstallation: jest.fn((_, callback) => callback(null, null))
-} as unknown) as azure.NotificationHubService;
+} as unknown) as NotificationHubsClient;
 const mockBuildNHService = jest
   .fn()
   .mockReturnValue(mockNotificationHubServiceOK);
