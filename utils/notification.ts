@@ -8,12 +8,10 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   createAppleNotification,
   AppleNotification,
-  createXiaomiNotification,
   Installation,
   NotificationHubsClient,
   NotificationHubsMessageResponse,
   NotificationHubsResponse,
-  XiaomiNotification,
   FcmV1Notification,
   createFcmV1Notification
 } from "@azure/notification-hubs";
@@ -21,15 +19,9 @@ import { pipe } from "fp-ts/lib/function";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
-type Platform =
-  | "apns"
-  | "adm"
-  | "baidu"
-  | "browser"
-  | "gcm"
-  | "fcmv1"
-  | "xiaomi"
-  | "wns";
+// when the createOrUpdateInstallation is called we only support apns and gcm
+const Platform = t.union([t.literal("apns"), t.literal("gcm")]);
+type Platform = t.TypeOf<typeof Platform>;
 
 const getInstallationFromInstallationId = (
   nhService: NotificationHubsClient
@@ -40,22 +32,23 @@ const getInstallationFromInstallationId = (
     () => new Error("error while retrieving the installation")
   );
 
-const getPlatformFromInstallation = (installation: Installation): Platform =>
-  installation.platform;
+const getPlatformFromInstallation = (
+  installation: Installation
+): TE.TaskEither<Error, Platform> =>
+  pipe(
+    Platform.decode(installation),
+    TE.fromEither,
+    // TODO: Make this error more specific
+    TE.mapLeft(() => new Error("Invalid platform"))
+  );
 
 // TODO: check if we need to use other platforms
 const createNotification = (body: NotifyMessagePayload) => (
   platform: Platform
-): TE.TaskEither<
-  Error,
-  AppleNotification | XiaomiNotification | FcmV1Notification
-> => {
-  const notificationParams = { body };
+): TE.TaskEither<Error, AppleNotification | FcmV1Notification> => {
   switch (platform) {
     case "apns":
-      return TE.of(createAppleNotification(notificationParams));
-    case "xiaomi":
-      return TE.of(createXiaomiNotification(notificationParams));
+      return TE.of(createAppleNotification({ body }));
     case "gcm":
       return TE.of(
         createFcmV1Notification({
@@ -107,7 +100,7 @@ export const notify = (
   pipe(
     installationId,
     getInstallationFromInstallationId(notificationHubService),
-    TE.map(getPlatformFromInstallation),
+    TE.chain(getPlatformFromInstallation),
     TE.chain(createNotification(payload)),
     TE.chain(notification =>
       TE.tryCatch(
