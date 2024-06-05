@@ -8,31 +8,47 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   createAppleNotification,
   AppleNotification,
+  FcmV1Installation,
   Installation,
   NotificationHubsClient,
   NotificationHubsMessageResponse,
   NotificationHubsResponse,
   FcmV1Notification,
-  createFcmV1Notification
+  createFcmV1Notification,
+  AppleInstallation
 } from "@azure/notification-hubs";
 import { pipe } from "fp-ts/lib/function";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
 // when the createOrUpdateInstallation is called we only support apns and gcm
-const Platform = t.union([t.literal("apns"), t.literal("gcm")]);
-type Platform = t.TypeOf<typeof Platform>;
+export const Platform = t.union([t.literal("apns"), t.literal("fcmv1")]);
+export type Platform = t.TypeOf<typeof Platform>;
 
-const getInstallationFromInstallationId = (
+const validateInstallation = (
+  installation: Installation
+): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
+  installation.platform === "fcmv1"
+    ? TE.of(installation)
+    : installation.platform === "apns"
+    ? TE.of(installation)
+    : TE.left(new Error("Invalid installation"));
+
+export const getInstallationFromInstallationId = (
   nhService: NotificationHubsClient
-) => (installationId: InstallationId): TE.TaskEither<Error, Installation> =>
-  TE.tryCatch(
-    () => nhService.getInstallation(installationId),
-    // TODO: make this error more specific
-    () => new Error("error while retrieving the installation")
+) => (
+  installationId: InstallationId
+): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
+  pipe(
+    TE.tryCatch(
+      () => nhService.getInstallation(installationId),
+      // TODO: make this error more specific
+      () => new Error("error while retrieving the installation")
+    ),
+    TE.chain(validateInstallation)
   );
 
-const getPlatformFromInstallation = (
+export const getPlatformFromInstallation = (
   installation: Installation
 ): TE.TaskEither<Error, Platform> =>
   pipe(
@@ -49,7 +65,7 @@ const createNotification = (body: NotifyMessagePayload) => (
   switch (platform) {
     case "apns":
       return TE.of(createAppleNotification({ body }));
-    case "gcm":
+    case "fcmv1":
       return TE.of(
         createFcmV1Notification({
           body: { android: { data: { message: body.message } } }

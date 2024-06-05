@@ -2,7 +2,10 @@ import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import {
+  AppleInstallation,
   createAppleInstallation,
+  createFcmV1Installation,
+  FcmV1Installation,
   NotificationHubsClient
 } from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
@@ -15,10 +18,12 @@ import {
   ActivityResultSuccess,
   retryActivity
 } from "../utils/durable/activities";
-import { createOrUpdateInstallation } from "../utils/notification";
+import {
+  getInstallationFromInstallationId,
+  getPlatformFromInstallation
+} from "../utils/notification";
 import { NotificationHubConfig } from "../utils/notificationhubServicePartition";
 
-// Activity input
 export type ActivityInput = t.TypeOf<typeof ActivityInput>;
 export const ActivityInput = t.interface({
   installationId: InstallationId,
@@ -27,6 +32,27 @@ export const ActivityInput = t.interface({
   pushChannel: t.string,
   tags: t.readonlyArray(t.string, "array of string")
 });
+
+const createInstallation = (
+  installation: AppleInstallation | FcmV1Installation
+): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
+  pipe(
+    installation,
+    getPlatformFromInstallation,
+    TE.map(platform =>
+      platform === "fcmv1"
+        ? createFcmV1Installation({
+            installationId: installation.installationId,
+            pushChannel: installation.pushChannel,
+            tags: installation.tags
+          })
+        : createAppleInstallation({
+            installationId: installation.installationId,
+            pushChannel: installation.pushChannel,
+            tags: installation.tags
+          })
+    )
+  );
 
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
@@ -42,16 +68,9 @@ export const getActivityBody = (
   logger.info(`INSTALLATION_ID=${input.installationId}`);
   const nhService = buildNHService(input.notificationHubConfig);
   return pipe(
-    createOrUpdateInstallation(
-      nhService,
-      createAppleInstallation({
-        installationId: input.installationId,
-        pushChannel: input.pushChannel,
-        // FIX: this map is here as a workaround to the typescript error due to
-        // the readonly property
-        tags: input.tags.map(x => x)
-      })
-    ),
+    input.installationId,
+    getInstallationFromInstallationId(nhService),
+    TE.chain(createInstallation),
     TE.bimap(
       e => retryActivity(logger, toString(e)),
       installation =>
