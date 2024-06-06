@@ -16,7 +16,7 @@ const mockNotificationHubServiceKO = ({
 } as unknown) as NotificationHubsClient;
 
 const mockNotificationHubServiceOK = ({
-  deleteInstallation: jest.fn((_, callback) => callback(null, null))
+  deleteInstallation: jest.fn(_ => Promise.resolve({}))
 } as unknown) as NotificationHubsClient;
 const mockBuildNHService = jest
   .fn()
@@ -33,7 +33,7 @@ function mockNHFunctions() {
 describe("healthcheck - notification hub", () => {
   beforeAll(() => mockNHFunctions());
 
-  it("should not throw exception", async done => {
+  it("should not throw exception", done => {
     expect.assertions(1);
 
     pipe(
@@ -48,7 +48,7 @@ describe("healthcheck - notification hub", () => {
     )();
   });
 
-  it("should throw exception", async done => {
+  it("should throw exception", async () => {
     mockBuildNHService.mockReturnValueOnce(mockNotificationHubServiceKO);
 
     expect.assertions(2);
@@ -61,11 +61,9 @@ describe("healthcheck - notification hub", () => {
       TE.mapLeft(err => {
         expect(err.length).toBe(1);
         expect(true).toBe(true);
-        done();
       }),
       TE.map(_ => {
         expect(true).toBeFalsy();
-        done();
       })
     )();
   });

@@ -39,8 +39,12 @@ const mockTelemetryClient = ({
   trackEvent: () => {}
 } as unknown) as TelemetryClient;
 
+const getInstallationMock = jest.fn();
+const sendNotificationMock = jest.fn();
+
 const mockNotificationHubService = {
-  send: jest.fn()
+  getInstallation: getInstallationMock,
+  sendNotification: sendNotificationMock
 };
 const mockBuildNHService = jest
   .fn()
@@ -74,28 +78,37 @@ describe("HandleNHNotifyMessageCallActivity", () => {
   });
 
   it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
-    mockNotificationHubService.send = jest
-      .fn()
-      .mockImplementation((_1, _2, _3, cb) => cb());
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+
+    sendNotificationMock.mockImplementation(() => Promise.resolve({}));
 
     const input = ActivityInput.encode({
       message: aNotifyMessage,
       notificationHubConfig: aNHConfig
     });
 
-    expect.assertions(3);
+    expect.assertions(5);
 
     const res = await handler(contextMock as any, input);
     expect(res.kind).toEqual("SUCCESS");
 
     expect(mockBuildNHService).toHaveBeenCalledTimes(1);
     expect(mockBuildNHService).toBeCalledWith(aNHConfig);
+    expect(getInstallationMock).toHaveBeenCalledTimes(1);
+    expect(sendNotificationMock).toHaveBeenCalledTimes(1);
   });
 
   it("should trigger a retry if notify fails", async () => {
-    mockNotificationHubService.send = jest
-      .fn()
-      .mockImplementation((_, __, ___, cb) => cb(new Error("send error")));
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    sendNotificationMock.mockImplementation(() => Promise.reject());
 
     const input = NHServiceActivityInput.encode({
       message: aNotifyMessage,
@@ -104,19 +117,24 @@ describe("HandleNHNotifyMessageCallActivity", () => {
         AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
       }
     });
+
     expect.assertions(2);
+
     try {
       await handler(contextMock as any, input);
     } catch (e) {
-      expect(mockNotificationHubService.send).toHaveBeenCalledTimes(1);
+      expect(sendNotificationMock).toHaveBeenCalledTimes(1);
       expect(e).toBeInstanceOf(Error);
     }
   });
 
   it("should not call notificationhubServicePartion.buildNHService when using a blacklisted user", async () => {
-    mockNotificationHubService.send = jest
-      .fn()
-      .mockImplementation((_1, _2, _3, cb) => cb());
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    sendNotificationMock.mockImplementation(() => Promise.resolve({}));
 
     const input = ActivityInput.encode({
       message: aNotifyMessageToBlacklistedUser,
@@ -129,6 +147,6 @@ describe("HandleNHNotifyMessageCallActivity", () => {
     expect(res.kind).toEqual("SUCCESS");
     expect(res).toHaveProperty("skipped", true);
 
-    expect(mockNotificationHubService.send).not.toBeCalled();
+    expect(sendNotificationMock).not.toBeCalled();
   });
 });

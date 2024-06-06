@@ -52,7 +52,7 @@ export const getPlatformFromInstallation = (
   installation: Installation
 ): TE.TaskEither<Error, Platform> =>
   pipe(
-    Platform.decode(installation),
+    Platform.decode(installation.platform),
     TE.fromEither,
     // TODO: Make this error more specific
     TE.mapLeft(() => new Error("Invalid platform"))

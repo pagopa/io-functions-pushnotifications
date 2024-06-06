@@ -57,8 +57,7 @@ export const getActivityBody = (
     ? TE.of<Error, ActivityResultSuccess>(
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
-    : // FIX: use the right platform
-      pipe(
+    : pipe(
         notify(nhService, input.message.payload, input.message.installationId),
         TE.map(notificationMessage =>
           ActivityResultSuccess.encode({

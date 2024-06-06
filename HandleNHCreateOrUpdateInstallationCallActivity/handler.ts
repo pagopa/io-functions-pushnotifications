@@ -6,7 +6,8 @@ import {
   createAppleInstallation,
   createFcmV1Installation,
   FcmV1Installation,
-  NotificationHubsClient
+  NotificationHubsClient,
+  NotificationHubsResponse
 } from "@azure/notification-hubs";
 import { toString } from "../utils/conversions";
 
@@ -54,6 +55,15 @@ const createInstallation = (
     )
   );
 
+const createOrUpdateInstallation = (nhService: NotificationHubsClient) => (
+  installation: AppleInstallation | FcmV1Installation
+): TE.TaskEither<Error, NotificationHubsResponse> =>
+  TE.tryCatch(
+    () => nhService.createOrUpdateInstallation(installation),
+    // TODO: make this error more specific
+    () => new Error("Error while creating or updating the installation")
+  );
+
 export { ActivityResultSuccess } from "../utils/durable/activities";
 
 export type ActivityBodyImpl = ActivityBody<
@@ -71,6 +81,7 @@ export const getActivityBody = (
     input.installationId,
     getInstallationFromInstallationId(nhService),
     TE.chain(createInstallation),
+    TE.chain(createOrUpdateInstallation(nhService)),
     TE.bimap(
       e => retryActivity(logger, toString(e)),
       installation =>

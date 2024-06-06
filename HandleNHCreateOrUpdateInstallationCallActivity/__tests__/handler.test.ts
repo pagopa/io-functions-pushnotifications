@@ -35,8 +35,12 @@ const aNHConfig = {
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 } as NotificationHubConfig;
 
+const createOrUpdateInstallationMock = jest.fn();
+const getInstallationMock = jest.fn();
+
 const mockNotificationHubService = {
-  createOrUpdateInstallation: jest.fn()
+  createOrUpdateInstallation: createOrUpdateInstallationMock,
+  getInstallation: getInstallationMock
 };
 const mockBuildNHService = jest
   .fn()
@@ -57,9 +61,12 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
   });
 
   it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
-    mockNotificationHubService.createOrUpdateInstallation = jest
-      .fn()
-      .mockImplementation((_, cb) => cb());
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    createOrUpdateInstallationMock.mockReturnValueOnce(Promise.resolve());
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,
@@ -79,11 +86,14 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
   });
 
   it("should trigger a retry if CreateOrUpdateInstallation fails", async () => {
-    mockNotificationHubService.createOrUpdateInstallation = jest
-      .fn()
-      .mockImplementation((_, cb) =>
-        cb(new Error("createOrUpdateInstallation error"))
-      );
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    createOrUpdateInstallationMock.mockImplementationOnce(() =>
+      Promise.reject({})
+    );
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,

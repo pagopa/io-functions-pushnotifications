@@ -47,7 +47,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
   it("should call deleteInstallation with right NH parameters", async () => {
     mockNotificationHubService.deleteInstallation = jest
       .fn()
-      .mockImplementation((_, cb) => cb());
+      .mockImplementation(_ => Promise.resolve({}));
 
     const input = ActivityInput.encode({
       installationId: anInstallationId,
