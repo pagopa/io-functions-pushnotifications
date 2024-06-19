@@ -81,6 +81,18 @@ export const getPlatformFromInstallation = (
   );
 
 // TODO: check if we need to use other platforms
+
+/**
+ * Notification template.
+ *
+ * @see https://msdn.microsoft.com/en-us/library/azure/mt621153.aspx
+ */
+export const INotificationTemplate = t.interface({
+  body: t.string
+});
+
+export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
+
 const createNotification = (body: NotifyMessagePayload) => (
   platform: Platform
 ): TE.TaskEither<
@@ -94,6 +106,10 @@ const createNotification = (body: NotifyMessagePayload) => (
           body: {
             aps: { alert: { body: body.message, title: body.title } },
             message_id: body.message_id
+          },
+          headers: {
+            ["apns-priority"]: "10",
+            ["apns-push-type"]: APNSPushType.ALERT
           }
         })
       );
@@ -133,17 +149,6 @@ const createNotification = (body: NotifyMessagePayload) => (
       return TE.left(new Error("Error invalid platform"));
   }
 };
-
-/**
- * Notification template.
- *
- * @see https://msdn.microsoft.com/en-us/library/azure/mt621153.aspx
- */
-export const INotificationTemplate = t.interface({
-  body: t.string
-});
-
-export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
 
 /**
  * APNS apns-push-type available values
