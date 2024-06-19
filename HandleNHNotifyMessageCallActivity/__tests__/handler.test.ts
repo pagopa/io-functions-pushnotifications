@@ -7,7 +7,7 @@ import {
   getActivityBody,
   ActivityResultSuccess
 } from "../handler";
-import { ActivityInput as NHServiceActivityInput } from "../handler";
+import { ActivityInput as NHClientActivityInput } from "../handler";
 
 import { NotifyMessage } from "../../generated/notifications/NotifyMessage";
 
@@ -46,7 +46,7 @@ const mockNotificationHubService = {
   getInstallation: getInstallationMock,
   sendNotification: sendNotificationMock
 };
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockImplementation(
     _ => (mockNotificationHubService as unknown) as NotificationHubsClient
@@ -67,7 +67,7 @@ const handler = createActivity(
   ActivityResultSuccess,
   getActivityBody(
     mockTelemetryClient,
-    mockBuildNHService,
+    mockBuildNHClient,
     envConfig.FISCAL_CODE_NOTIFICATION_BLACKLIST
   )
 );
@@ -77,7 +77,7 @@ describe("HandleNHNotifyMessageCallActivity", () => {
     jest.clearAllMocks();
   });
 
-  it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
+  it("should call notificationhubServicePartion.buildNHClient to get the right notificationService to call", async () => {
     getInstallationMock.mockImplementation(() =>
       Promise.resolve({
         platform: "apns"
@@ -96,8 +96,8 @@ describe("HandleNHNotifyMessageCallActivity", () => {
     const res = await handler(contextMock as any, input);
     expect(res.kind).toEqual("SUCCESS");
 
-    expect(mockBuildNHService).toHaveBeenCalledTimes(1);
-    expect(mockBuildNHService).toBeCalledWith(aNHConfig);
+    expect(mockBuildNHClient).toHaveBeenCalledTimes(1);
+    expect(mockBuildNHClient).toBeCalledWith(aNHConfig);
     expect(getInstallationMock).toHaveBeenCalledTimes(1);
     expect(sendNotificationMock).toHaveBeenCalledTimes(1);
   });
@@ -110,7 +110,7 @@ describe("HandleNHNotifyMessageCallActivity", () => {
     );
     sendNotificationMock.mockImplementation(() => Promise.reject());
 
-    const input = NHServiceActivityInput.encode({
+    const input = NHClientActivityInput.encode({
       message: aNotifyMessage,
       notificationHubConfig: {
         AZURE_NH_ENDPOINT: envConfig.AZURE_NH_ENDPOINT,
@@ -128,7 +128,7 @@ describe("HandleNHNotifyMessageCallActivity", () => {
     }
   });
 
-  it("should not call notificationhubServicePartion.buildNHService when using a blacklisted user", async () => {
+  it("should not call notificationhubServicePartion.buildNHClient when using a blacklisted user", async () => {
     getInstallationMock.mockImplementation(() =>
       Promise.resolve({
         platform: "apns"

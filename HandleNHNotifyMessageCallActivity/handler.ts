@@ -39,7 +39,7 @@ export const ActivityResultSuccess = t.intersection([
 
 export const getActivityBody = (
   telemetryClient: TelemetryClient,
-  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubsClient,
+  buildNHClient: (nhConfig: NotificationHubConfig) => NotificationHubsClient,
   fiscalCodeNotificationBlacklist: ReadonlyArray<FiscalCode>
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
@@ -48,7 +48,7 @@ export const getActivityBody = (
 }) => {
   logger.info(`INSTALLATION_ID=${input.message.installationId}`);
 
-  const nhService = buildNHService(input.notificationHubConfig);
+  const nhClient = buildNHClient(input.notificationHubConfig);
 
   // If recipients are in blacklist, consider the operation successful
   const doNotify = fiscalCodeNotificationBlacklist
@@ -58,7 +58,7 @@ export const getActivityBody = (
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
     : pipe(
-        notify(nhService, input.message.payload, input.message.installationId),
+        notify(nhClient, input.message.payload, input.message.installationId),
         TE.map(notificationMessage =>
           ActivityResultSuccess.encode({
             kind: "SUCCESS",

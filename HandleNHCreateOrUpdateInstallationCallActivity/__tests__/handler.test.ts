@@ -42,7 +42,7 @@ const mockNotificationHubService = {
   createOrUpdateInstallation: createOrUpdateInstallationMock,
   getInstallation: getInstallationMock
 };
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockImplementation(
     _ => (mockNotificationHubService as unknown) as NotificationHubsClient
@@ -52,7 +52,7 @@ const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHService)
+  getActivityBody(mockBuildNHClient)
 );
 
 describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
@@ -60,7 +60,7 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     jest.clearAllMocks();
   });
 
-  it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
+  it("should call notificationhubServicePartion.buildNHClient to get the right notificationService to call", async () => {
     getInstallationMock.mockImplementation(() =>
       Promise.resolve({
         platform: "apns"
@@ -81,8 +81,8 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     const res = await handler(contextMock as any, input);
     expect(ActivityResultSuccess.is(res)).toBeTruthy();
 
-    expect(mockBuildNHService).toHaveBeenCalledTimes(1);
-    expect(mockBuildNHService).toBeCalledWith(aNHConfig);
+    expect(mockBuildNHClient).toHaveBeenCalledTimes(1);
+    expect(mockBuildNHClient).toBeCalledWith(aNHConfig);
   });
 
   it("should trigger a retry if CreateOrUpdateInstallation fails", async () => {

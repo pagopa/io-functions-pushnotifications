@@ -63,7 +63,7 @@ export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
     })
   );
 
-export const buildNHService = ({
+export const buildNHClient = ({
   AZURE_NH_HUB_NAME,
   AZURE_NH_ENDPOINT
 }: NotificationHubConfig): NotificationHubsClient =>

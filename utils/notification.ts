@@ -57,13 +57,13 @@ const validateInstallation = (
     : TE.left(new Error("Invalid installation"));
 
 export const getInstallationFromInstallationId = (
-  nhService: NotificationHubsClient
+  nhClient: NotificationHubsClient
 ) => (
   installationId: InstallationId
 ): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
   pipe(
     TE.tryCatch(
-      () => nhService.getInstallation(installationId),
+      () => nhClient.getInstallation(installationId),
       // TODO: make this error more specific
       () => new Error("error while retrieving the installation")
     ),

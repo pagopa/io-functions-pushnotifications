@@ -6,7 +6,7 @@ import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { TelemetryClient } from "applicationinsights";
 import { errorsToError } from "../IsUserInActiveSubsetActivity/handler";
 import {
-  buildNHService,
+  buildNHClient,
   getNotificationHubPartitionConfig,
   NotificationHubConfig
 } from "../utils/notificationhubServicePartition";
@@ -71,7 +71,7 @@ export const handle = (
         TE.orElseW(() =>
           pipe(
             notify(
-              buildNHService(nhConfig),
+              buildNHClient(nhConfig),
               message.payload,
               message.installationId
             ),

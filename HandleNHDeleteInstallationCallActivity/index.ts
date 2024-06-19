@@ -5,7 +5,7 @@
 import { RetryOptions } from "durable-functions";
 import { createActivity } from "../utils/durable/activities";
 import * as o from "../utils/durable/orchestrators";
-import { buildNHService } from "../utils/notificationhubServicePartition";
+import { buildNHClient } from "../utils/notificationhubServicePartition";
 import {
   ActivityInput,
   ActivityResultSuccess,
@@ -35,7 +35,7 @@ const activityFunctionHandler = createActivity<ActivityInput>(
   activityName,
   ActivityInput,
   ActivityResultSuccess,
-  getActivityBody(buildNHService)
+  getActivityBody(buildNHClient)
 );
 
 export default activityFunctionHandler;

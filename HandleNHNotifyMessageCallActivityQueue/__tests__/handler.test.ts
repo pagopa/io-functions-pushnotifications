@@ -43,8 +43,8 @@ const mockNotificationHubService = {
   sendNotification: sendNotificationMock,
   getInstallation: getInstallationMock
 };
-const buildNHService = jest
-  .spyOn(NSP, "buildNHService")
+const buildNHClient = jest
+  .spyOn(NSP, "buildNHClient")
   .mockImplementation(
     () => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
@@ -61,7 +61,7 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
     jest.clearAllMocks();
   });
 
-  it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
+  it("should call notificationhubServicePartion.buildNHClient to get the right notificationService to call", async () => {
     getInstallationMock.mockReturnValueOnce(
       Promise.resolve({
         platform: "apns"
@@ -88,10 +88,10 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
     expect(res.kind).toEqual("SUCCESS");
 
     expect(sendNotificationMock).toHaveBeenCalledTimes(1);
-    expect(buildNHService).toBeCalledWith(aNHConfig);
+    expect(buildNHClient).toBeCalledWith(aNHConfig);
   });
 
-  it("should call notificationhubServicePartion.buildNHService to get the legacy notificationService to call", async () => {
+  it("should call notificationhubServicePartion.buildNHClient to get the legacy notificationService to call", async () => {
     getInstallationMock.mockReturnValueOnce(
       Promise.resolve({
         platform: "apns"
@@ -118,7 +118,7 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
     expect(res.kind).toEqual("SUCCESS");
 
     expect(sendNotificationMock).toHaveBeenCalledTimes(1);
-    expect(buildNHService).toBeCalledWith(legacyNotificationHubConfig);
+    expect(buildNHClient).toBeCalledWith(legacyNotificationHubConfig);
   });
 
   it("should trigger a retry if notify fails", async () => {
@@ -155,7 +155,7 @@ describe("HandleNHNotifyMessageCallActivityQueue", () => {
     );
   });
 
-  it("should not call notificationhubServicePartion.buildNHService when using a blacklisted user", async () => {
+  it("should not call notificationhubServicePartion.buildNHClient when using a blacklisted user", async () => {
     sendNotificationMock.mockImplementation((_1, _2, _3, cb) => cb());
 
     const input = Buffer.from(

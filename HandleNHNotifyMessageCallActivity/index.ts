@@ -5,7 +5,7 @@ import * as o from "../utils/durable/orchestrators";
 import { initTelemetryClient } from "../utils/appinsights";
 import { getConfigOrThrow } from "../utils/config";
 import { createActivity } from "../utils/durable/activities";
-import { buildNHService } from "../utils/notificationhubServicePartition";
+import { buildNHClient } from "../utils/notificationhubServicePartition";
 
 import {
   ActivityInput,
@@ -40,7 +40,7 @@ const activityFunctionHandler = createActivity(
   ActivityResultSuccess,
   getActivityBody(
     telemetryClient,
-    buildNHService,
+    buildNHClient,
     config.FISCAL_CODE_NOTIFICATION_BLACKLIST
   )
 );

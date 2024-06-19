@@ -27,7 +27,7 @@ const aNHConfig = {
 const mockNotificationHubService = {
   deleteInstallation: jest.fn()
 };
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockImplementation(
     _ => (mockNotificationHubService as unknown) as NotificationHubsClient
@@ -37,7 +37,7 @@ const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHService)
+  getActivityBody(mockBuildNHClient)
 );
 
 describe("HandleNHDeleteInstallationCallActivity", () => {
@@ -58,7 +58,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
       1
     );
 
-    expect(mockBuildNHService).toHaveBeenCalledWith(aNHConfig);
+    expect(mockBuildNHClient).toHaveBeenCalledWith(aNHConfig);
 
     expect(ActivityResultSuccess.is(res)).toBeTruthy();
   });

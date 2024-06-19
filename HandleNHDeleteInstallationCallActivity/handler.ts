@@ -32,17 +32,17 @@ export { ActivityResultSuccess } from "../utils/durable/activities";
  */
 
 export const getActivityBody = (
-  buildNHService: (nhConfig: NotificationHubConfig) => NotificationHubsClient
+  buildNHClient: (nhConfig: NotificationHubConfig) => NotificationHubsClient
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
   input,
   logger
 }) => {
   logger.info(`INSTALLATION_ID=${input.installationId}`);
-  const nhService = buildNHService(input.notificationHubConfig);
+  const nhClient = buildNHClient(input.notificationHubConfig);
 
   return pipe(
-    deleteInstallation(nhService, input.installationId),
+    deleteInstallation(nhClient, input.installationId),
     TE.bimap(
       e => failActivity(logger)(`ERROR=${toString(e)}`),
       response => ActivityResultSuccess.encode({ kind: "SUCCESS", ...response })

@@ -18,12 +18,12 @@ const mockNotificationHubServiceKO = ({
 const mockNotificationHubServiceOK = ({
   deleteInstallation: jest.fn(_ => Promise.resolve({}))
 } as unknown) as NotificationHubsClient;
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockReturnValue(mockNotificationHubServiceOK);
 
 function mockNHFunctions() {
-  notificationhubServicePartition["buildNHService"] = mockBuildNHService;
+  notificationhubServicePartition["buildNHClient"] = mockBuildNHClient;
 }
 
 // -------------
@@ -49,7 +49,7 @@ describe("healthcheck - notification hub", () => {
   });
 
   it("should throw exception", async () => {
-    mockBuildNHService.mockReturnValueOnce(mockNotificationHubServiceKO);
+    mockBuildNHClient.mockReturnValueOnce(mockNotificationHubServiceKO);
 
     expect.assertions(2);
 
