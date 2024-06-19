@@ -64,7 +64,7 @@ const validateInstallation = (
     ? TE.of(installation)
     : TE.left(new Error("Invalid installation"));
 
-const NHClientError = t.type({
+export const NHClientError = t.type({
   statusCode: t.literal(404)
 });
 
