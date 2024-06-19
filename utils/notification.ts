@@ -64,7 +64,6 @@ export const getInstallationFromInstallationId = (
   pipe(
     TE.tryCatch(
       () => nhClient.getInstallation(installationId),
-      // TODO: make this error more specific
       () => new Error("error while retrieving the installation")
     ),
     TE.chain(validateInstallation)
@@ -76,11 +75,8 @@ export const getPlatformFromInstallation = (
   pipe(
     Platform.decode(installation.platform),
     TE.fromEither,
-    // TODO: Make this error more specific
     TE.mapLeft(() => new Error("Invalid platform"))
   );
-
-// TODO: check if we need to use other platforms
 
 /**
  * Notification template.
@@ -145,7 +141,6 @@ const createNotification = (body: NotifyMessagePayload) => (
         })
       );
     default:
-      // TODO: make this more explicit
       return TE.left(new Error("Error invalid platform"));
   }
 };
