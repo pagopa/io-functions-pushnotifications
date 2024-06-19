@@ -89,6 +89,20 @@ export const INotificationTemplate = t.interface({
 
 export type INotificationTemplate = t.TypeOf<typeof INotificationTemplate>;
 
+/**
+ * APNS apns-push-type available values
+ *
+ * @see https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns
+ */
+export enum APNSPushType {
+  ALERT = "alert",
+  BACKGROUND = "background",
+  VOIP = "voip",
+  COMPLICATION = "complication",
+  FILEPROVIDER = "fileprovider",
+  MDM = "mdm"
+}
+
 const createNotification = (body: NotifyMessagePayload) => (
   platform: Platform
 ): TE.TaskEither<
@@ -144,20 +158,6 @@ const createNotification = (body: NotifyMessagePayload) => (
       return TE.left(new Error("Error invalid platform"));
   }
 };
-
-/**
- * APNS apns-push-type available values
- *
- * @see https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns
- */
-export enum APNSPushType {
-  ALERT = "alert",
-  BACKGROUND = "background",
-  VOIP = "voip",
-  COMPLICATION = "complication",
-  FILEPROVIDER = "fileprovider",
-  MDM = "mdm"
-}
 
 export const nhResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
