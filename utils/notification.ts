@@ -73,7 +73,12 @@ export const getInstallationFromInstallationId = (
   pipe(
     TE.tryCatch(
       () => nhClient.getInstallation(installationId),
-      () => new Error("error while retrieving the installation")
+      e =>
+        new Error(
+          `Error while retrieving the installation | installationId: ${installationId} | ${JSON.stringify(
+            e
+          )}`
+        )
     ),
     TE.chain(validateInstallation)
   );
