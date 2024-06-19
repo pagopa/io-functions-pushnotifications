@@ -6,23 +6,45 @@ import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import {
-  createAppleNotification,
+  AppleInstallation,
   AppleNotification,
+  createAppleNotification,
+  createFcmLegacyNotification,
+  createFcmV1Notification,
+  FcmLegacyNotification,
   FcmV1Installation,
+  FcmV1Notification,
   Installation,
   NotificationHubsClient,
   NotificationHubsMessageResponse,
-  NotificationHubsResponse,
-  FcmV1Notification,
-  createFcmV1Notification,
-  AppleInstallation
+  NotificationHubsResponse
 } from "@azure/notification-hubs";
 import { pipe } from "fp-ts/lib/function";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
+/**
+ * A template suitable for Apple's APNs.
+ *
+ * @see https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
+ */
+const APNSTemplate =
+  '{"aps": {"alert": {"title": "$(title)", "body": "$(message)"}}, "message_id": "$(message_id)"}';
+
+/**
+ * Build a template suitable for Google's FCMV1.
+ *
+ * @see https://developers.google.com/cloud-messaging/concept-options
+ */
+const FCMV1Template =
+  '{"message": {"notification": {"title": "$(title)", "body": "$(message)"}, "android": {"data": {"message_id": "$(message_id)"}, "notification": {"icon": "ic_notification"}}}}';
+
 // when the createOrUpdateInstallation is called we only support apns and gcm
-export const Platform = t.union([t.literal("apns"), t.literal("fcmv1")]);
+export const Platform = t.union([
+  t.literal("apns"),
+  t.literal("fcmv1"),
+  t.literal("gcm")
+]);
 export type Platform = t.TypeOf<typeof Platform>;
 
 const validateInstallation = (
@@ -61,14 +83,49 @@ export const getPlatformFromInstallation = (
 // TODO: check if we need to use other platforms
 const createNotification = (body: NotifyMessagePayload) => (
   platform: Platform
-): TE.TaskEither<Error, AppleNotification | FcmV1Notification> => {
+): TE.TaskEither<
+  Error,
+  AppleNotification | FcmV1Notification | FcmLegacyNotification
+> => {
   switch (platform) {
     case "apns":
-      return TE.of(createAppleNotification({ body }));
+      return TE.of(
+        createAppleNotification({
+          body: {
+            aps: { alert: { body: body.message, title: body.title } },
+            message_id: body.message_id
+          }
+        })
+      );
+    case "gcm":
+      return TE.of(
+        createFcmLegacyNotification({
+          body: {
+            data: {
+              largeIcon: "ic_notification",
+              message: body.message,
+              message_id: body.message_id,
+              smallIcon: "ic_notification",
+              title: body.title
+            }
+          }
+        })
+      );
     case "fcmv1":
       return TE.of(
         createFcmV1Notification({
-          body: { android: { data: { message: body.message } } }
+          body: {
+            android: {
+              data: { message_id: body.message_id },
+              notification: {
+                icon: "ic_notification"
+              }
+            },
+            notification: {
+              body: body.message,
+              title: body.title
+            }
+          }
         })
       );
     default:
@@ -130,11 +187,32 @@ export const notify = (
   );
 
 export const createOrUpdateInstallation = (
-  notificationHubService: NotificationHubsClient,
-  installation: Installation
-): TaskEither<Error, NotificationHubsResponse> =>
-  tryCatch(
-    () => notificationHubService.createOrUpdateInstallation(installation),
+  notificationHubClient: NotificationHubsClient,
+  installationId: NonEmptyString,
+  platform: Platform,
+  pushChannel: string,
+  tags: ReadonlyArray<string>
+): TE.TaskEither<Error, NotificationHubsResponse> =>
+  TE.tryCatch(
+    () =>
+      notificationHubClient.createOrUpdateInstallation({
+        installationId,
+        platform,
+        pushChannel,
+        templates: {
+          template: {
+            body: platform === "apns" ? APNSTemplate : FCMV1Template,
+            headers:
+              platform === "apns"
+                ? {
+                    ["apns-priority"]: "10",
+                    ["apns-push-type"]: APNSPushType.ALERT
+                  }
+                : {},
+            tags: [...tags]
+          }
+        }
+      }),
     errs =>
       new Error(
         `Error while creating or updating installation on NotificationHub [${errs}]`
