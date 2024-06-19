@@ -11,6 +11,7 @@ import {
   createAppleNotification,
   createFcmLegacyNotification,
   createFcmV1Notification,
+  FcmLegacyInstallation,
   FcmLegacyNotification,
   FcmV1Installation,
   FcmV1Notification,
@@ -49,10 +50,15 @@ export type Platform = t.TypeOf<typeof Platform>;
 
 const validateInstallation = (
   installation: Installation
-): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
+): TE.TaskEither<
+  Error,
+  AppleInstallation | FcmV1Installation | FcmLegacyInstallation
+> =>
   installation.platform === "fcmv1"
     ? TE.of(installation)
     : installation.platform === "apns"
+    ? TE.of(installation)
+    : installation.platform === "gcm"
     ? TE.of(installation)
     : TE.left(new Error("Invalid installation"));
 
@@ -60,7 +66,10 @@ export const getInstallationFromInstallationId = (
   nhClient: NotificationHubsClient
 ) => (
   installationId: InstallationId
-): TE.TaskEither<Error, AppleInstallation | FcmV1Installation> =>
+): TE.TaskEither<
+  Error,
+  AppleInstallation | FcmV1Installation | FcmLegacyInstallation
+> =>
   pipe(
     TE.tryCatch(
       () => nhClient.getInstallation(installationId),
