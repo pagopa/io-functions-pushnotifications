@@ -1,5 +1,7 @@
 import * as t from "io-ts";
+import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
 
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
@@ -17,10 +19,10 @@ import {
   FcmV1Notification,
   Installation,
   NotificationHubsClient,
-  NotificationHubsMessageResponse,
   NotificationHubsResponse
 } from "@azure/notification-hubs";
-import { pipe } from "fp-ts/lib/function";
+import { constVoid, flow, identity, pipe } from "fp-ts/lib/function";
+import { TelemetryClient } from "applicationinsights";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
 
@@ -62,25 +64,38 @@ const validateInstallation = (
     ? TE.of(installation)
     : TE.left(new Error("Invalid installation"));
 
+const NHClientError = t.type({
+  statusCode: t.literal(404)
+});
+
 export const getInstallationFromInstallationId = (
   nhClient: NotificationHubsClient
 ) => (
   installationId: InstallationId
 ): TE.TaskEither<
   Error,
-  AppleInstallation | FcmV1Installation | FcmLegacyInstallation
+  O.Option<AppleInstallation | FcmV1Installation | FcmLegacyInstallation>
 > =>
   pipe(
-    TE.tryCatch(
-      () => nhClient.getInstallation(installationId),
-      e =>
-        new Error(
-          `Error while retrieving the installation | installationId: ${installationId} | ${JSON.stringify(
-            e
-          )}`
-        )
-    ),
-    TE.chain(validateInstallation)
+    TE.tryCatch(() => nhClient.getInstallation(installationId), identity),
+    TE.chainW(validateInstallation),
+    TE.map(O.some),
+    TE.orElseW(error =>
+      pipe(
+        error,
+        NHClientError.decode,
+        E.mapLeft(
+          () =>
+            new Error(
+              `Error while retrieving the installation with installationId: ${installationId} | ${JSON.stringify(
+                error
+              )}`
+            )
+        ),
+        E.map(() => O.none),
+        TE.fromEither
+      )
+    )
   );
 
 export const getPlatformFromInstallation = (
@@ -182,20 +197,41 @@ export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 export const notify = (
   notificationHubService: NotificationHubsClient,
   payload: NotifyMessagePayload,
-  installationId: InstallationId
-): TaskEither<Error, NotificationHubsMessageResponse> =>
+  installationId: InstallationId,
+  telemetryClient: TelemetryClient
+): TaskEither<Error, void> =>
   pipe(
     installationId,
     getInstallationFromInstallationId(notificationHubService),
-    TE.chain(getPlatformFromInstallation),
-    TE.chain(createNotification(payload)),
-    TE.chain(notification =>
-      TE.tryCatch(
-        () => notificationHubService.sendNotification(notification),
-        errs =>
-          new Error(
-            `Error while sending notification to NotificationHub | ${errs}`
+    TE.chain(
+      flow(
+        O.fold(
+          () => TE.of(constVoid()),
+          flow(
+            getPlatformFromInstallation,
+            TE.chain(createNotification(payload)),
+            TE.chain(notification =>
+              TE.tryCatch(
+                () => notificationHubService.sendNotification(notification),
+                errs =>
+                  new Error(
+                    `Error while sending notification to NotificationHub | ${errs}`
+                  )
+              )
+            ),
+            TE.map(response => {
+              telemetryClient.trackEvent({
+                name: "api.messages.notification.push.sent",
+                properties: {
+                  installationId,
+                  isSuccess: response.successCount > 0,
+                  messageId: payload.message_id,
+                  state: response.state
+                }
+              });
+            })
           )
+        )
       )
     )
   );

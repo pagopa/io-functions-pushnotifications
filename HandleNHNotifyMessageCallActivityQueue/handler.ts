@@ -73,7 +73,8 @@ export const handle = (
             notify(
               buildNHClient(nhConfig),
               message.payload,
-              message.installationId
+              message.installationId,
+              telemetryClient
             ),
             TE.map(() => ({ kind: "SUCCESS", skipped: false }))
           )

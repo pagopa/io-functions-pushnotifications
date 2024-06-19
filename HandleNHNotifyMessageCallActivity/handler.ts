@@ -58,11 +58,15 @@ export const getActivityBody = (
         ActivityResultSuccess.encode({ kind: "SUCCESS", skipped: true })
       )
     : pipe(
-        notify(nhClient, input.message.payload, input.message.installationId),
-        TE.map(notificationMessage =>
+        notify(
+          nhClient,
+          input.message.payload,
+          input.message.installationId,
+          telemetryClient
+        ),
+        TE.map(() =>
           ActivityResultSuccess.encode({
-            kind: "SUCCESS",
-            ...notificationMessage
+            kind: "SUCCESS"
           })
         )
       );
