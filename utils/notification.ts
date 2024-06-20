@@ -103,7 +103,7 @@ export const notify = (
   payload: NotifyMessagePayload,
   installationId: InstallationId,
   telemetryClient: TelemetryClient
-): TaskEither<Error, boolean> =>
+): TaskEither<Error, void> =>
   pipe(
     createNotification(payload),
     TE.chain(notification =>
@@ -126,7 +126,6 @@ export const notify = (
         },
         tagOverrides: { samplingEnabled: "false" }
       });
-      return response.successCount > 0 ? true : false;
     })
   );
 
