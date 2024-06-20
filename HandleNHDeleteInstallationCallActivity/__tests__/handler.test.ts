@@ -12,8 +12,8 @@ import {
   ActivityResultFailure,
   createActivity
 } from "../../utils/durable/activities";
-import { activityName } from "../";
 import { NotificationHubsClient } from "@azure/notification-hubs";
+import { TelemetryClient } from "applicationinsights";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -33,11 +33,15 @@ const mockBuildNHClient = jest
     _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
+const mockTelemetryClient = ({
+  trackEvent: jest.fn(() => {})
+} as unknown) as TelemetryClient;
+
 const handler = createActivity(
-  activityName,
+  "HandleNHDeleteInstallationCallActivity",
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHClient)
+  getActivityBody(mockBuildNHClient, mockTelemetryClient)
 );
 
 describe("HandleNHDeleteInstallationCallActivity", () => {
