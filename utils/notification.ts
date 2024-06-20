@@ -1,7 +1,5 @@
 import * as t from "io-ts";
-import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
-import * as E from "fp-ts/lib/Either";
 
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 
@@ -14,7 +12,7 @@ import {
   NotificationHubsResponse,
   TemplateNotification
 } from "@azure/notification-hubs";
-import { flow, identity, pipe } from "fp-ts/lib/function";
+import { pipe } from "fp-ts/lib/function";
 import { TelemetryClient } from "applicationinsights";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
@@ -87,8 +85,8 @@ const createNotification = (
   TE.of(
     createTemplateNotification({
       body: {
-        message_id: body.message_id,
         message: body.message,
+        message_id: body.message_id,
         title: body.title
       }
     })
