@@ -204,7 +204,17 @@ export const notify = (
     TE.chain(
       flow(
         O.fold(
-          () => TE.of(false),
+          () => {
+            telemetryClient.trackEvent({
+              name: "api.messages.notification.push.installation.notFound",
+              properties: {
+                installationId,
+                messageId: payload.message_id
+              },
+              tagOverrides: { samplingEnabled: "false" }
+            });
+            return TE.of(false);
+          },
           flow(
             getPlatformFromInstallation,
             TE.chain(createNotification(payload)),
@@ -225,7 +235,8 @@ export const notify = (
                   messageId: payload.message_id,
                   state: response.state,
                   successCount: response.successCount
-                }
+                },
+                tagOverrides: { samplingEnabled: "false" }
               });
               return response.successCount > 0 ? true : false;
             })
