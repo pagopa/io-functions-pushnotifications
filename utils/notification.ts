@@ -87,7 +87,7 @@ export const getInstallationFromInstallationId = (
         E.mapLeft(
           () =>
             new Error(
-              `Error while retrieving the installation with installationId: ${installationId}`
+              `Error while retrieving the installation with installationId: ${installationId} | ${JSON.stringify(error)}`
             )
         ),
         E.map(() => O.none),
