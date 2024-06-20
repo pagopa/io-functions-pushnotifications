@@ -8,18 +8,11 @@ import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 
 import {
-  AppleInstallation,
-  AppleNotification,
-  createAppleNotification,
-  createFcmLegacyNotification,
-  createFcmV1Notification,
-  FcmLegacyInstallation,
-  FcmLegacyNotification,
-  FcmV1Installation,
-  FcmV1Notification,
+  createTemplateNotification,
   Installation,
   NotificationHubsClient,
-  NotificationHubsResponse
+  NotificationHubsResponse,
+  TemplateNotification
 } from "@azure/notification-hubs";
 import { flow, identity, pipe } from "fp-ts/lib/function";
 import { TelemetryClient } from "applicationinsights";
@@ -50,51 +43,9 @@ export const Platform = t.union([
 ]);
 export type Platform = t.TypeOf<typeof Platform>;
 
-const validateInstallation = (
-  installation: Installation
-): TE.TaskEither<
-  Error,
-  AppleInstallation | FcmV1Installation | FcmLegacyInstallation
-> =>
-  installation.platform === "fcmv1"
-    ? TE.of(installation)
-    : installation.platform === "apns"
-    ? TE.of(installation)
-    : installation.platform === "gcm"
-    ? TE.of(installation)
-    : TE.left(new Error("Invalid installation"));
-
 export const NHClientError = t.type({
   statusCode: t.literal(404)
 });
-
-export const getInstallationFromInstallationId = (
-  nhClient: NotificationHubsClient
-) => (
-  installationId: InstallationId
-): TE.TaskEither<
-  Error,
-  O.Option<AppleInstallation | FcmV1Installation | FcmLegacyInstallation>
-> =>
-  pipe(
-    TE.tryCatch(() => nhClient.getInstallation(installationId), identity),
-    TE.chainW(validateInstallation),
-    TE.map(O.some),
-    TE.orElseW(error =>
-      pipe(
-        error,
-        NHClientError.decode,
-        E.mapLeft(
-          () =>
-            new Error(
-              `Error while retrieving the installation with installationId: ${installationId} | ${JSON.stringify(error)}`
-            )
-        ),
-        E.map(() => O.none),
-        TE.fromEither
-      )
-    )
-  );
 
 export const getPlatformFromInstallation = (
   installation: Installation
@@ -130,61 +81,18 @@ export enum APNSPushType {
   MDM = "mdm"
 }
 
-const createNotification = (body: NotifyMessagePayload) => (
-  platform: Platform
-): TE.TaskEither<
-  Error,
-  AppleNotification | FcmV1Notification | FcmLegacyNotification
-> => {
-  switch (platform) {
-    case "apns":
-      return TE.of(
-        createAppleNotification({
-          body: {
-            aps: { alert: { body: body.message, title: body.title } },
-            message_id: body.message_id
-          },
-          headers: {
-            ["apns-priority"]: "10",
-            ["apns-push-type"]: APNSPushType.ALERT
-          }
-        })
-      );
-    case "gcm":
-      return TE.of(
-        createFcmLegacyNotification({
-          body: {
-            data: {
-              largeIcon: "ic_notification",
-              message: body.message,
-              message_id: body.message_id,
-              smallIcon: "ic_notification",
-              title: body.title
-            }
-          }
-        })
-      );
-    case "fcmv1":
-      return TE.of(
-        createFcmV1Notification({
-          body: {
-            android: {
-              data: { message_id: body.message_id },
-              notification: {
-                icon: "ic_notification"
-              }
-            },
-            notification: {
-              body: body.message,
-              title: body.title
-            }
-          }
-        })
-      );
-    default:
-      return TE.left(new Error("Error invalid platform"));
-  }
-};
+const createNotification = (
+  body: NotifyMessagePayload
+): TE.TaskEither<never, TemplateNotification> =>
+  TE.of(
+    createTemplateNotification({
+      body: {
+        message_id: body.message_id,
+        message: body.message,
+        title: body.title
+      }
+    })
+  );
 
 export const nhResultSuccess = t.interface({
   kind: t.literal("SUCCESS")
@@ -199,51 +107,29 @@ export const notify = (
   telemetryClient: TelemetryClient
 ): TaskEither<Error, boolean> =>
   pipe(
-    installationId,
-    getInstallationFromInstallationId(notificationHubService),
-    TE.chain(
-      flow(
-        O.fold(
-          () => {
-            telemetryClient.trackEvent({
-              name: "api.messages.notification.push.installation.notFound",
-              properties: {
-                installationId,
-                messageId: payload.message_id
-              },
-              tagOverrides: { samplingEnabled: "false" }
-            });
-            return TE.of(false);
-          },
-          flow(
-            getPlatformFromInstallation,
-            TE.chain(createNotification(payload)),
-            TE.chain(notification =>
-              TE.tryCatch(
-                () => notificationHubService.sendNotification(notification),
-                errs =>
-                  new Error(
-                    `Error while sending notification to NotificationHub | ${errs}`
-                  )
-              )
-            ),
-            TE.map(response => {
-              telemetryClient.trackEvent({
-                name: "api.messages.notification.push.request",
-                properties: {
-                  installationId,
-                  messageId: payload.message_id,
-                  state: response.state,
-                  successCount: response.successCount
-                },
-                tagOverrides: { samplingEnabled: "false" }
-              });
-              return response.successCount > 0 ? true : false;
-            })
+    createNotification(payload),
+    TE.chain(notification =>
+      TE.tryCatch(
+        () => notificationHubService.sendNotification(notification),
+        errs =>
+          new Error(
+            `Error while sending notification to NotificationHub | ${errs}`
           )
-        )
       )
-    )
+    ),
+    TE.map(response => {
+      telemetryClient.trackEvent({
+        name: "api.messages.notification.push.nh.response",
+        properties: {
+          installationId,
+          messageId: payload.message_id,
+          state: response.state,
+          successCount: response.successCount
+        },
+        tagOverrides: { samplingEnabled: "false" }
+      });
+      return response.successCount > 0 ? true : false;
+    })
   );
 
 export const createOrUpdateInstallation = (

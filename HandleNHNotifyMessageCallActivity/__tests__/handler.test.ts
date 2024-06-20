@@ -78,12 +78,6 @@ describe("HandleNHNotifyMessageCallActivity", () => {
   });
 
   it("should call notificationhubServicePartion.buildNHClient to get the right notificationService to call", async () => {
-    getInstallationMock.mockImplementation(() =>
-      Promise.resolve({
-        platform: "apns"
-      })
-    );
-
     sendNotificationMock.mockImplementation(() => Promise.resolve({}));
 
     const input = ActivityInput.encode({
@@ -91,23 +85,17 @@ describe("HandleNHNotifyMessageCallActivity", () => {
       notificationHubConfig: aNHConfig
     });
 
-    expect.assertions(5);
+    expect.assertions(4);
 
     const res = await handler(contextMock as any, input);
     expect(res.kind).toEqual("SUCCESS");
 
     expect(mockBuildNHClient).toHaveBeenCalledTimes(1);
     expect(mockBuildNHClient).toBeCalledWith(aNHConfig);
-    expect(getInstallationMock).toHaveBeenCalledTimes(1);
     expect(sendNotificationMock).toHaveBeenCalledTimes(1);
   });
 
   it("should trigger a retry if notify fails", async () => {
-    getInstallationMock.mockImplementation(() =>
-      Promise.resolve({
-        platform: "apns"
-      })
-    );
     sendNotificationMock.mockImplementation(() => Promise.reject());
 
     const input = NHClientActivityInput.encode({
@@ -129,11 +117,6 @@ describe("HandleNHNotifyMessageCallActivity", () => {
   });
 
   it("should not call notificationhubServicePartion.buildNHClient when using a blacklisted user", async () => {
-    getInstallationMock.mockImplementation(() =>
-      Promise.resolve({
-        platform: "apns"
-      })
-    );
     sendNotificationMock.mockImplementation(() => Promise.resolve({}));
 
     const input = ActivityInput.encode({
