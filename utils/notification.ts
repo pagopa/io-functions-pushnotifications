@@ -108,7 +108,10 @@ export const notify = (
     createNotification(payload),
     TE.chain(notification =>
       TE.tryCatch(
-        () => notificationHubService.sendNotification(notification),
+        () =>
+          notificationHubService.sendNotification(notification, {
+            deviceHandle: installationId
+          }),
         errs =>
           new Error(
             `Error while sending notification to NotificationHub | ${errs}`
