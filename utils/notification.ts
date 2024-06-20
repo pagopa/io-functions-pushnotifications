@@ -21,7 +21,7 @@ import {
   NotificationHubsClient,
   NotificationHubsResponse
 } from "@azure/notification-hubs";
-import { constVoid, flow, identity, pipe } from "fp-ts/lib/function";
+import { flow, identity, pipe } from "fp-ts/lib/function";
 import { TelemetryClient } from "applicationinsights";
 import { NotifyMessagePayload } from "../generated/notifications/NotifyMessagePayload";
 import { InstallationId } from "../generated/notifications/InstallationId";
@@ -197,14 +197,14 @@ export const notify = (
   payload: NotifyMessagePayload,
   installationId: InstallationId,
   telemetryClient: TelemetryClient
-): TaskEither<Error, void> =>
+): TaskEither<Error, boolean> =>
   pipe(
     installationId,
     getInstallationFromInstallationId(notificationHubService),
     TE.chain(
       flow(
         O.fold(
-          () => TE.of(constVoid()),
+          () => TE.of(false),
           flow(
             getPlatformFromInstallation,
             TE.chain(createNotification(payload)),
@@ -219,14 +219,15 @@ export const notify = (
             ),
             TE.map(response => {
               telemetryClient.trackEvent({
-                name: "api.messages.notification.push.sent",
+                name: "api.messages.notification.push.request",
                 properties: {
                   installationId,
-                  isSuccess: response.successCount > 0,
                   messageId: payload.message_id,
-                  state: response.state
+                  state: response.state,
+                  successCount: response.successCount
                 }
               });
+              return response.successCount > 0 ? true : false;
             })
           )
         )

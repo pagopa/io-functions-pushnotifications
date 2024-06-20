@@ -4,6 +4,7 @@ import * as t from "io-ts";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { NotificationHubsClient } from "@azure/notification-hubs";
+import { TelemetryClient } from "applicationinsights";
 import { toString } from "../utils/conversions";
 
 import {
@@ -32,7 +33,8 @@ export { ActivityResultSuccess } from "../utils/durable/activities";
  */
 
 export const getActivityBody = (
-  buildNHClient: (nhConfig: NotificationHubConfig) => NotificationHubsClient
+  buildNHClient: (nhConfig: NotificationHubConfig) => NotificationHubsClient,
+  telemetryClient: TelemetryClient
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ): ActivityBody<ActivityInput, ActivityResultSuccess> => ({
   input,
@@ -44,8 +46,31 @@ export const getActivityBody = (
   return pipe(
     deleteInstallation(nhClient, input.installationId),
     TE.bimap(
-      e => failActivity(logger)(`ERROR=${toString(e)}`),
-      response => ActivityResultSuccess.encode({ kind: "SUCCESS", ...response })
+      e => {
+        telemetryClient.trackEvent({
+          name: "api.messages.notification.deleteInstallation.failure",
+          properties: {
+            installationId: input.installationId,
+            isSuccess: "false",
+            notificationHubName: input.notificationHubConfig.AZURE_NH_HUB_NAME,
+            reason: e.message
+          },
+          tagOverrides: { samplingEnabled: "false" }
+        });
+        return failActivity(logger)(`ERROR=${toString(e)}`);
+      },
+      response => {
+        telemetryClient.trackEvent({
+          name: "api.messages.notification.deleteInstallation.success",
+          properties: {
+            installationId: input.installationId,
+            isSuccess: "true",
+            notificationHubName: input.notificationHubConfig.AZURE_NH_HUB_NAME
+          },
+          tagOverrides: { samplingEnabled: "false" }
+        });
+        return ActivityResultSuccess.encode({ kind: "SUCCESS", ...response });
+      }
     )
   );
 };
