@@ -15,6 +15,7 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { createActivity } from "../../utils/durable/activities";
 import { NotificationHubsClient } from "@azure/notification-hubs";
+import { TelemetryClient } from "applicationinsights";
 
 const activityName = "any";
 
@@ -48,11 +49,15 @@ const mockBuildNHClient = jest
     _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
+const mockTelemetryClient = ({
+  trackEvent: jest.fn(() => {})
+} as unknown) as TelemetryClient;
+
 const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHClient)
+  getActivityBody(mockBuildNHClient, mockTelemetryClient)
 );
 
 describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
