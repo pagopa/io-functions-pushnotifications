@@ -16,9 +16,6 @@
     }
   },
   "extensions": {
-    "queues": {
-      "maxDequeueCount": 1
-    },
     "http": {
       "routePrefix": ""
     },
