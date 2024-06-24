@@ -98,6 +98,9 @@ export const nhResultSuccess = t.interface({
 
 export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 
+export const toTagExpression = (fiscalCodeHash: NonEmptyString): any =>
+  `$InstallationId:{${fiscalCodeHash}}`;
+
 export const notify = (
   notificationHubService: NotificationHubsClient,
   payload: NotifyMessagePayload,
@@ -110,7 +113,7 @@ export const notify = (
       TE.tryCatch(
         () =>
           notificationHubService.sendNotification(notification, {
-            deviceHandle: installationId
+            tagExpression: toTagExpression(installationId)
           }),
         errs =>
           new Error(
