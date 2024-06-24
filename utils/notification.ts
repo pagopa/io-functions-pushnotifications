@@ -98,7 +98,7 @@ export const nhResultSuccess = t.interface({
 
 export type NHResultSuccess = t.TypeOf<typeof nhResultSuccess>;
 
-export const toTagExpression = (fiscalCodeHash: NonEmptyString): any =>
+export const toTagExpression = (fiscalCodeHash: NonEmptyString): string =>
   `$InstallationId:{${fiscalCodeHash}}`;
 
 export const notify = (
