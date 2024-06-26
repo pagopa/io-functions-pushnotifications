@@ -1,13 +1,12 @@
-import { NotificationHubService } from "azure-sb";
 import * as t from "io-ts";
 
 import * as E from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 import { InstallationId } from "../generated/notifications/InstallationId";
 import { IConfig } from "./config";
-import { ExtendedNotificationHubService } from "./notification";
 
 export const NotificationHubConfig = t.interface({
   AZURE_NH_ENDPOINT: NonEmptyString,
@@ -64,12 +63,8 @@ export const getNotificationHubPartitionConfig = (envConfig: IConfig) => (
     })
   );
 
-/**
- * @param config The NotificationHubConfig
- * @returns a NotificationHubService used to call Notification Hub APIs
- */
-export const buildNHService = ({
+export const buildNHClient = ({
   AZURE_NH_HUB_NAME,
   AZURE_NH_ENDPOINT
-}: NotificationHubConfig): NotificationHubService =>
-  new ExtendedNotificationHubService(AZURE_NH_HUB_NAME, AZURE_NH_ENDPOINT);
+}: NotificationHubConfig): NotificationHubsClient =>
+  new NotificationHubsClient(AZURE_NH_ENDPOINT, AZURE_NH_HUB_NAME);

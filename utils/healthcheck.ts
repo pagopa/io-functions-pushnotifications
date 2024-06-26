@@ -3,8 +3,7 @@ import { pipe } from "fp-ts/lib/function";
 
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as healthcheck from "@pagopa/io-functions-commons/dist/src/utils/healthcheck";
-import { NHResultSuccess } from "./notification";
-import { buildNHService } from "./notificationhubServicePartition";
+import { buildNHClient } from "./notificationhubServicePartition";
 
 /**
  * Check connections to Notification Hubs
@@ -18,18 +17,10 @@ export const checkAzureNotificationHub = (
   pipe(
     TE.tryCatch(
       () =>
-        new Promise<NHResultSuccess>((resolve, reject) =>
-          buildNHService({
-            AZURE_NH_ENDPOINT,
-            AZURE_NH_HUB_NAME
-          }).deleteInstallation(
-            "aFakeInstallation",
-            (err, _) =>
-              err == null
-                ? resolve({ kind: "SUCCESS" })
-                : reject(err.message.replace(/\n/gim, " ")) // avoid newlines
-          )
-        ),
+        buildNHClient({
+          AZURE_NH_ENDPOINT,
+          AZURE_NH_HUB_NAME
+        }).deleteInstallation("aFakeInstallation"),
       healthcheck.toHealthProblems("AzureNotificationHub")
     ),
     TE.map(_ => true)

@@ -1,9 +1,11 @@
+import * as E from "fp-ts/lib/Either";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import {
   getNHLegacyConfig,
   getNotificationHubPartitionConfig,
   testShaForPartitionRegex
 } from "../notificationhubServicePartition";
+import { NHClientError } from "../notification";
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { InstallationId } from "../../generated/notifications/InstallationId";
@@ -16,6 +18,20 @@ describe("NotificationHubServicepartition", () => {
 
     expect(nhConfig.AZURE_NH_ENDPOINT).toBe(envConfig.AZURE_NH_ENDPOINT);
     expect(nhConfig.AZURE_NH_HUB_NAME).toBe(envConfig.AZURE_NH_HUB_NAME);
+  });
+});
+
+describe("NHClientError", () => {
+  it("should decode a 404 as right", () => {
+    expect(
+      E.isRight(NHClientError.decode({ statusCode: 404, message: "foo" }))
+    ).toBe(true);
+  });
+
+  it("should decode a 401 as left", () => {
+    expect(
+      E.isLeft(NHClientError.decode({ statusCode: 401, message: "foo" }))
+    ).toBe(true);
   });
 });
 

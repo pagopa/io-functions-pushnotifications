@@ -7,7 +7,6 @@ import {
   ActivityResultSuccess
 } from "../handler";
 
-import * as azure from "azure-sb";
 import { PlatformEnum } from "../../generated/notifications/Platform";
 import { CreateOrUpdateInstallationMessage } from "../../generated/notifications/CreateOrUpdateInstallationMessage";
 
@@ -15,6 +14,8 @@ import { NotificationHubConfig } from "../../utils/notificationhubServicePartiti
 
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { createActivity } from "../../utils/durable/activities";
+import { NotificationHubsClient } from "@azure/notification-hubs";
+import { TelemetryClient } from "applicationinsights";
 
 const activityName = "any";
 
@@ -35,20 +36,28 @@ const aNHConfig = {
   AZURE_NH_HUB_NAME: envConfig.AZURE_NH_HUB_NAME
 } as NotificationHubConfig;
 
+const createOrUpdateInstallationMock = jest.fn();
+const getInstallationMock = jest.fn();
+
 const mockNotificationHubService = {
-  createOrUpdateInstallation: jest.fn()
+  createOrUpdateInstallation: createOrUpdateInstallationMock,
+  getInstallation: getInstallationMock
 };
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockImplementation(
-    _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
+    _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
+
+const mockTelemetryClient = ({
+  trackEvent: jest.fn(() => {})
+} as unknown) as TelemetryClient;
 
 const handler = createActivity(
   activityName,
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHService)
+  getActivityBody(mockBuildNHClient, mockTelemetryClient)
 );
 
 describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
@@ -56,10 +65,13 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     jest.clearAllMocks();
   });
 
-  it("should call notificationhubServicePartion.buildNHService to get the right notificationService to call", async () => {
-    mockNotificationHubService.createOrUpdateInstallation = jest
-      .fn()
-      .mockImplementation((_, cb) => cb());
+  it("should call notificationhubServicePartion.buildNHClient to get the right notificationService to call", async () => {
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    createOrUpdateInstallationMock.mockReturnValueOnce(Promise.resolve());
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,
@@ -74,16 +86,19 @@ describe("HandleNHCreateOrUpdateInstallationCallActivity", () => {
     const res = await handler(contextMock as any, input);
     expect(ActivityResultSuccess.is(res)).toBeTruthy();
 
-    expect(mockBuildNHService).toHaveBeenCalledTimes(1);
-    expect(mockBuildNHService).toBeCalledWith(aNHConfig);
+    expect(mockBuildNHClient).toHaveBeenCalledTimes(1);
+    expect(mockBuildNHClient).toBeCalledWith(aNHConfig);
   });
 
   it("should trigger a retry if CreateOrUpdateInstallation fails", async () => {
-    mockNotificationHubService.createOrUpdateInstallation = jest
-      .fn()
-      .mockImplementation((_, cb) =>
-        cb(new Error("createOrUpdateInstallation error"))
-      );
+    getInstallationMock.mockImplementation(() =>
+      Promise.resolve({
+        platform: "apns"
+      })
+    );
+    createOrUpdateInstallationMock.mockImplementationOnce(() =>
+      Promise.reject({})
+    );
 
     const input = ActivityInput.encode({
       installationId: aCreateOrUpdateInstallationMessage.installationId,

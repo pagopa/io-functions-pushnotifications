@@ -2,10 +2,10 @@ import { envConfig } from "../../__mocks__/env-config.mock";
 
 import { checkAzureNotificationHub } from "../healthcheck";
 
-import * as azure from "azure-sb";
 import { pipe } from "fp-ts/lib/function";
 
 import * as TE from "fp-ts/lib/TaskEither";
+import { NotificationHubsClient } from "@azure/notification-hubs";
 
 const notificationhubServicePartition = require("../notificationhubServicePartition");
 
@@ -13,17 +13,17 @@ const mockNotificationHubServiceKO = ({
   deleteInstallation: jest.fn((_, callback) =>
     callback(Error("An error occurred"), null)
   )
-} as unknown) as azure.NotificationHubService;
+} as unknown) as NotificationHubsClient;
 
 const mockNotificationHubServiceOK = ({
-  deleteInstallation: jest.fn((_, callback) => callback(null, null))
-} as unknown) as azure.NotificationHubService;
-const mockBuildNHService = jest
+  deleteInstallation: jest.fn(_ => Promise.resolve({}))
+} as unknown) as NotificationHubsClient;
+const mockBuildNHClient = jest
   .fn()
   .mockReturnValue(mockNotificationHubServiceOK);
 
 function mockNHFunctions() {
-  notificationhubServicePartition["buildNHService"] = mockBuildNHService;
+  notificationhubServicePartition["buildNHClient"] = mockBuildNHClient;
 }
 
 // -------------
@@ -33,7 +33,7 @@ function mockNHFunctions() {
 describe("healthcheck - notification hub", () => {
   beforeAll(() => mockNHFunctions());
 
-  it("should not throw exception", async done => {
+  it("should not throw exception", done => {
     expect.assertions(1);
 
     pipe(
@@ -48,8 +48,8 @@ describe("healthcheck - notification hub", () => {
     )();
   });
 
-  it("should throw exception", async done => {
-    mockBuildNHService.mockReturnValueOnce(mockNotificationHubServiceKO);
+  it("should throw exception", async () => {
+    mockBuildNHClient.mockReturnValueOnce(mockNotificationHubServiceKO);
 
     expect.assertions(2);
 
@@ -61,11 +61,9 @@ describe("healthcheck - notification hub", () => {
       TE.mapLeft(err => {
         expect(err.length).toBe(1);
         expect(true).toBe(true);
-        done();
       }),
       TE.map(_ => {
         expect(true).toBeFalsy();
-        done();
       })
     )();
   });

@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { context as contextMock } from "../../__mocks__/durable-functions";
 import {
@@ -8,15 +6,14 @@ import {
   ActivityResultSuccess
 } from "../handler";
 
-import * as azure from "azure-sb";
-
 import { envConfig } from "../../__mocks__/env-config.mock";
 import { NotificationHubConfig } from "../../utils/notificationhubServicePartition";
 import {
   ActivityResultFailure,
   createActivity
 } from "../../utils/durable/activities";
-import { activityName } from "..";
+import { NotificationHubsClient } from "@azure/notification-hubs";
+import { TelemetryClient } from "applicationinsights";
 
 const aFiscalCodeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" as NonEmptyString;
 
@@ -30,17 +27,21 @@ const aNHConfig = {
 const mockNotificationHubService = {
   deleteInstallation: jest.fn()
 };
-const mockBuildNHService = jest
+const mockBuildNHClient = jest
   .fn()
   .mockImplementation(
-    _ => (mockNotificationHubService as unknown) as azure.NotificationHubService
+    _ => (mockNotificationHubService as unknown) as NotificationHubsClient
   );
 
+const mockTelemetryClient = ({
+  trackEvent: jest.fn(() => {})
+} as unknown) as TelemetryClient;
+
 const handler = createActivity(
-  activityName,
+  "HandleNHDeleteInstallationCallActivity",
   ActivityInput, // FIXME: the editor marks it as type error, but tests compile correctly
   ActivityResultSuccess,
-  getActivityBody(mockBuildNHService)
+  getActivityBody(mockBuildNHClient, mockTelemetryClient)
 );
 
 describe("HandleNHDeleteInstallationCallActivity", () => {
@@ -50,7 +51,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
   it("should call deleteInstallation with right NH parameters", async () => {
     mockNotificationHubService.deleteInstallation = jest
       .fn()
-      .mockImplementation((_, cb) => cb());
+      .mockImplementation(_ => Promise.resolve({}));
 
     const input = ActivityInput.encode({
       installationId: anInstallationId,
@@ -61,7 +62,7 @@ describe("HandleNHDeleteInstallationCallActivity", () => {
       1
     );
 
-    expect(mockBuildNHService).toHaveBeenCalledWith(aNHConfig);
+    expect(mockBuildNHClient).toHaveBeenCalledWith(aNHConfig);
 
     expect(ActivityResultSuccess.is(res)).toBeTruthy();
   });

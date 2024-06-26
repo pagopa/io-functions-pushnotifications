@@ -1,8 +1,10 @@
 import { RetryOptions } from "durable-functions";
+import { initTelemetryClient } from "../utils/appinsights";
+import { getConfigOrThrow } from "../utils/config";
 
 import { createActivity } from "../utils/durable/activities";
 import * as o from "../utils/durable/orchestrators";
-import { buildNHService } from "../utils/notificationhubServicePartition";
+import { buildNHClient } from "../utils/notificationhubServicePartition";
 import {
   ActivityInput,
   ActivityResultSuccess,
@@ -12,6 +14,10 @@ import {
 export { ActivityInput, ActivityResultSuccess } from "./handler";
 
 export const activityName = "HandleNHCreateOrUpdateInstallationCallActivity";
+
+const config = getConfigOrThrow();
+
+const telemetryClient = initTelemetryClient(config);
 
 /**
  * Build a `CreateOrUpdateActivity` to be called by an Orchestrator
@@ -32,7 +38,7 @@ const activityFunctionHandler = createActivity(
   activityName,
   ActivityInput,
   ActivityResultSuccess,
-  getActivityBody(buildNHService)
+  getActivityBody(buildNHClient, telemetryClient)
 );
 
 export default activityFunctionHandler;
